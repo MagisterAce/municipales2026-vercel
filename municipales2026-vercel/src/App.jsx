@@ -898,6 +898,20 @@ export default function App() {
     setLastUpd(new Date().toLocaleDateString("fr-FR"));
     setListeModal(null);
   };
+  const effacerListe = async () => {
+    if (!listeModal) return;
+    const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
+    const newResults = {...listeResults};
+    delete newResults[key];
+    setListeResults(newResults);
+    const { error } = await supabase
+      .from("resultats")
+      .delete()
+      .eq("result_key", key);
+    if (error) console.error("Erreur effacement:", error);
+    setListeForm({statut:"", score:"", voix:""});
+    setListeModal(null);
+  };
   // ── REPORT AUTOMATIQUE : listeResults → crList ───────────────────────────
   // Pour chaque CR lié à une commune, on cherche dans listeResults si une liste
   // correspond à son groupe et on reporte le statut/score automatiquement.
@@ -1828,6 +1842,7 @@ export default function App() {
               </div>
               <div className="mbts">
                 <button className="btn-cancel" onClick={()=>setListeModal(null)}>Annuler</button>
+<button className="btn-cancel" style={{color:"#b71c1c",borderColor:"#b71c1c"}} onClick={effacerListe}>✕ Effacer</button>
                 <button className="btn-save" onClick={saveListe}>✓ Enregistrer</button>
               </div>
             </div>
