@@ -851,10 +851,11 @@ export default function App() {
     const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
     const newResults = {...listeResults, [key]: listeForm};
     setListeResults(newResults);
-    const scoreNum = listeForm.score ? parseFloat(listeForm.score) : null;
+   const scoreNum = listeForm.score ? parseFloat(listeForm.score) : null;
+  const voixNum = listeForm.voix ? parseFloat(listeForm.voix) : null;
   const { error } = await supabase
     .from("resultats")
-    .upsert({ result_key: key, statut: listeForm.statut, score: scoreNum }, { onConflict: "result_key" });
+    .upsert({ result_key: key, statut: listeForm.statut, score: scoreNum, voix: voixNum }, { onConflict: "result_key" });
   if (error) console.error("Erreur sauvegarde:", error);
 
     // ── REPORT AUTOMATIQUE VERS crList ─────────────────────────────────
@@ -914,7 +915,7 @@ export default function App() {
     if (error) { console.error("Erreur chargement:", error); return; }
     const obj = {};
     data.forEach(row => {
-      obj[row.result_key] = { statut: row.statut, score: row.score };
+     obj[row.result_key] = { statut: row.statut, score: row.score, voix: row.voix };
     });
     setListeResults(obj);
   };
