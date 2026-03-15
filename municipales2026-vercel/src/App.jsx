@@ -900,7 +900,6 @@ const saveListe = async () => {
   setLastUpd(new Date().toLocaleDateString("fr-FR"));
   setListeModal(null);
 };
-  };
   // ── REPORT AUTOMATIQUE : listeResults → crList ───────────────────────────
   // Pour chaque CR lié à une commune, on cherche dans listeResults si une liste
   // correspond à son groupe et on reporte le statut/score automatiquement.
