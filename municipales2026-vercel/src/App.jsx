@@ -1672,7 +1672,7 @@ const saveListe = async () => {
                                             className="btn"
                                             style={{padding:"2px 7px",fontSize:"7px",flexShrink:0}}
                                             onClick={()=>{
-                                              setListeModal({dept:c.dept,ville:c.nom,idx:li,liste:l});
+                                              setListeModal({dept:c.dept,ville:c.nom,idx:li_orig,liste:l});
                                               setListeForm({statut:res?.statut||"",score:res?.score||"",voix:res?.voix||"",tour:"T1"});
                                             }}
                                           >Saisir</button>
