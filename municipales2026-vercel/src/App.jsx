@@ -848,58 +848,58 @@ export default function App() {
   // Résultats par liste : clé = "dept|ville|idx", val = {statut, score}
   const [listeResults, setListeResults] = useState({});
   const [listeModal, setListeModal] = useState(null); // {dept, ville, idx, liste}
-  const [listeForm, setListeForm] = useState({statut:"", score:""});
-  const saveListe = async () => {
-    if (!listeModal) return;
-    const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
-    const newResults = {...listeResults, [key]: listeForm};
-    setListeResults(newResults);
+  const [listeForm, setListeForm] = useState({statut:"", score:"", voix:"", tour:"T1"});
+const saveListe = async () => {
+  if (!listeModal) return;
+  const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
+  const newResults = {...listeResults, [key]: listeForm};
+  setListeResults(newResults);
 
-    // ── REPORT AUTOMATIQUE VERS crList ─────────────────────────────────
-    // Pour chaque commune, déduire le statut des CR liés depuis LISTES_DATA
-    const commune = COMMUNES.find(c => c.dept===listeModal.dept && c.nom===listeModal.ville);
-    if (commune && commune.cr_lies.length > 0) {
-      const comKey = `${commune.dept}|${commune.nom}`;
-      const listes = LISTES_DATA[comKey] || [];
-      // Trouver les listes avec un résultat saisi qui concernent un CR lié
-      commune.cr_lies.forEach(crLie => {
-        // Chercher si une liste dans cette commune a ce CR comme lié
-        // On matche par nom partiel ou par groupe
-        // Stratégie : liste PS/UG/DVG → CR PS/PP ; liste RN → CR RN ; liste LR → CR LR
-        const NUANCE_TO_GROUPE = {
-          "PS":"PS/PP","UG":"PS/PP","DVG":"PS/PP","PCF":"PCF","PRG":"PRG",
-          "RN":"RN","LR":"LR","DVD":"LR","DVC":"Centre/Indé","UDI":"Centre/Indé",
-          "RE":"Centre/Indé","LFI":"LFI","Écolo":"Écologistes","Rég.":"Rég."
-        };
-        // Trouver la liste qui correspond au groupe du CR
-        const listeIdx = listes.findIndex((l,li) => {
-          const grp = NUANCE_TO_GROUPE[l.nuance] || l.nuance;
-          return grp === crLie.groupe || l.nuance === crLie.groupe;
-        });
-        if (listeIdx >= 0) {
-          const rKey = `${commune.dept}|${commune.nom}|${listeIdx}`;
-          const res = newResults[rKey];
-          if (res && res.statut) {
-            setCrList(prev => prev.map(cr => {
-              if (cr.nom === crLie.nom || cr.commune === commune.nom) {
-                const score1 = res.score ? parseFloat(res.score) : cr.s1;
-                const newStatut = res.statut || cr.statut;
-                return {...cr, statut: newStatut, s1: score1};
-              }
-              return cr;
-            }));
-          }
-        }
-      });
-    }
+  if (listeForm.tour === "T2") {
     await supabase.from("resultats").upsert({
-  result_key: key,
-  statut_t1: listeForm.statut,
-  score_t1: listeForm.score ? parseFloat(listeForm.score) : null,
-  voix_t1: listeForm.voix ? parseInt(listeForm.voix) : null,
-}, { onConflict: "result_key" });
-    setLastUpd(new Date().toLocaleDateString("fr-FR"));
-    setListeModal(null);
+      result_key: key,
+      statut_t2: listeForm.statut,
+      score_t2: listeForm.score ? parseFloat(listeForm.score) : null,
+      voix_t2: listeForm.voix ? parseInt(listeForm.voix) : null,
+    }, { onConflict: "result_key" });
+  } else {
+    await supabase.from("resultats").upsert({
+      result_key: key,
+      statut_t1: listeForm.statut,
+      score_t1: listeForm.score ? parseFloat(listeForm.score) : null,
+      voix_t1: listeForm.voix ? parseInt(listeForm.voix) : null,
+    }, { onConflict: "result_key" });
+  }
+
+  // Report automatique vers crList
+  const commune = COMMUNES.find(c => c.dept===listeModal.dept && c.nom===listeModal.ville);
+  if (commune && commune.cr_lies.length > 0) {
+    const comKey = `${commune.dept}|${commune.nom}`;
+    const listes = LISTES_DATA[comKey] || [];
+    commune.cr_lies.forEach(crLie => {
+      const listeIdx = listes.findIndex((l,li) => {
+        const grp = NUANCE_TO_GROUPE[l.nuance] || l.nuance;
+        return grp === crLie.groupe || l.nuance === crLie.groupe;
+      });
+      if (listeIdx >= 0) {
+        const rKey = `${commune.dept}|${commune.nom}|${listeIdx}`;
+        const res = newResults[rKey];
+        if (res && res.statut) {
+          setCrList(prev => prev.map(cr => {
+            if (cr.nom === crLie.nom || cr.commune === commune.nom) {
+              const score1 = res.score ? parseFloat(res.score) : cr.s1;
+              const newStatut = res.statut || cr.statut;
+              return {...cr, statut: newStatut, s1: score1};
+            }
+            return cr;
+          }));
+        }
+      }
+    });
+  }
+  setLastUpd(new Date().toLocaleDateString("fr-FR"));
+  setListeModal(null);
+};
   };
   // ── REPORT AUTOMATIQUE : listeResults → crList ───────────────────────────
   // Pour chaque CR lié à une commune, on cherche dans listeResults si une liste
@@ -968,11 +968,15 @@ export default function App() {
     const loaded = {};
     data.forEach(row => {
       if (row.result_key) {
-        loaded[row.result_key] = {
-          statut: row.statut_t1 || "",
-          score: row.score_t1 != null ? String(row.score_t1) : "",
-          voix: row.voix_t1 != null ? String(row.voix_t1) : "",
-        };
+       loaded[row.result_key] = {
+  statut: row.statut_t1 || "",
+  score: row.score_t1 != null ? String(row.score_t1) : "",
+  voix: row.voix_t1 != null ? String(row.voix_t1) : "",
+  tour: "T1",
+  statut_t2: row.statut_t2 || "",
+  score_t2: row.score_t2 != null ? String(row.score_t2) : "",
+  voix_t2: row.voix_t2 != null ? String(row.voix_t2) : "",
+};
       }
     });
     setListeResults(loaded);
@@ -1801,62 +1805,82 @@ export default function App() {
 
         {/* MODAL SAISIE */}
         {/* ══ MODAL RÉSULTAT LISTE ══ */}
-        {listeModal && (
-          <div className="modal-bg" onClick={()=>setListeModal(null)}>
-            <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
-              <div className="modal-title">{listeModal.ville}</div>
-              <div className="modal-sub">
-                <span style={{
-                  background:listeModal.liste.color,color:"#fff",
-                  fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,
-                  padding:"1px 7px",borderRadius:3,marginRight:6
-                }}>{listeModal.liste.nuance}</span>
-                <span style={{fontWeight:700}}>{listeModal.liste.tete}</span>
-              </div>
-              <div style={{background:"#f9f6f2",border:"1px solid #f0ebe4",padding:"6px 10px",borderRadius:5,marginBottom:12,fontSize:10,color:"#888"}}>{listeModal.liste.libelle}</div>
-              <div className="fg">
-                <label className="fl">Résultat</label>
-                <select className="fs" value={listeForm.statut} onChange={e=>setListeForm(f=>({...f,statut:e.target.value}))}>
-                  <option value="">— Pas encore saisi —</option>
-                  <option disabled>── 1er Tour ──</option>
-                  <option value="Victoire 1er Tour">Victoire 1er Tour</option>
-                  <option value="Défaite 1er Tour">Défaite 1er Tour</option>
-                  <option value="Qualifié·e pour le 2nd Tour">Qualifié·e pour le 2nd Tour</option>
-                  <option disabled>── 2nd Tour ──</option>
-                  <option value="Victoire 2nd Tour">Victoire 2nd Tour</option>
-                  <option value="Défaite 2nd Tour">Défaite 2nd Tour</option>
-                </select>
-              </div>
-              <div className="fg">
-                <label className="fl">Nb de Voix</label>
-                <input className="fi" type="number" min="0" step="1" value={listeForm.voix||""} placeholder="ex. 1240" onChange={e=>setListeForm(f=>({...f,voix:e.target.value}))}/>
-              </div>
-              <div className="fg">
-                <label className="fl">Score en %</label>
-                <input className="fi" type="number" min="0" max="100" step="0.1" value={listeForm.score||""} placeholder="ex. 34.5" onChange={e=>setListeForm(f=>({...f,score:e.target.value}))}/>
-              </div>
-              <div className="mbts">
-                <button className="btn-cancel" onClick={()=>setListeModal(null)}>Annuler</button>
-                <button
-  className="btn-cancel"
-  style={{color:"#b71c1c", borderColor:"#ffcdd2"}}
-  onClick={async () => {
-    const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
-    await supabase.from("resultats").delete().eq("result_key", key);
-    const newResults = {...listeResults};
-    delete newResults[key];
-    setListeResults(newResults);
-    setLastUpd(new Date().toLocaleDateString("fr-FR"));
-    setListeModal(null);
-  }}
->
-  ✗ Effacer
-</button>
-                <button className="btn-save" onClick={saveListe}>✓ Enregistrer</button>
-              </div>
-            </div>
-          </div>
-        )}
+{listeModal && (
+  <div className="modal-bg" onClick={()=>setListeModal(null)}>
+    <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:440}}>
+      <div className="modal-title">{listeModal.ville}</div>
+      <div className="modal-sub">
+        <span style={{
+          background:listeModal.liste.color,color:"#fff",
+          fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,
+          padding:"1px 7px",borderRadius:3,marginRight:6
+        }}>{listeModal.liste.nuance}</span>
+        <span style={{fontWeight:700}}>{listeModal.liste.tete}</span>
+      </div>
+      <div style={{background:"#f9f6f2",border:"1px solid #f0ebe4",padding:"6px 10px",borderRadius:5,marginBottom:12,fontSize:10,color:"#888"}}>{listeModal.liste.libelle}</div>
+
+      {/* Sélecteur T1 / T2 */}
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        <button
+          onClick={()=>setListeForm(f=>({...f,tour:"T1",statut:"",score:"",voix:""}))}
+          style={{
+            flex:1,padding:"8px",borderRadius:6,cursor:"pointer",fontFamily:"'Source Code Pro',monospace",
+            fontSize:"10px",fontWeight:700,letterSpacing:"1px",
+            background:listeForm.tour==="T1"?"#E8186D":"#f5f0ea",
+            color:listeForm.tour==="T1"?"#fff":"#aaa",
+            border:listeForm.tour==="T1"?"2px solid #c01057":"2px solid #e8e0d8"
+          }}
+        >1er TOUR</button>
+        <button
+          onClick={()=>setListeForm(f=>({...f,tour:"T2",statut:"",score:"",voix:""}))}
+          style={{
+            flex:1,padding:"8px",borderRadius:6,cursor:"pointer",fontFamily:"'Source Code Pro',monospace",
+            fontSize:"10px",fontWeight:700,letterSpacing:"1px",
+            background:listeForm.tour==="T2"?"#1565c0":"#f5f0ea",
+            color:listeForm.tour==="T2"?"#fff":"#aaa",
+            border:listeForm.tour==="T2"?"2px solid #0d47a1":"2px solid #e8e0d8"
+          }}
+        >2nd TOUR</button>
+      </div>
+
+      <div className="fg">
+        <label className="fl">Résultat {listeForm.tour==="T2"?"2nd tour":"1er tour"}</label>
+        <select className="fs" value={listeForm.statut} onChange={e=>setListeForm(f=>({...f,statut:e.target.value}))}>
+          <option value="">— Pas encore saisi —</option>
+          {listeForm.tour==="T1" ? <>
+            <option value="Victoire 1er Tour">Victoire 1er Tour</option>
+            <option value="Défaite 1er Tour">Défaite 1er Tour</option>
+            <option value="Qualifié·e pour le 2nd Tour">Qualifié·e pour le 2nd Tour</option>
+          </> : <>
+            <option value="Victoire 2nd Tour">Victoire 2nd Tour</option>
+            <option value="Défaite 2nd Tour">Défaite 2nd Tour</option>
+          </>}
+        </select>
+      </div>
+      <div className="fg">
+        <label className="fl">Nb de Voix</label>
+        <input className="fi" type="number" min="0" step="1" value={listeForm.voix||""} placeholder="ex. 1240" onChange={e=>setListeForm(f=>({...f,voix:e.target.value}))}/>
+      </div>
+      <div className="fg">
+        <label className="fl">Score en %</label>
+        <input className="fi" type="number" min="0" max="100" step="0.1" value={listeForm.score||""} placeholder="ex. 34.5" onChange={e=>setListeForm(f=>({...f,score:e.target.value}))}/>
+      </div>
+      <div className="mbts">
+        <button className="btn-cancel" style={{color:"#b71c1c",borderColor:"#ffcdd2"}} onClick={async () => {
+          const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
+          await supabase.from("resultats").delete().eq("result_key", key);
+          const newResults = {...listeResults};
+          delete newResults[key];
+          setListeResults(newResults);
+          setLastUpd(new Date().toLocaleDateString("fr-FR"));
+          setListeModal(null);
+        }}>✗ Effacer</button>
+        <button className="btn-cancel" onClick={()=>setListeModal(null)}>Annuler</button>
+        <button className="btn-save" onClick={saveListe}>✓ Enregistrer</button>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* ══ MODAL CR ══ */}
         {editModal && (
