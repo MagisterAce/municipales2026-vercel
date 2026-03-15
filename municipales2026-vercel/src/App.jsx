@@ -1426,9 +1426,7 @@ export default function App() {
                                         {cr.s1!=null && <span className="score" style={{fontSize:11}}>{cr.s1}%</span>}
                                         {cr.s2!=null && <span className="score" style={{fontSize:11}}>{cr.s2}%</span>}
                                         <span className="pill" style={{color:sc.c,background:sc.bg,fontSize:"8px",padding:"2px 8px"}}>{cr.statut}</span>
-                                        {isCandidat && (
-                                          <button className="btn" style={{padding:"3px 8px",fontSize:"8px"}} onClick={e=>{e.stopPropagation();openEdit(cr);}}>Saisir</button>
-                                        )}
+                                    
                                       </div>
                                     </div>
                                   );
