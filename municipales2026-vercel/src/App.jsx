@@ -959,26 +959,60 @@ const saveListe = async () => {
   const [editModal, setEditModal] = useState(null);
   const [form, setForm] = useState({});
   const [lastUpd, setLastUpd] = useState("08/03/2026");
-  useEffect(() => {
+useEffect(() => {
   const loadFromSupabase = async () => {
     const { data, error } = await supabase.from("resultats").select("*");
     if (error) { console.error("Supabase load error:", error); return; }
     if (!data || data.length === 0) return;
     const loaded = {};
+    const crUpdates = [];
     data.forEach(row => {
-      if (row.result_key) {
-       loaded[row.result_key] = {
-  statut: row.statut_t1 || "",
-  score: row.score_t1 != null ? String(row.score_t1) : "",
-  voix: row.voix_t1 != null ? String(row.voix_t1) : "",
-  tour: "T1",
-  statut_t2: row.statut_t2 || "",
-  score_t2: row.score_t2 != null ? String(row.score_t2) : "",
-  voix_t2: row.voix_t2 != null ? String(row.voix_t2) : "",
-};
+      if (!row.result_key) return;
+      if (row.result_key.startsWith("cr|")) {
+        // Résultat direct d'un CR
+        const nomNorm = row.result_key.replace("cr|", "");
+        crUpdates.push({
+          nomNorm,
+          statut: row.statut_t1 || "",
+          s1: row.score_t1 != null ? parseFloat(row.score_t1) : null,
+          statut_t2: row.statut_t2 || "",
+          s2: row.score_t2 != null ? parseFloat(row.score_t2) : null,
+        });
+      } else {
+        // Résultat d'une liste commune
+        loaded[row.result_key] = {
+          statut: row.statut_t1 || "",
+          score: row.score_t1 != null ? String(row.score_t1) : "",
+          voix: row.voix_t1 != null ? String(row.voix_t1) : "",
+          tour: "T1",
+          statut_t2: row.statut_t2 || "",
+          score_t2: row.score_t2 != null ? String(row.score_t2) : "",
+          voix_t2: row.voix_t2 != null ? String(row.voix_t2) : "",
+        };
       }
     });
     setListeResults(loaded);
+    if (crUpdates.length > 0) {
+      const norm = s => s.toLowerCase().trim()
+        .replace(/[-\s]+/g, " ")
+        .replace(/[éèê]/g,"e").replace(/[à]/g,"a")
+        .replace(/[ü]/g,"u").replace(/[ô]/g,"o")
+        .replace(/[î]/g,"i").replace(/[ç]/g,"c")
+        .replace(/[ë]/g,"e").replace(/[â]/g,"a")
+        .replace(/[û]/g,"u");
+      setCrList(prev => prev.map(cr => {
+        const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
+        if (match && match.statut) {
+          return {
+            ...cr,
+            statut: match.statut,
+            s1: match.s1 !== null ? match.s1 : cr.s1,
+            s2: match.s2 !== null ? match.s2 : cr.s2,
+          };
+        }
+        return cr;
+      }));
+    }
   };
   loadFromSupabase();
 }, []);
