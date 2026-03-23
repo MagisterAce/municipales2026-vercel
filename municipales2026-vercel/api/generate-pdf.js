@@ -64,18 +64,18 @@ function buildFallbackAnalysis(data) {
   );
 
   return {
-    titre: 'Note d\'analyse — Résultats municipaux 2026',
-    sous_titre: 'Groupe Socialiste, Place Publique & Apparentés · Conseil Régional Nouvelle-Aquitaine',
+    titre: 'Note d\'analyse - Résultats municipaux 2026',
+    sous_titre: 'Groupe Socialiste, Place Publique & Apparentés - Conseil Régional Nouvelle-Aquitaine',
     resume_executif: [
       `Sur ${stats.total || 0} conseillers régionaux suivis, ${totalElus} ont remporté leur élection (${stats.e1 || 0} dès le 1er tour), ${totalQual} sont qualifiés pour le 2nd tour et ${totalDef} ont été battus.`,
       `Le groupe PS/PP et apparentés confirme son ancrage territorial en Nouvelle-Aquitaine avec ${blocsPSPP ? (blocsPSPP.victoires_1t || 0) + (blocsPSPP.victoires_2t || 0) : totalElus} victoires directes et ${blocsPSPP ? (blocsPSPP.qualifies_2t || 0) : totalQual} qualifications pour le second tour.`,
       `${communes.length || 0} communes clés ont déjà des résultats enregistrés dans l\'application de suivi.`,
     ],
     elus_par_dept: deptsSorted.slice(0, 12).map(d => ({
-      dept: `${d.dept} — ${d.departement}`,
+      dept: `${d.dept} - ${d.departement}`,
       elus: elusByDept[d.dept] || [],
       qualifies: qualByDept[d.dept] || [],
-      stats: `${(d.victoires_1t || 0) + (d.victoires_2t || 0)} élu·e·s · ${d.qualifies_2t || 0} qualifié·e·s · ${d.defaites || 0} défaites`,
+      stats: `${(d.victoires_1t || 0) + (d.victoires_2t || 0)} elus - ${d.qualifies_2t || 0} qualifies - ${d.defaites || 0} défaites`,
     })),
     analyse_blocs: blocs.filter(b => (b.engages || 0) > 0).map(b => ({
       bloc: b.bloc,
@@ -85,7 +85,7 @@ function buildFallbackAnalysis(data) {
       defaites: (b.defaites_1t || 0) + (b.defaites_2t || 0),
     })),
     points_attention: [
-      totalQual > 0 ? `${totalQual} conseiller·ère·s sont encore en lice pour le 2nd tour — mobilisation nécessaire dans les circonscriptions concernées.` : null,
+      totalQual > 0 ? `${totalQual} conseillers sont encore en lice pour le 2nd tour - mobilisation nécessaire dans les circonscriptions concernées.` : null,
       'Vérifier les communes à fort enjeu encore sans résultat saisi dans l\'application.',
       'Actualiser la note après le 2nd tour pour une synthèse définitive.',
     ].filter(Boolean),
@@ -129,8 +129,8 @@ FORMAT JSON STRICT (sans balises markdown) :
   "titre": "string",
   "sous_titre": "string", 
   "resume_executif": ["string x3"],
-  "faits_marquants": ["string x4 — faits politiques saillants avec noms"],
-  "elus_par_dept": [{"dept": "XX — Nom", "elus": ["Nom (Commune)"], "qualifies": ["Nom (Commune)"], "stats": "string"}],
+  "faits_marquants": ["string x4 - faits politiques saillants avec noms"],
+  "elus_par_dept": [{"dept": "XX - Nom", "elus": ["Nom (Commune)"], "qualifies": ["Nom (Commune)"], "stats": "string"}],
   "analyse_blocs": [{"bloc": "string", "engages": 0, "elus": 0, "qualifies": 0, "defaites": 0}],
   "points_attention": ["string x3"]
 }`;
@@ -208,7 +208,7 @@ async function buildPdf(analysis, meta = {}) {
     page.drawText('MUNICIPALES 2026', {
       x: margin, y: H - 22, size: 13, font: fBold, color: C.blanc,
     });
-    page.drawText('Groupe Socialiste, Place Publique & Apparentés · Nouvelle-Aquitaine', {
+    page.drawText('Groupe Socialiste, Place Publique & Apparentés - Nouvelle-Aquitaine', {
       x: margin, y: H - 38, size: 8, font: fReg, color: rgb(1, 0.85, 0.92),
     });
     // Date à droite
@@ -246,7 +246,7 @@ async function buildPdf(analysis, meta = {}) {
     const lines = wrapText(text, font, size, contentW - indent - bOff);
     lines.forEach((line, i) => {
       ensureY(leading);
-      if (bullet && i === 0) page.drawText('•', { x: margin + indent, y, size, font, color: C.rose });
+      if (bullet && i === 0) page.drawText('-', { x: margin + indent, y, size, font, color: C.rose });
       page.drawText(line, { x: margin + indent + bOff, y, size, font, color });
       y -= leading;
     });
@@ -288,7 +288,7 @@ async function buildPdf(analysis, meta = {}) {
   // Titre principal
   ensureY(50);
   y -= 4;
-  page.drawText(analysis.titre || 'Note d\'analyse — Résultats municipaux 2026', {
+  page.drawText(analysis.titre || 'Note d\'analyse - Résultats municipaux 2026', {
     x: margin, y, size: 16, font: fBold, color: C.noir,
   });
   y -= 20;
@@ -331,7 +331,7 @@ async function buildPdf(analysis, meta = {}) {
     ensureY(38);
     // Ligne bloc
     page.drawText(b.bloc, { x: margin, y, size: 9, font: fBold, color: C.noir });
-    const engStr = `${b.engages} engagé·e·s`;
+    const engStr = `${b.engages} engages`;
     const engW = fReg.widthOfTextAtSize(engStr, 8);
     page.drawText(engStr, { x: margin + contentW - engW, y, size: 8, font: fReg, color: C.grisClair });
     y -= 13;
@@ -342,7 +342,7 @@ async function buildPdf(analysis, meta = {}) {
     const vRatio = b.engages > 0 ? (b.elus / b.engages) : 0;
     page.drawRectangle({ x: margin, y: y - bH, width: bW, height: bH, color: rgb(0.88,0.94,0.89), borderRadius: 2 });
     if (vRatio > 0) page.drawRectangle({ x: margin, y: y - bH, width: Math.round(bW * vRatio), height: bH, color: C.vert, borderRadius: 2 });
-    page.drawText(`✓ ${b.elus} élus`, { x: margin + 4, y: y - bH + 2, size: 7, font: fBold, color: C.blanc });
+    page.drawText(`+ ${b.elus} élus`, { x: margin + 4, y: y - bH + 2, size: 7, font: fBold, color: C.blanc });
     // Qualifiés
     const qRatio = b.engages > 0 ? (b.qualifies / b.engages) : 0;
     page.drawRectangle({ x: margin + bW + 6, y: y - bH, width: bW, height: bH, color: rgb(0.95,0.90,0.83), borderRadius: 2 });
@@ -352,7 +352,7 @@ async function buildPdf(analysis, meta = {}) {
     const dRatio = b.engages > 0 ? (b.defaites / b.engages) : 0;
     page.drawRectangle({ x: margin + (bW + 6) * 2, y: y - bH, width: bW, height: bH, color: rgb(0.95,0.88,0.88), borderRadius: 2 });
     if (dRatio > 0) page.drawRectangle({ x: margin + (bW + 6) * 2, y: y - bH, width: Math.round(bW * dRatio), height: bH, color: C.rouge, borderRadius: 2 });
-    page.drawText(`✗ ${b.defaites} déf.`, { x: margin + (bW + 6) * 2 + 4, y: y - bH + 2, size: 7, font: fBold, color: C.blanc });
+    page.drawText(`- ${b.defaites} déf.`, { x: margin + (bW + 6) * 2 + 4, y: y - bH + 2, size: 7, font: fBold, color: C.blanc });
 
     y -= bH + 10;
   });
@@ -368,11 +368,11 @@ async function buildPdf(analysis, meta = {}) {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PAGE 2 — CR par département
+  // PAGE 2 - CR par département
   // ═══════════════════════════════════════════════════════════════════════════
   newPage();
   y -= 4;
-  page.drawText('RÉSULTATS PAR DÉPARTEMENT — CONSEILLERS RÉGIONAUX', {
+  page.drawText('RÉSULTATS PAR DÉPARTEMENT - CONSEILLERS RÉGIONAUX', {
     x: margin, y, size: 13, font: fBold, color: C.noir,
   });
   y -= 22;
@@ -411,12 +411,12 @@ async function buildPdf(analysis, meta = {}) {
 
     // Élus
     if (d.elus.length > 0) {
-      page.drawText('Élu·e·s :', { x: baseX + 6, y: localY, size: 7.5, font: fBold, color: C.vert });
+      page.drawText('Elus :', { x: baseX + 6, y: localY, size: 7.5, font: fBold, color: C.vert });
       localY -= 12;
       d.elus.forEach(nom => {
         const lines = wrapText(nom, fReg, 8, colW - 18);
         lines.forEach(line => {
-          page.drawText('✓', { x: baseX + 8, y: localY, size: 7, font: fBold, color: C.vert });
+          page.drawText('v', { x: baseX + 8, y: localY, size: 7, font: fBold, color: C.vert });
           page.drawText(line, { x: baseX + 18, y: localY, size: 8, font: fReg, color: C.noir });
           localY -= 12;
         });
@@ -425,12 +425,12 @@ async function buildPdf(analysis, meta = {}) {
 
     // Qualifiés
     if (d.qualifies.length > 0) {
-      page.drawText('Qualifié·e·s 2T :', { x: baseX + 6, y: localY, size: 7.5, font: fBold, color: C.orange });
+      page.drawText('Qualifies 2T :', { x: baseX + 6, y: localY, size: 7.5, font: fBold, color: C.orange });
       localY -= 12;
       d.qualifies.forEach(nom => {
         const lines = wrapText(nom, fReg, 8, colW - 18);
         lines.forEach(line => {
-          page.drawText('→', { x: baseX + 8, y: localY, size: 7, font: fBold, color: C.orange });
+          page.drawText('>', { x: baseX + 8, y: localY, size: 7, font: fBold, color: C.orange });
           page.drawText(line, { x: baseX + 18, y: localY, size: 8, font: fReg, color: C.noir });
           localY -= 12;
         });
@@ -449,7 +449,7 @@ async function buildPdf(analysis, meta = {}) {
 
   // ── Pied de page sur toutes les pages ─────────────────────────────────────
   const pages = pdfDoc.getPages();
-  const genStr = `Généré le ${new Date(meta.generatedAt || Date.now()).toLocaleString('fr-FR')} · Application Municipales 2026 NA`;
+  const genStr = `Généré le ${new Date(meta.generatedAt || Date.now()).toLocaleString('fr-FR')} - Application Municipales 2026 NA`;
   pages.forEach((pg, i) => {
     const pgW = pg.getWidth();
     pg.drawLine({
