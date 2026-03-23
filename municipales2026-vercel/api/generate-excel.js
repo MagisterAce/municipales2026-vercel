@@ -158,7 +158,7 @@ export default async function handler(req, res) {
             li===0 ? (com.pop||null) : null,
             li===0 ? (com.maire||null) : null,
             li===0 ? (com.cr||null) : null,
-            liste.nom||null, liste.nuance||null, liste.tete||null,
+            liste.libelle||null, liste.nuance||null, liste.tete||null,
             rdata.statut_t1||null, rdata.voix_t1??null, rdata.score_t1??null,
             rdata.statut_t2||null, rdata.voix_t2??null, rdata.score_t2??null,
           ]);
