@@ -1804,10 +1804,6 @@ if (match && match.statut && cr.statut === "Candidat") {
                     }}
                   >
                     ↓ Note d'analyse PDF
-                    <span style={{
-                      background:"rgba(255,255,255,.15)",color:"#fff",fontSize:"8px",
-                      padding:"2px 6px",borderRadius:3,letterSpacing:"1px"
-                    }}>CLAUDE</span>
                   </button>
                   <button
                     onClick={exportExcel}
