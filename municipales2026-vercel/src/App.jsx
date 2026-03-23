@@ -1071,13 +1071,24 @@ if (match && match.statut && cr.statut === "Candidat") {
     document.head.appendChild(s);
   }, []);
 
-  const exportExcel = async () => {
+const exportExcel = async () => {
     try {
+      const liste_results_api = {};
+      Object.entries(listeResults).forEach(([k, v]) => {
+        liste_results_api[k] = {
+          statut_t1: v.statut || v.statut_t1 || null,
+          score_t1: v.score ? parseFloat(v.score) : (v.score_t1 ? parseFloat(v.score_t1) : null),
+          voix_t1: v.voix ? parseInt(v.voix) : (v.voix_t1 ? parseInt(v.voix_t1) : null),
+          statut_t2: v.statut_t2 || null,
+          score_t2: v.score_t2 ? parseFloat(v.score_t2) : null,
+          voix_t2: v.voix_t2 ? parseInt(v.voix_t2) : null,
+        };
+      });
       const payload = {
         depts: DEPTS,
         communes: COMMUNES,
         listes_data: LISTES_DATA,
-        liste_results: listeResults,
+        liste_results: liste_results_api,
         cr_list: crList,
       };
       const response = await fetch('/api/generate-excel', {
