@@ -1071,8 +1071,36 @@ if (match && match.statut && cr.statut === "Candidat") {
     document.head.appendChild(s);
   }, []);
 
-  const exportExcel = () => {
-    const XL = window.XLSX;
+  const exportExcel = async () => {
+    try {
+      const payload = {
+        depts: DEPTS,
+        communes: COMMUNES,
+        listes_data: LISTES_DATA,
+        liste_results: listeResults,
+        cr_list: crList,
+      };
+      const response = await fetch('/api/generate-excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Erreur génération Excel');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toLocaleDateString('fr-FR').replace(/\//g,'-');
+      a.href = url;
+      a.download = `Municipales2026_NA_Resultats_${date}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Impossible de générer le fichier Excel : ' + err.message);
+    }
+  };
     if (!XL) { alert("Librairie Excel en cours de chargement, réessayez dans 2 secondes."); return; }
     const wb = XL.utils.book_new();
 
