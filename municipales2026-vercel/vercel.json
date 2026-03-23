@@ -3,6 +3,9 @@
   "functions": {
     "api/generate-pdf.js": {
       "maxDuration": 60
+    },
+    "api/generate-excel.js": {
+      "maxDuration": 30
     }
   }
 }
