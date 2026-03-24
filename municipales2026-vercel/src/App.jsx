@@ -1221,7 +1221,8 @@ const exportExcel = async () => {
           })),
       };
 
-      const response = await fetch('/api/generate-pdf', {
+      const response = await fetch('https://oqlfodtesrrbqlawrgez.supabase.co/functions/v1/generate-pdf', {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
