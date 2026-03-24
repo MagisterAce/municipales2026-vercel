@@ -211,7 +211,7 @@ const CR_DATA = [
 {id:"c149",dept:"79",nom:"Guillaume Riou",groupe:"PS/PP",commune:"Marigny",mandat:"Adjoint maire Marigny",perspective:"Candidat tête de liste",statut:"Candidat",s1:null,s2:null},
 {id:"c150",dept:"79",nom:"Emmanuel Charre",groupe:"PS/PP",commune:"Thouars",mandat:"Adjoint maire Thouars",perspective:"Candidat (majorité)",statut:"Candidat",s1:null,s2:null},
 {id:"c151",dept:"79",nom:"Christelle Chassagne",groupe:"PS/PP",commune:"Niort",mandat:"Adjointe maire Niort",perspective:"Liste maire sortant Baloge",statut:"Candidat",s1:null,s2:null},
-{id:"c152",dept:"79",nom:"Pascal Duforestelle",groupe:"PS/PP",commune:"Magné",mandat:"Pas de mandat local",perspective:"Candidat liste maire sortant Magné",statut:"Candidat",s1:null,s2:null},
+{id:"c152",dept:"79",nom:"Pascal Duforestel",groupe:"PS/PP",commune:"Magné",mandat:"Pas de mandat local",perspective:"Candidat liste maire sortant Magné",statut:"Candidat",s1:null,s2:null},
 {id:"c153",dept:"79",nom:"Nathalie Lanzi",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c154",dept:"79",nom:"Nicolas Gamache",groupe:"EELV",commune:"Les Châteliers",mandat:"Maire des Châteliers",perspective:"Candidat tête de liste",statut:"Candidat",s1:null,s2:null},
 {id:"c155",dept:"79",nom:"Armelle Cassin",groupe:"Centre/Indé",commune:"Argentonnay",mandat:"Maire d'Argentonnay",perspective:"Pas de candidature (ne se représente pas)",statut:"Non-candidat",s1:null,s2:null},
