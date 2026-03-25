@@ -1003,9 +1003,11 @@ useEffect(() => {
       setCrList(prev => prev.map(cr => {
         const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
 if (match && match.statut) {
+  const statutFinal = match.statut_t2 || match.statut;
   return {
     ...cr,
-    statut: match.statut,
+    statut: statutFinal,
+    statut_t2: match.statut_t2 || "",
     s1: match.s1 !== null ? match.s1 : cr.s1,
     s2: match.s2 !== null ? match.s2 : cr.s2,
   };
