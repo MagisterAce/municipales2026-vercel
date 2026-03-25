@@ -125,7 +125,7 @@ const CR_DATA = [
 {id:"c067",dept:"33",nom:"Lydia Héraud",groupe:"PS/PP",commune:"Val de Livenne",mandat:"Présidente CdC estuaire – adjointe Val de Livenne",perspective:"Liste maire sortant Val de Livenne",statut:"Candidat",s1:null,s2:null},
 {id:"c068",dept:"33",nom:"Sandrine Hernandez",groupe:"PS/PP",commune:"Saint André de Cubzac",mandat:"Adjointe maire St André de Cubzac",perspective:"Ne se représente pas",statut:"Non-candidat",s1:null,s2:null},
 {id:"c069",dept:"33",nom:"Claire Jacquinet",groupe:"PS/PP",commune:"/",mandat:"/",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c070",dept:"33",nom:"Nathalie Le Yondre",groupe:"PS",commune:"Audenge",mandat:"Maire d'Audenge",perspective:"Tête de liste PS Audenge (maire sortante)",statut:"Candidat",s1:null,s2:null},
+{id:"c070",dept:"33",nom:"Nathalie Le Yondre",groupe:"PS/PP",commune:"Audenge",mandat:"Maire d'Audenge",perspective:"Tête de liste PS Audenge (maire sortante)",statut:"Candidat",s1:null,s2:null},
 {id:"c071",dept:"33",nom:"Virginie Lenoir",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c072",dept:"33",nom:"Baptiste Maurin",groupe:"PS/PP",commune:"Bordeaux",mandat:"CM adjoint Bordeaux",perspective:"Liste Pierre Hurmic Bordeaux",statut:"Candidat",s1:null,s2:null},
 {id:"c073",dept:"33",nom:"Henri Sabarot",groupe:"PS/PP",commune:"/",mandat:"/",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
