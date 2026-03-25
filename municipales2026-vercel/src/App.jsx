@@ -1002,7 +1002,7 @@ useEffect(() => {
         .replace(/[û]/g,"u");
       setCrList(prev => prev.map(cr => {
         const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
-if (match && match.statut && cr.statut === "Candidat") {
+if (match && match.statut) {
   return {
     ...cr,
     statut: match.statut,
