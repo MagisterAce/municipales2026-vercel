@@ -912,11 +912,7 @@ const saveListe = async () => {
   useEffect(() => {
     if (Object.keys(listeResults).length === 0) return;
     setCrList(prev => prev.map(cr => {
-      if (cr.statut !== "Candidat" && cr.statut !== "") {
-        // Déjà mis à jour manuellement — on ne force pas l'écrasement
-        // sauf si le CR est encore "Candidat"
-        if (cr.statut !== "Candidat") return cr;
-      }
+
       if (!cr.commune || cr.commune === "/" || cr.commune === "") return cr;
       // Trouver la commune correspondante dans COMMUNES
       const commune = COMMUNES.find(c => {
