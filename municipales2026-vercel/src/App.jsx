@@ -1001,7 +1001,7 @@ useEffect(() => {
       setCrList(prev => prev.map(cr => {
         const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
         if (cr.statut === "Non-candidat") return cr;
-        if (match && match.statut) {
+        if (match && (match.statut || match.statut_t2)) {
           return {
             ...cr,
             statut: match.statut_t2 && match.statut_t2 !== "" ? match.statut_t2 : match.statut,
