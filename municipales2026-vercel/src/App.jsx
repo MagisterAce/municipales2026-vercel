@@ -18,7 +18,7 @@ const GC = {
   "PCF":"#b71c1c","PC":"#b71c1c","PRG":"#e91e63",
   "DVG":"#e53935","UG":"#E8186D",
   // Écolo
-  "EELV":"#2e7d32","Les Verts":"#2e7d32","Verts":"#2e7d32",
+  "EELV":"#2e7d32","Écologistes":"#2e7d32","Verts":"#2e7d32",
   "Écologiste":"#388e3c","Écologistes":"#388e3c",
   // Gauche radicale
   "LFI":"#8e24aa",
@@ -133,11 +133,11 @@ const CR_DATA = [
 {id:"c075",dept:"33",nom:"Frédéric Mellier",groupe:"PCF",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c076",dept:"33",nom:"Isabelle Taris",groupe:"PCF",commune:"Bègles",mandat:"CM Bègles",perspective:"Liste maire sortante Ste-Foy-la-Grande",statut:"Candidat",s1:null,s2:null},
 {id:"c077",dept:"33",nom:"Francis Wilsius",groupe:"PRG",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c078",dept:"33",nom:"Vital Baudé",groupe:"Les Verts",commune:"Arcachon",mandat:"Pas de mandat local",perspective:"Tête de liste Arcachon (Verts)",statut:"Candidat",s1:null,s2:null},
-{id:"c079",dept:"33",nom:"Anne-Laure Bedu",groupe:"Les Verts",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
+{id:"c078",dept:"33",nom:"Vital Baudé",groupe:"Écologistes",commune:"Arcachon",mandat:"Pas de mandat local",perspective:"Tête de liste Arcachon (Verts)",statut:"Candidat",s1:null,s2:null},
+{id:"c079",dept:"33",nom:"Anne-Laure Bedu",groupe:"Écologistes",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c080",dept:"33",nom:"Karfa Diallo",groupe:"Écologistes",commune:"Bordeaux",mandat:"Pas de mandat local",perspective:"Liste Nordine Raymond (LFI) Bordeaux",statut:"Candidat",s1:null,s2:null},
-{id:"c081",dept:"33",nom:"Émilie Sarrazin",groupe:"Les Verts",commune:"Gradignan",mandat:"Pas de mandat local",perspective:"Tête de liste Gradignan PS/PP/Verts",statut:"Candidat",s1:null,s2:null},
-{id:"c082",dept:"33",nom:"Christine Seguinau",groupe:"Les Verts",commune:"Eysines",mandat:"9ème adjointe Eysines",perspective:"Liste Christine Bost Eysines (sortante)",statut:"Candidat",s1:null,s2:null},
+{id:"c081",dept:"33",nom:"Émilie Sarrazin",groupe:"Écologistes",commune:"Gradignan",mandat:"Pas de mandat local",perspective:"Tête de liste Gradignan PS/PP/Verts",statut:"Candidat",s1:null,s2:null},
+{id:"c082",dept:"33",nom:"Christine Seguinau",groupe:"Écologistes",commune:"Eysines",mandat:"9ème adjointe Eysines",perspective:"Liste Christine Bost Eysines (sortante)",statut:"Candidat",s1:null,s2:null},
 {id:"c083",dept:"33",nom:"Florent Boudie",groupe:"RE",commune:"Libourne",mandat:"Député Libournais",perspective:"Pas de candidature municipale",statut:"Non-candidat",s1:null,s2:null},
 {id:"c084",dept:"33",nom:"Véronique Hammerer",groupe:"RE",commune:"/",mandat:"Pas de mandat",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c085",dept:"33",nom:"Christelle Lapouge",groupe:"PRG",commune:"Salleboeuf",mandat:"Adjointe maire Salleboeuf",perspective:"Candidate Salleboeuf (majorité)",statut:"Candidat",s1:null,s2:null},
@@ -224,10 +224,10 @@ const CR_DATA = [
 {id:"c161",dept:"86",nom:"Laurence Vallois-Rouet",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat actuel",perspective:"A retiré sa candidature liste PS",statut:"Non-candidat",s1:null,s2:null},
 {id:"c162",dept:"86",nom:"Reine-Marie Waszak",groupe:"PS/PP",commune:"Montmorillon",mandat:"CM Montmorillon – 4ème VP enfance-jeunesse",perspective:"Pressentie liste Montmorillon (non éligible)",statut:"Non-candidat",s1:null,s2:null},
 {id:"c163",dept:"86",nom:"Françoise Ballet-Blu",groupe:"RE",commune:"/",mandat:"Ancienne députée 2017-2022",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c164",dept:"86",nom:"Christine Graval",groupe:"Les Verts",commune:"/",mandat:"Pas de mandat actuel",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
+{id:"c164",dept:"86",nom:"Christine Graval",groupe:"Écologistes",commune:"/",mandat:"Pas de mandat actuel",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c165",dept:"86",nom:"Marion Latus",groupe:"RN",commune:"Châtellerault",mandat:"Ancienne CM Châtellerault",perspective:"Liste RN Châtellerault",statut:"Candidat",s1:null,s2:null},
 {id:"c166",dept:"86",nom:"Ronan Nedelec",groupe:"LR",commune:"Mignaloux-Beauvoir",mandat:"Président Fédération LR 86",perspective:"Candidat Mignaloux-Beauvoir",statut:"Candidat",s1:null,s2:null},
-{id:"c167",dept:"86",nom:"Thierry Perreau",groupe:"Les Verts",commune:"Ternay",mandat:"CM 1er adjoint Ternay",perspective:"Candidat (majorité)",statut:"Candidat",s1:null,s2:null},
+{id:"c167",dept:"86",nom:"Thierry Perreau",groupe:"Écologistes",commune:"Ternay",mandat:"CM 1er adjoint Ternay",perspective:"Candidat (majorité)",statut:"Candidat",s1:null,s2:null},
 {id:"c168",dept:"86",nom:"Éric Soulat",groupe:"RN",commune:"Archigny",mandat:"Pas de mandat actuel",perspective:"Candidat tête de liste Archigny",statut:"Candidat",s1:null,s2:null},
 /* ── 87 HAUTE-VIENNE (6) ── */
 {id:"c169",dept:"87",nom:"Andréa Brouille",groupe:"PS/PP",commune:"Bessines-sur-Gartempe",mandat:"Maire Bessines-sur-Gartempe",perspective:"Tête de liste (maire sortante)",statut:"Candidat",s1:null,s2:null},
@@ -263,7 +263,7 @@ const COMMUNES = [
   {nom:"Pessac",dept:"33",pop:67000,maire:"F. Raynal (DVD)",couleur_pol:"DVD",enjeu:"très fort",analyse:"200 voix d'écart 2020. UG Saint-Pasteur (PS) candidat. Bascule possible.",cr_lies:[]},
   {nom:"Villenave d'Ornon",dept:"33",pop:42000,maire:"M. Poignonnec (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"CR Anfray cheffe de file UG. Scrutin ouvert.",cr_lies:[{nom:"S. Anfray",groupe:"PS"}]},
   {nom:"Langon",dept:"33",pop:7500,maire:"J. Guillem (PS)",couleur_pol:"PS",enjeu:"fort",analyse:"CR Guillem maire sortant. Face à sénatrice Lassarade (LR) + liste RN. Triangulaire.",cr_lies:[{nom:"J. Guillem",groupe:"PS"}]},
-  {nom:"Arcachon",dept:"33",pop:10000,maire:"Y. Foulon (LR)",couleur_pol:"LR",enjeu:"moyen",analyse:"CR Foulon (LR) vs CR Lamara (RN). Duel de CR.",cr_lies:[{nom:"Y. Foulon",groupe:"LR"},{nom:"L. Lamara",groupe:"RN"},{nom:"V. Baudé",groupe:"Les Verts"}]},
+  {nom:"Arcachon",dept:"33",pop:10000,maire:"Y. Foulon (LR)",couleur_pol:"LR",enjeu:"moyen",analyse:"CR Foulon (LR) vs CR Lamara (RN). Duel de CR.",cr_lies:[{nom:"Y. Foulon",groupe:"LR"},{nom:"L. Lamara",groupe:"RN"},{nom:"V. Baudé",groupe:"Écologistes"}]},
   {nom:"Cenon",dept:"33",pop:27000,maire:"J.-F. Egron (PS)",couleur_pol:"PS",enjeu:"moyen",analyse:"CR Astier sur liste sortante. Gauche solide.",cr_lies:[{nom:"D. Astier",groupe:"PS"}]},
   {nom:"Lormont",dept:"33",pop:24000,maire:"Ph. Quertinmont (PS)",couleur_pol:"PS",enjeu:"moyen",analyse:"CR Boultam 2ème sur liste. Gauche solide.",cr_lies:[{nom:"Y. Boultam",groupe:"PS"}]},
   {nom:"Mont-de-Marsan",dept:"40",pop:34000,maire:"C. Dayot (DVD)",couleur_pol:"DVD",enjeu:"très fort",analyse:"Triangulaire Dayot/Darrieussecq (MoDem)/Dutin (PS). CR Lafargue + Baché sur liste PS.",cr_lies:[{nom:"M.-L. Lafargue",groupe:"PS/PP"},{nom:"A. Baché",groupe:"PCF"}]},
@@ -649,7 +649,7 @@ function NaMap({crList, selDept, onSelect}) {
     const m = {};
     DEPTS.forEach(d => {
       const crs = crList.filter(c=>c.dept===d.code);
-      const left = crs.filter(c=>["PS/PP","PS","PP","PCF","PC","PRG","EELV","Les Verts","Écologiste","LFI","DVG"].includes(c.groupe));
+      const left = crs.filter(c=>["PS/PP","PS","PP","PCF","PC","PRG","EELV","Écologistes","Écologiste","LFI","DVG"].includes(c.groupe));
       const cands = left.filter(c=>c.statut==="Candidat");
       const elus = left.filter(c=>c.statut.startsWith("Élu"));
       m[d.code] = {total:crs.length, left:left.length, cands:cands.length, elus:elus.length};
@@ -1019,7 +1019,7 @@ if (match && match.statut && cr.statut === "Candidat") {
 
   const stats = useMemo(() => {
     const pspp = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG"].includes(c.groupe));
-    const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG","EELV","Les Verts","Écologiste","Écologistes","DVG","LFI"].includes(c.groupe));
+    const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG","EELV","Écologistes","Écologiste","Écologistes","DVG","LFI"].includes(c.groupe));
     const opp  = crList.filter(c => ["LR","RN","Centre/Indé","Renaissance","RE","Modem","UDI","DVD"].includes(c.groupe));
     return {
       total:crList.length, pspp:pspp.length, maj:maj.length, opp:opp.length,
@@ -1126,7 +1126,7 @@ const exportExcel = async () => {
         "PS / PP / PCF / PRG": ["PS/PP","PS","PP","PCF","PC","PRG"],
         "DVG": ["DVG"],
         "LFI": ["LFI"],
-        "Écologistes / Verts": ["EELV","Les Verts","Écologiste","Écologistes"],
+        "Écologistes / Verts": ["EELV","Écologistes","Écologiste","Écologistes"],
         "Centre / UDI / Horizons": ["Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","DVC"],
         "LR / DVD": ["LR","DVD"],
         "RN / EXD": ["RN","EXD","UXD"],
@@ -1329,7 +1329,7 @@ const exportExcel = async () => {
                 const deptCRs = crList.filter(c => c.dept === d.code);
                 const isOpen = !!openDepts[d.code];
                 const groupesPresents = [...new Set(deptCRs.map(c=>c.groupe))].sort((a,b)=>{
-                  const order=["PS/PP","PS","PP","PCF","PRG","EELV","Les Verts","DVG","LFI","Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","LR","DVD","RN","Société Civile","SE"];
+                  const order=["PS/PP","PS","PP","PCF","PRG","EELV","Écologistes","DVG","LFI","Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","LR","DVD","RN","Société Civile","SE"];
                   return (order.indexOf(a)>=0?order.indexOf(a):99)-(order.indexOf(b)>=0?order.indexOf(b):99);
                 });
                 const elus = deptCRs.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Victoire 2nd Tour"||c.statut==="Élu 1er tour"||c.statut==="Élu 2nd tour").length;
