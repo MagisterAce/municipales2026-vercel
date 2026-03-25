@@ -914,7 +914,7 @@ const saveListe = async () => {
     setCrList(prev => prev.map(cr => {
       if (cr.statut === "Non-candidat") return cr;
       if (cr.statut === "Victoire 2nd Tour" || cr.statut === "Défaite 2nd Tour") return cr;
-
+      if (cr.statut_t2 && cr.statut_t2 !== "") return cr;
       if (!cr.commune || cr.commune === "/" || cr.commune === "") return cr;
       // Trouver la commune correspondante dans COMMUNES
       const commune = COMMUNES.find(c => {
