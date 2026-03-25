@@ -138,7 +138,7 @@ const CR_DATA = [
 {id:"c080",dept:"33",nom:"Karfa Diallo",groupe:"Écologistes",commune:"Bordeaux",mandat:"Pas de mandat local",perspective:"Liste Nordine Raymond (LFI) Bordeaux",statut:"Candidat",s1:null,s2:null},
 {id:"c081",dept:"33",nom:"Émilie Sarrazin",groupe:"Écologistes",commune:"Gradignan",mandat:"Pas de mandat local",perspective:"Tête de liste Gradignan PS/PP/Verts",statut:"Candidat",s1:null,s2:null},
 {id:"c082",dept:"33",nom:"Christine Seguinau",groupe:"Écologistes",commune:"Eysines",mandat:"9ème adjointe Eysines",perspective:"Liste Christine Bost Eysines (sortante)",statut:"Candidat",s1:null,s2:null},
-{id:"c083",dept:"33",nom:"Florent Boudie",groupe:"RE",commune:"Libourne",mandat:"Député Libournais",perspective:"Pas de candidature municipale",statut:"Non-candidat",s1:null,s2:null},
+{id:"c083",dept:"33",nom:"Florent Boudié",groupe:"RE",commune:"Libourne",mandat:"Député Libournais",perspective:"Pas de candidature municipale",statut:"Non-candidat",s1:null,s2:null},
 {id:"c084",dept:"33",nom:"Véronique Hammerer",groupe:"RE",commune:"/",mandat:"Pas de mandat",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c085",dept:"33",nom:"Christelle Lapouge",groupe:"PRG",commune:"Salleboeuf",mandat:"Adjointe maire Salleboeuf",perspective:"Candidate Salleboeuf (majorité)",statut:"Candidat",s1:null,s2:null},
 {id:"c086",dept:"33",nom:"Fabien Robert",groupe:"Modem",commune:"Bordeaux",mandat:"CM d'opposition Bordeaux",perspective:"Liste Thomas Cazenave Bordeaux",statut:"Candidat",s1:null,s2:null},
