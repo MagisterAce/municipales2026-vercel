@@ -133,7 +133,7 @@ const CR_DATA = [
 {id:"c075",dept:"33",nom:"Frédéric Mellier",groupe:"PCF",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c076",dept:"33",nom:"Isabelle Taris",groupe:"PCF",commune:"Bègles",mandat:"CM Bègles",perspective:"Liste maire sortante Ste-Foy-la-Grande",statut:"Candidat",s1:null,s2:null},
 {id:"c077",dept:"33",nom:"Francis Wilsius",groupe:"PRG",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c078",dept:"33",nom:"Vital Baudé",groupe:"Écologistes",commune:"Arcachon",mandat:"Pas de mandat local",perspective:"Tête de liste Arcachon (Verts)",statut:"Candidat",s1:null,s2:null},
+{id:"c078",dept:"33",nom:"Vital Baude",groupe:"Écologistes",commune:"Arcachon",mandat:"Pas de mandat local",perspective:"Tête de liste Arcachon (Verts)",statut:"Candidat",s1:null,s2:null},
 {id:"c079",dept:"33",nom:"Anne-Laure Bedu",groupe:"Écologistes",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c080",dept:"33",nom:"Karfa Diallo",groupe:"Écologistes",commune:"Bordeaux",mandat:"Pas de mandat local",perspective:"Liste Nordine Raymond (LFI) Bordeaux",statut:"Candidat",s1:null,s2:null},
 {id:"c081",dept:"33",nom:"Émilie Sarrazin",groupe:"Écologistes",commune:"Gradignan",mandat:"Pas de mandat local",perspective:"Tête de liste Gradignan PS/PP/Verts",statut:"Candidat",s1:null,s2:null},
