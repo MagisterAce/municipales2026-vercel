@@ -18,7 +18,7 @@ const GC = {
   "PCF":"#b71c1c","PC":"#b71c1c","PRG":"#e91e63",
   "DVG":"#e53935","UG":"#E8186D",
   // Écolo
-  "EELV":"#2e7d32","Écologistes":"#2e7d32","Verts":"#2e7d32",
+  "Écologistes":"#2e7d32","Écologistes":"#2e7d32","Verts":"#2e7d32",
   "Écologiste":"#388e3c","Écologistes":"#388e3c",
   // Gauche radicale
   "LFI":"#8e24aa",
@@ -68,8 +68,8 @@ const CR_DATA = [
 {id:"c014",dept:"17",nom:"Élise Laurent-Guégan",groupe:"PRG",commune:"Grand-Village-Plage",mandat:"/",perspective:"3ème liste Lemaire à Grand-Village-Plage",statut:"Candidat",s1:null,s2:null},
 {id:"c015",dept:"17",nom:"Jean-Philippe Plez",groupe:"PRG",commune:"La Rochelle",mandat:"Ancien 2ème adjoint La Rochelle",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c016",dept:"17",nom:"Brahim Jlalji",groupe:"PCF",commune:"La Rochelle",mandat:"/",perspective:"4ème liste Simoné La Rochelle",statut:"Candidat",s1:null,s2:null},
-{id:"c017",dept:"17",nom:"Katia Bourdin",groupe:"EELV",commune:"La Rochelle",mandat:"/",perspective:"15ème liste Simoné La Rochelle",statut:"Candidat",s1:null,s2:null},
-{id:"c018",dept:"17",nom:"Stéphane Trifiletti",groupe:"EELV",commune:"Port d'Envaux",mandat:"CM Port d'Envaux",perspective:"Ne se représente pas",statut:"Non-candidat",s1:null,s2:null},
+{id:"c017",dept:"17",nom:"Katia Bourdin",groupe:"Écologistes",commune:"La Rochelle",mandat:"/",perspective:"15ème liste Simoné La Rochelle",statut:"Candidat",s1:null,s2:null},
+{id:"c018",dept:"17",nom:"Stéphane Trifiletti",groupe:"Écologistes",commune:"Port d'Envaux",mandat:"CM Port d'Envaux",perspective:"Ne se représente pas",statut:"Non-candidat",s1:null,s2:null},
 {id:"c019",dept:"17",nom:"Marie-Line Cheminade",groupe:"UDI",commune:"Saintes",mandat:"1ère adjointe Saintes",perspective:"2ème liste Drapron à Saintes",statut:"Candidat",s1:null,s2:null},
 {id:"c020",dept:"17",nom:"Daniel Dartigolles",groupe:"Centre/Indé",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c021",dept:"17",nom:"David Labiche",groupe:"LR",commune:"Châtelaillon",mandat:"Adjoint maire Châtelaillon",perspective:"Liste maire sortant Villain",statut:"Candidat",s1:null,s2:null},
@@ -213,7 +213,7 @@ const CR_DATA = [
 {id:"c151",dept:"79",nom:"Christelle Chassagne",groupe:"PS/PP",commune:"Niort",mandat:"Adjointe maire Niort",perspective:"Liste maire sortant Baloge",statut:"Candidat",s1:null,s2:null},
 {id:"c152",dept:"79",nom:"Pascal Duforestel",groupe:"PS/PP",commune:"Magné",mandat:"Pas de mandat local",perspective:"Candidat liste maire sortant Magné",statut:"Candidat",s1:null,s2:null},
 {id:"c153",dept:"79",nom:"Nathalie Lanzi",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c154",dept:"79",nom:"Nicolas Gamache",groupe:"EELV",commune:"Les Châteliers",mandat:"Maire des Châteliers",perspective:"Candidat tête de liste",statut:"Candidat",s1:null,s2:null},
+{id:"c154",dept:"79",nom:"Nicolas Gamache",groupe:"Écologistes",commune:"Les Châteliers",mandat:"Maire des Châteliers",perspective:"Candidat tête de liste",statut:"Candidat",s1:null,s2:null},
 {id:"c155",dept:"79",nom:"Armelle Cassin",groupe:"Centre/Indé",commune:"Argentonnay",mandat:"Maire d'Argentonnay",perspective:"Pas de candidature (ne se représente pas)",statut:"Non-candidat",s1:null,s2:null},
 {id:"c156",dept:"79",nom:"Marie Jarry",groupe:"LR",commune:"Bressuire",mandat:"CM Bressuire",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c157",dept:"79",nom:"Olivier Guibert",groupe:"RN",commune:"Saint-Yzan-de-Soudiac (33)",mandat:"CM opposition St-Yzan",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
@@ -236,7 +236,7 @@ const CR_DATA = [
 {id:"c172",dept:"87",nom:"Thibault Bergeron",groupe:"PS/PP",commune:"Limoges",mandat:"CM opposition Limoges",perspective:"Liste Thierry Miguel (PS) Limoges",statut:"Candidat",s1:null,s2:null},
 {id:"c173",dept:"87",nom:"Alain Darbon",groupe:"PS/PP",commune:"St-Léonard-de-Noblat",mandat:"Maire St-Léonard-de-Noblat",perspective:"Tête de liste (maire sortant)",statut:"Candidat",s1:null,s2:null},
 {id:"c174",dept:"87",nom:"Catherine Bernardeau",groupe:"PCF",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c175",dept:"87",nom:"Jean-Louis Pagès",groupe:"EELV",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
+{id:"c175",dept:"87",nom:"Jean-Louis Pagès",groupe:"Écologistes",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c176",dept:"87",nom:"Guillaume Guérin",groupe:"LR",commune:"Limoges",mandat:"1er adjoint – Pdt Limoges Métropole",perspective:"Tête de liste LR Limoges",statut:"Candidat",s1:null,s2:null},
 {id:"c177",dept:"87",nom:"Marie-Ange Magne",groupe:"RE",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c178",dept:"87",nom:"Albin Freychet",groupe:"RN",commune:"Limoges",mandat:"Pas de mandat local",perspective:"Tête de liste RN Limoges",statut:"Candidat",s1:null,s2:null},
@@ -246,7 +246,7 @@ const CR_DATA = [
 const COMMUNES = [
   {nom:"Angoulême",dept:"16",pop:42000,maire:"X. Bonnefont (Horizons)",couleur_pol:"Centre",enjeu:"fort",analyse:"9 listes. Bonnefont favori. PS Manzanas + PP Mardikian.",cr_lies:[{nom:"M. Pinville",groupe:"PS/PP"}]},
   {nom:"Cognac",dept:"16",pop:18200,maire:"M. Berger (DVD)",couleur_pol:"LR",enjeu:"moyen",analyse:"3 listes. PS Carry (UG), RN Hoffmann.",cr_lies:[]},
-  {nom:"La Rochelle",dept:"17",pop:76610,maire:"T. Guiraud (DVG)",couleur_pol:"DVG",enjeu:"fort",analyse:"7 listes. UG Simoné, RN Werbrouck, PRG Falorni.",cr_lies:[{nom:"S. Werbrouck",groupe:"RN"},{nom:"B. Jlalji",groupe:"PCF"},{nom:"K. Bourdin",groupe:"EELV"}]},
+  {nom:"La Rochelle",dept:"17",pop:76610,maire:"T. Guiraud (DVG)",couleur_pol:"DVG",enjeu:"fort",analyse:"7 listes. UG Simoné, RN Werbrouck, PRG Falorni.",cr_lies:[{nom:"S. Werbrouck",groupe:"RN"},{nom:"B. Jlalji",groupe:"PCF"},{nom:"K. Bourdin",groupe:"Écologistes"}]},
   {nom:"Tonnay-Charente",dept:"17",pop:8200,maire:"Authiat PS (ne repart pas)",couleur_pol:"PS",enjeu:"moyen",analyse:"PS Justinien vs DVD Troale.",cr_lies:[{nom:"R. Justinien",groupe:"PS/PP"}]},
   {nom:"Saint-Jean-d'Angély",dept:"17",pop:7550,maire:"F. Mesnard (PS)",couleur_pol:"PS",enjeu:"moyen",analyse:"Mesnard candidate à sa succession. 3 listes.",cr_lies:[{nom:"F. Mesnard",groupe:"PS/PP"}]},
   {nom:"Saintes",dept:"17",pop:25145,maire:"B. Drapron (Horizons)",couleur_pol:"Centre",enjeu:"fort",analyse:"5 listes. UG Norigeon (PS/PP/PCF/EELV). Horizons Drapron.",cr_lies:[{nom:"M.-L. Cheminade",groupe:"UDI"}]},
@@ -649,7 +649,7 @@ function NaMap({crList, selDept, onSelect}) {
     const m = {};
     DEPTS.forEach(d => {
       const crs = crList.filter(c=>c.dept===d.code);
-      const left = crs.filter(c=>["PS/PP","PS","PP","PCF","PC","PRG","EELV","Écologistes","Écologiste","LFI","DVG"].includes(c.groupe));
+      const left = crs.filter(c=>["PS/PP","PS","PP","PCF","PC","PRG","Écologistes","Écologistes","Écologiste","LFI","DVG"].includes(c.groupe));
       const cands = left.filter(c=>c.statut==="Candidat");
       const elus = left.filter(c=>c.statut.startsWith("Élu"));
       m[d.code] = {total:crs.length, left:left.length, cands:cands.length, elus:elus.length};
@@ -1019,7 +1019,7 @@ if (match && match.statut && cr.statut === "Candidat") {
 
   const stats = useMemo(() => {
     const pspp = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG"].includes(c.groupe));
-    const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG","EELV","Écologistes","Écologiste","Écologistes","DVG","LFI"].includes(c.groupe));
+    const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG","Écologistes","Écologistes","Écologiste","Écologistes","DVG","LFI"].includes(c.groupe));
     const opp  = crList.filter(c => ["LR","RN","Centre/Indé","Renaissance","RE","Modem","UDI","DVD"].includes(c.groupe));
     return {
       total:crList.length, pspp:pspp.length, maj:maj.length, opp:opp.length,
@@ -1126,7 +1126,7 @@ const exportExcel = async () => {
         "PS / PP / PCF / PRG": ["PS/PP","PS","PP","PCF","PC","PRG"],
         "DVG": ["DVG"],
         "LFI": ["LFI"],
-        "Écologistes / Verts": ["EELV","Écologistes","Écologiste","Écologistes"],
+        "Écologistes / Verts": ["Écologistes","Écologistes","Écologiste","Écologistes"],
         "Centre / UDI / Horizons": ["Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","DVC"],
         "LR / DVD": ["LR","DVD"],
         "RN / EXD": ["RN","EXD","UXD"],
@@ -1329,7 +1329,7 @@ const exportExcel = async () => {
                 const deptCRs = crList.filter(c => c.dept === d.code);
                 const isOpen = !!openDepts[d.code];
                 const groupesPresents = [...new Set(deptCRs.map(c=>c.groupe))].sort((a,b)=>{
-                  const order=["PS/PP","PS","PP","PCF","PRG","EELV","Écologistes","DVG","LFI","Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","LR","DVD","RN","Société Civile","SE"];
+                  const order=["PS/PP","PS","PP","PCF","PRG","Écologistes","Écologistes","DVG","LFI","Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","LR","DVD","RN","Société Civile","SE"];
                   return (order.indexOf(a)>=0?order.indexOf(a):99)-(order.indexOf(b)>=0?order.indexOf(b):99);
                 });
                 const elus = deptCRs.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Victoire 2nd Tour"||c.statut==="Élu 1er tour"||c.statut==="Élu 2nd tour").length;
