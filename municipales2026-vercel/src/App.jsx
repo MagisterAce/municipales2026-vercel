@@ -1025,9 +1025,9 @@ if (match && match.statut && cr.statut === "Candidat") {
       total:crList.length, pspp:pspp.length, maj:maj.length, opp:opp.length,
       cands:crList.filter(c=>c.statut==="Candidat").length,
       e1:crList.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Élu 1er tour").length,
-      e2:crList.filter(c=>c.statut==="Victoire 2nd Tour"||c.statut==="Élu 2nd tour").length,
-      ball:crList.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage").length,
-      def:crList.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite").length,
+      e2:crList.filter(c=>c.statut==="Victoire 2nd Tour"||c.statut==="Élu 2nd tour"||c.statut_t2==="Victoire 2nd Tour").length,
+      ball:crList.filter(c=>(c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage")&&!c.statut_t2).length,
+      def:crList.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite"||c.statut_t2==="Défaite 2nd Tour").length,
     };
   }, [crList]);
 
@@ -1214,7 +1214,7 @@ const exportExcel = async () => {
             nom: c.nom,
             groupe: c.groupe,
             commune: c.commune,
-            statut: c.statut,
+            statut: c.statut_t2 || c.statut,
             s1: c.s1,
             s2: c.s2,
             perspective: c.perspective,
