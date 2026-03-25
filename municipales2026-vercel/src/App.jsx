@@ -913,7 +913,7 @@ const saveListe = async () => {
     if (Object.keys(listeResults).length === 0) return;
     setCrList(prev => prev.map(cr => {
       if (cr.statut === "Non-candidat") return cr;
-      if (cr.statut === "Victoire 2nd Tour" || cr.statut === "Défaite 2nd Tour") return cr;
+      if (cr._fromSupabase) return cr;
       if (cr.statut_t2 && cr.statut_t2 !== "") return cr;
       if (!cr.commune || cr.commune === "/" || cr.commune === "") return cr;
       // Trouver la commune correspondante dans COMMUNES
@@ -1002,13 +1002,13 @@ useEffect(() => {
         const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
         if (cr.statut === "Non-candidat") return cr;
         if (match && match.statut) {
-          const statutFinal = match.statut_t2 && match.statut_t2 !== "" ? match.statut_t2 : match.statut;
           return {
             ...cr,
-            statut: statutFinal,
+            statut: match.statut_t2 && match.statut_t2 !== "" ? match.statut_t2 : match.statut,
             statut_t2: match.statut_t2 || "",
             s1: match.s1 !== null ? match.s1 : cr.s1,
             s2: match.s2 !== null ? match.s2 : cr.s2,
+            _fromSupabase: true,
           };
         }
         return cr;
