@@ -99,7 +99,7 @@ const CR_DATA = [
 {id:"c042",dept:"24",nom:"Delphine Labails",groupe:"PS/PP",commune:"Périgueux",mandat:"CM Périgueux (ex-maire)",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c043",dept:"24",nom:"Colette Langlade",groupe:"PS/PP",commune:"Thiviers",mandat:"CM majoritaire Thiviers",perspective:"Candidate majorité",statut:"Candidat",s1:null,s2:null},
 {id:"c044",dept:"24",nom:"Nicolas Platon",groupe:"PS/PP",commune:"Ribérac",mandat:"Maire de Ribérac",perspective:"Candidat naturel",statut:"Candidat",s1:null,s2:null},
-{id:"c045",dept:"24",nom:"Jacqueline Simmonet",groupe:"PRG",commune:"Bergerac",mandat:"CM d'opposition Bergerac",perspective:"Candidate opposition Bergerac",statut:"Candidat",s1:null,s2:null},
+{id:"c045",dept:"24",nom:"Jacqueline Simonnet",groupe:"PRG",commune:"Bergerac",mandat:"CM d'opposition Bergerac",perspective:"Candidate opposition Bergerac",statut:"Candidat",s1:null,s2:null},
 {id:"c046",dept:"24",nom:"Fanny Castegnède",groupe:"PCF",commune:"Boulazac Isle Manoire",mandat:"Maire de Boulazac Isle Manoire",perspective:"Candidate naturelle",statut:"Candidat",s1:null,s2:null},
 {id:"c047",dept:"24",nom:"Maryline Forgeneuf",groupe:"Écologiste",commune:"Saint-Estèphe",mandat:"Adjointe maire St-Estèphe",perspective:"Candidate majorité",statut:"Candidat",s1:null,s2:null},
 {id:"c048",dept:"24",nom:"Jérôme Peyrat",groupe:"Renaissance",commune:"La Roque Gageac",mandat:"Maire La Roque Gageac",perspective:"Candidat naturel",statut:"Candidat",s1:null,s2:null},
