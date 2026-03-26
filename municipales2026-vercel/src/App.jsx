@@ -1400,8 +1400,8 @@ const exportExcel = async () => {
                                         )}
                                       </div>
                                       <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
-                                        {cr.s1!=null && <span className="score" style={{fontSize:11}}>{cr.s1}%</span>}
-                                        {cr.s2!=null && <span className="score" style={{fontSize:11}}>{cr.s2}%</span>}
+                                        {cr.s1!=null && <span className="score" style={{fontSize:11}}>T1: {cr.s1}%</span>}
+                                        {cr.s2!=null && <span className="score" style={{fontSize:11,fontWeight:700}}>T2: {cr.s2}%</span>}
                                         <span className="pill" style={{color:sc.c,background:sc.bg,fontSize:"8px",padding:"2px 8px"}}>{cr.statut}</span>
                                     
                                       </div>
@@ -1503,9 +1503,8 @@ const exportExcel = async () => {
                                 </div>
                                 <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                                   <span className="pill" style={{color:sc.c,background:sc.bg,fontSize:"9px"}}>{cr.statut}</span>
-                                  {cr.s1!=null && <span className="score" style={{fontSize:10}}>{cr.s1}%</span>}
-                                  {cr.s2!=null && <span className="score" style={{fontSize:10}}>{cr.s2}%</span>}
-                                  {cr.statut==="Candidat" && <button className="btn" style={{padding:"3px 8px",fontSize:"8px"}} onClick={()=>openEdit(cr)}>Saisir</button>}
+                                  {cr.s1!=null && <span className="score" style={{fontSize:10}}>T1: {cr.s1}%</span>}
+                                  {cr.s2!=null && <span className="score" style={{fontSize:10,fontWeight:700}}>T2: {cr.s2}%</span>}
                                 </div>
                               </div>
                             );
@@ -1640,8 +1639,9 @@ const exportExcel = async () => {
                                             <span style={{fontWeight:700,fontSize:11}}>{l.tete}</span>
                                             <span style={{fontSize:9,color:"#bbb",marginLeft:6}}>{l.libelle}</span>
                                           </div>
-                                          {res?.score && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}>{res.score}%</span>}
-                                          {sr && <span style={{fontSize:"8px",padding:"2px 7px",borderRadius:10,background:sr.bg,color:sr.c,fontWeight:700,whiteSpace:"nowrap"}}>{res.statut}</span>}
+                                          {res?.score && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}>T1: {res.score}%</span>}
+                                          {res?.score_t2 && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#666",fontWeight:700}}>T2: {res.score_t2}%</span>}
+                                          {sr && <span style={{fontSize:"8px",padding:"2px 7px",borderRadius:10,background:SC_LISTE[res.statut_t2||res.statut]?.bg||sr.bg,color:SC_LISTE[res.statut_t2||res.statut]?.c||sr.c,fontWeight:700,whiteSpace:"nowrap"}}>{res.statut_t2||res.statut}</span>}
                                           <button
                                             className="btn"
                                             style={{padding:"2px 7px",fontSize:"7px",flexShrink:0}}
