@@ -1649,7 +1649,7 @@ const exportExcel = async () => {
                                           {sr && finalStatut && <span style={{fontSize:"8px",padding:"2px 7px",borderRadius:10,background:sr.bg,color:sr.c,fontWeight:700,whiteSpace:"nowrap"}}>{finalStatut}</span>}
                                         </>;
                                       })()}
-                                          {sr && <span style={{fontSize:"8px",padding:"2px 7px",borderRadius:10,background:SC_LISTE[res.statut_t2||res.statut]?.bg||sr.bg,color:SC_LISTE[res.statut_t2||res.statut]?.c||sr.c,fontWeight:700,whiteSpace:"nowrap"}}>{res.statut_t2||res.statut}</span>}
+
                                           <button
                                             className="btn"
                                             style={{padding:"2px 7px",fontSize:"7px",flexShrink:0}}
