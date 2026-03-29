@@ -656,8 +656,8 @@ function NaMap({crList, selDept, onSelect}) {
     DEPTS.forEach(d => {
       const crs = crList.filter(c=>c.dept===d.code);
       const left = crs.filter(c=>["PS/PP","PS","PP","PCF","PC","PRG","Écologistes","Écologistes","Écologiste","LFI","DVG"].includes(c.groupe));
-      const cands = left.filter(c=>c.statut==="Candidat");
-      const elus = left.filter(c=>c.statut.startsWith("Élu"));
+      const cands = left.filter(c=>getFinalStatut(c)==="Candidat");
+      const elus = left.filter(c=>getFinalStatut(c).startsWith("Élu"));
       m[d.code] = {total:crs.length, left:left.length, cands:cands.length, elus:elus.length};
     });
     return m;
@@ -1230,10 +1230,10 @@ const exportExcel = async () => {
           communes_suivies: communesSuivies,
           communes_avec_resultats: communesAvecResultats,
           cr_suivis: crDept.length,
-          victoires_1t: crDept.filter(c => c.statut === "Victoire 1er Tour").length,
-          victoires_2t: crDept.filter(c => c.statut === "Victoire 2nd Tour").length,
-          qualifies_2t: crDept.filter(c => c.statut === "Qualifié·e pour le 2nd Tour").length,
-          defaites: crDept.filter(c => ["Défaite 1er Tour", "Défaite 2nd Tour", "Défaite"].includes(c.statut)).length,
+          victoires_1t: crDept.filter(c => getFinalStatut(c) === "Victoire 1er Tour").length,
+          victoires_2t: crDept.filter(c => getFinalStatut(c) === "Victoire 2nd Tour").length,
+          qualifies_2t: crDept.filter(c => getFinalStatut(c) === "Qualifié·e pour le 2nd Tour").length,
+          defaites: crDept.filter(c => ["Défaite 1er Tour", "Défaite 2nd Tour", "Défaite"].includes(getFinalStatut(c))).length,
         };
       }).filter(d => d.communes_avec_resultats > 0 || d.victoires_1t || d.victoires_2t || d.qualifies_2t || d.defaites);
 
@@ -1272,7 +1272,7 @@ const exportExcel = async () => {
         depts: syntheseDepts,
         communes: communesAnalysees,
         crs: crList
-          .filter(c => c.statut !== "Non-candidat")
+          .filter(c => getFinalStatut(c) !== "Non-candidat")
           .map(c => ({
             dept: c.dept,
             nom: c.nom,
@@ -1386,7 +1386,7 @@ const exportExcel = async () => {
               <div className="sh">
                 <div className="sh-l"><span className="sh-title">Tableau de Bord — Suivi par département</span></div>
                 <div className="sh-act">
-                  <span className="ctag">{crList.filter(c=>c.statut==="Candidat").length} à saisir</span>
+                  <span className="ctag">{crList.filter(c=>getFinalStatut(c)==="Candidat").length} à saisir</span>
                 </div>
               </div>
               {DEPTS.map(d => {
@@ -1396,11 +1396,11 @@ const exportExcel = async () => {
                   const order=["PS/PP","PS","PP","PCF","PRG","Écologistes","Écologistes","DVG","LFI","Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","LR","DVD","RN","Société Civile","SE"];
                   return (order.indexOf(a)>=0?order.indexOf(a):99)-(order.indexOf(b)>=0?order.indexOf(b):99);
                 });
-                const elus = deptCRs.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Victoire 2nd Tour"||c.statut==="Élu 1er tour"||c.statut==="Élu 2nd tour").length;
+                const elus = deptCRs.filter(c=>["Victoire 1er Tour","Victoire 2nd Tour","Élu 1er tour","Élu 2nd tour"].includes(getFinalStatut(c))).length;
                 const qualifies = deptCRs.filter(c=>(c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage") && !c.statut_t2).length;
                 const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite"||c.statut_t2==="Défaite 2nd Tour").length;
                 const desistements = deptCRs.filter(c=>c.statut_t2==="Désistement").length;
-                const candidats = deptCRs.filter(c=>c.statut==="Candidat").length;
+                const candidats = deptCRs.filter(c=>getFinalStatut(c)==="Candidat").length;
                 return (
                   <div key={d.code} className="panel" style={{marginBottom:10}}>
                     {/* EN-TÊTE CLIQUABLE */}
@@ -1450,8 +1450,8 @@ const exportExcel = async () => {
                               </div>
                               <div style={{display:"flex",flexDirection:"column",gap:4}}>
                                 {groupeCRs.map(cr => {
-                                  const sc = SC[cr.statut]||SC["Candidat"];
-                                  const isCandidat = cr.statut === "Candidat";
+                                  const fs=getFinalStatut(cr); const sc = SC[fs]||SC["Candidat"];
+                                  const isCandidat = fs === "Candidat";
                                   return (
                                     <div key={cr.id} style={{
                                       display:"flex",alignItems:"center",justifyContent:"space-between",
@@ -1516,11 +1516,11 @@ const exportExcel = async () => {
                   if (deptCRs.length===0) return null;
                   const crKey = `cr-dept-${d.code}`;
                   const isOpen = !!openDepts[crKey];
-                  const elus = deptCRs.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Victoire 2nd Tour").length;
+                  const elus = deptCRs.filter(c=>["Victoire 1er Tour","Victoire 2nd Tour"].includes(getFinalStatut(c))).length;
                   const qualifies = deptCRs.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour" && !c.statut_t2).length;
                   const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut_t2==="Défaite 2nd Tour").length;
                   const desistements = deptCRs.filter(c=>c.statut_t2==="Désistement").length;
-                  const candidats = deptCRs.filter(c=>c.statut==="Candidat").length;
+                  const candidats = deptCRs.filter(c=>getFinalStatut(c)==="Candidat").length;
                   return (
                     <div key={d.code} className="panel">
                       <div onClick={()=>setOpenDepts(prev=>({...prev,[crKey]:!prev[crKey]}))} style={{
@@ -1553,7 +1553,7 @@ const exportExcel = async () => {
                       {isOpen && (
                         <div style={{padding:"10px 14px",display:"flex",flexDirection:"column",gap:6}}>
                           {deptCRs.map(cr => {
-                            const sc = SC[cr.statut]||SC["Non-candidat"];
+                            const fs2=getFinalStatut(cr); const sc = SC[fs2]||SC["Non-candidat"];
                             return (
                               <div key={cr.id} style={{
                                 display:"flex",alignItems:"flex-start",gap:10,flexWrap:"wrap",
@@ -1572,7 +1572,7 @@ const exportExcel = async () => {
                                   {(()=>{const f=cr.statut_t2&&cr.statut_t2!==""?cr.statut_t2:cr.statut;const s=SC[f]||SC["Non-candidat"];return <span className="pill" style={{color:s.c,background:s.bg,fontSize:"9px"}}>{f}</span>;})()}
                                   {cr.s1!=null && <span className="score" style={{fontSize:10}}><span style={{fontSize:8,color:"#aaa",fontWeight:400,fontFamily:"'Source Code Pro',monospace"}}>T1: </span>{cr.s1}%</span>}
                                   {cr.s2!=null && <span className="score" style={{fontSize:10}}><span style={{fontSize:8,color:"#aaa",fontWeight:400,fontFamily:"'Source Code Pro',monospace"}}>T2: </span>{cr.s2}%</span>}
-                                  {cr.statut==="Candidat" && <button className="btn" style={{padding:"3px 8px",fontSize:"8px"}} onClick={()=>openEdit(cr)}>Saisir</button>}
+                                  {fs2==="Candidat" && <button className="btn" style={{padding:"3px 8px",fontSize:"8px"}} onClick={()=>openEdit(cr)}>Saisir</button>}
                                 </div>
                               </div>
                             );
@@ -1761,7 +1761,7 @@ const exportExcel = async () => {
               }}>
                 {(() => {
                   const nbSaisies = Object.keys(listeResults).filter(k=>listeResults[k]?.statut).length;
-                  const nbCRReportes = crList.filter(c=>c.statut!=="Candidat"&&c.statut!=="Non-candidat").length;
+                  const nbCRReportes = crList.filter(c=>getFinalStatut(c)!=="Candidat"&&getFinalStatut(c)!=="Non-candidat").length;
                   return (<>
                 <div style={{
                   width:64,height:64,background: nbSaisies>0?"#e8f5e9":"#fce4ec",borderRadius:"50%",
@@ -1784,11 +1784,11 @@ const exportExcel = async () => {
                 {nbSaisies>0 && (
                   <div style={{display:"flex",flexWrap:"wrap",gap:16,justifyContent:"center",marginBottom:32}}>
                     {[
-                      {label:"Victoires 1T",val:crList.filter(c=>c.statut==="Victoire 1er Tour").length,bg:"#c8e6c9",c:"#1b5e20"},
-                      {label:"Qualifiés 2T",val:crList.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour").length,bg:"#fff3e0",c:"#e65100"},
-                      {label:"Défaites 1T",val:crList.filter(c=>c.statut==="Défaite 1er Tour").length,bg:"#ffebee",c:"#b71c1c"},
-                      {label:"Victoires 2T",val:crList.filter(c=>c.statut==="Victoire 2nd Tour").length,bg:"#a5d6a7",c:"#1b5e20"},
-                      {label:"Défaites 2T",val:crList.filter(c=>c.statut==="Défaite 2nd Tour").length,bg:"#ef9a9a",c:"#b71c1c"},
+                      {label:"Victoires 1T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 1er Tour").length,bg:"#c8e6c9",c:"#1b5e20"},
+                      {label:"Qualifiés 2T",val:crList.filter(c=>getFinalStatut(c)==="Qualifié·e pour le 2nd Tour").length,bg:"#fff3e0",c:"#e65100"},
+                      {label:"Défaites 1T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 1er Tour").length,bg:"#ffebee",c:"#b71c1c"},
+                      {label:"Victoires 2T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 2nd Tour").length,bg:"#a5d6a7",c:"#1b5e20"},
+                      {label:"Défaites 2T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 2nd Tour").length,bg:"#ef9a9a",c:"#b71c1c"},
                     ].map(s=>(
                       <div key={s.label} style={{
                         background:s.bg,color:s.c,borderRadius:10,
