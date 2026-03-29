@@ -17,19 +17,24 @@ const GC = {
   "PS/PP":"#E8186D","PS":"#E8186D","PP":"#c2185b",
   "PCF":"#b71c1c","PC":"#b71c1c","PRG":"#e91e63",
   "DVG":"#e53935","UG":"#E8186D",
+
   // Écolo
-  "Écologistes":"#2e7d32","Écologistes":"#2e7d32","Verts":"#2e7d32",
-  "Écologiste":"#388e3c","Écologistes":"#388e3c",
+  "Écologistes":"#2e7d32","Écologiste":"#388e3c","Verts":"#2e7d32",
+
   // Gauche radicale
   "LFI":"#8e24aa",
+
   // Centre
   "Centre/Indé":"#f57f17","Centre":"#f57f17","Ctr":"#f57f17",
   "Renaissance":"#ef6c00","RE":"#ef6c00","Modem":"#fb8c00",
   "Horizons":"#ff8f00","UDI":"#0288d1","DVC":"#0288d1",
+
   // Droite
-  "LR":"#1565c0","DVD":"#37474f","DVG":"#e53935",
+  "LR":"#1565c0","DVD":"#37474f",
+
   // RN
   "RN":"#212121",
+
   // Divers
   "Société Civile":"#9e9e9e","SE":"#9e9e9e",
 };
@@ -42,6 +47,7 @@ const SC = {
   "Qualifié·e pour le 2nd Tour":{c:"#e65100",bg:"#fff3e0"},
   "Défaite 1er Tour":{c:"#b71c1c",bg:"#ffebee"},
   "Défaite 2nd Tour":{c:"#c62828",bg:"#ffcdd2"},
+  "Désistement":{c:"#6d4c41",bg:"#efebe9"},
   // Rétro-compatibilité
   "Élu 1er tour":{c:"#1b5e20",bg:"#c8e6c9"},
   "Élu 2nd tour":{c:"#2e7d32",bg:"#e8f5e9"},
@@ -1029,6 +1035,7 @@ useEffect(() => {
       e2:crList.filter(c=>c.statut==="Victoire 2nd Tour"||c.statut==="Élu 2nd tour"||c.statut_t2==="Victoire 2nd Tour").length,
       ball:crList.filter(c=>(c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage")&&!c.statut_t2).length,
       def:crList.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite"||c.statut_t2==="Défaite 2nd Tour").length,
+      des:crList.filter(c=>c.statut_t2==="Désistement").length,
     };
   }, [crList]);
 
@@ -1036,7 +1043,7 @@ useEffect(() => {
     let r = [...crList];
     if (fDept !== "all") r = r.filter(c => c.dept === fDept);
     if (fGroupe !== "all") r = r.filter(c => c.groupe === fGroupe);
-    if (fStatut !== "all") r = r.filter(c => c.statut === fStatut);
+    if (fStatut !== "all") r = r.filter(c => (c.statut_t2 || c.statut) === fStatut);
     if (search) { const q = search.toLowerCase(); r = r.filter(c => c.nom.toLowerCase().includes(q) || c.commune.toLowerCase().includes(q)); }
     r.sort((a,b) => { const v = String(a[sortKey]??"").localeCompare(String(b[sortKey]??""), "fr"); return sortDir==="asc"?v:-v; });
     return r;
@@ -1334,8 +1341,9 @@ const exportExcel = async () => {
                   return (order.indexOf(a)>=0?order.indexOf(a):99)-(order.indexOf(b)>=0?order.indexOf(b):99);
                 });
                 const elus = deptCRs.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Victoire 2nd Tour"||c.statut==="Élu 1er tour"||c.statut==="Élu 2nd tour").length;
-                const qualifies = deptCRs.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage").length;
-                const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite").length;
+                const qualifies = deptCRs.filter(c=>(c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage") && !c.statut_t2).length;
+                const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite"||c.statut_t2==="Défaite 2nd Tour").length;
+                const desistements = deptCRs.filter(c=>c.statut_t2==="Désistement").length;
                 const candidats = deptCRs.filter(c=>c.statut==="Candidat").length;
                 return (
                   <div key={d.code} className="panel" style={{marginBottom:10}}>
@@ -1366,6 +1374,7 @@ const exportExcel = async () => {
                         <span style={{fontSize:"10px",color:"#888",fontFamily:"'Source Code Pro',monospace"}}>{deptCRs.length} CR</span>
                         {elus>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#c8e6c9",color:"#1b5e20",fontWeight:700}}>✓ {elus} élu·e·s</span>}
                         {qualifies>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#fff3e0",color:"#e65100",fontWeight:700}}>→ {qualifies} qualifié·e·s 2T</span>}
+                        {desistements>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#efebe9",color:"#6d4c41",fontWeight:700}}>↺ {desistements} désistement{desistements>1?"s":""}</span>}
                         {defaites>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#ffebee",color:"#b71c1c",fontWeight:700}}>✗ {defaites} défaite·s</span>}
                         {candidats>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#fce4ec",color:"#E8186D",fontWeight:700}}>⏳ {candidats} à saisir</span>}
                         <span style={{fontSize:"13px",color:"#bbb",marginLeft:4}}>{isOpen ? "▲" : "▼"}</span>
@@ -1441,6 +1450,7 @@ const exportExcel = async () => {
                   <option value="Qualifié·e pour le 2nd Tour">Qualifié·e pour le 2nd Tour</option>
                   <option value="Victoire 2nd Tour">Victoire 2nd Tour</option>
                   <option value="Défaite 2nd Tour">Défaite 2nd Tour</option>
+                  <option value="Désistement">Désistement</option>
                 </select>
                 <span className="ctag">{filtered.length} CR</span>
               </div>
@@ -1451,8 +1461,9 @@ const exportExcel = async () => {
                   const crKey = `cr-dept-${d.code}`;
                   const isOpen = !!openDepts[crKey];
                   const elus = deptCRs.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Victoire 2nd Tour").length;
-                  const qualifies = deptCRs.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour").length;
-                  const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour").length;
+                  const qualifies = deptCRs.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour" && !c.statut_t2).length;
+                  const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut_t2==="Défaite 2nd Tour").length;
+                  const desistements = deptCRs.filter(c=>c.statut_t2==="Désistement").length;
                   const candidats = deptCRs.filter(c=>c.statut==="Candidat").length;
                   return (
                     <div key={d.code} className="panel">
@@ -1477,6 +1488,7 @@ const exportExcel = async () => {
                           <span style={{fontSize:"10px",color:"#888",fontFamily:"'Source Code Pro',monospace"}}>{deptCRs.length} CR</span>
                           {elus>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#c8e6c9",color:"#1b5e20",fontWeight:700}}>✓ {elus} élu·e·s</span>}
                           {qualifies>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#fff3e0",color:"#e65100",fontWeight:700}}>→ {qualifies} qualifié·e·s 2T</span>}
+                          {desistements>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#efebe9",color:"#6d4c41",fontWeight:700}}>↺ {desistements} désistement{desistements>1?"s":""}</span>}
                           {defaites>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#ffebee",color:"#b71c1c",fontWeight:700}}>✗ {defaites} défaite·s</span>}
                           {candidats>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#fce4ec",color:"#E8186D",fontWeight:700}}>⏳ {candidats} à saisir</span>}
                           <span style={{fontSize:"13px",color:"#bbb",marginLeft:4}}>{isOpen ? "▲" : "▼"}</span>
@@ -1615,13 +1627,14 @@ const exportExcel = async () => {
                                       const res = listeResults[rKey];
                                       // Couleur statut
                                       const SC_LISTE = {
-                                        "Victoire 1er Tour":{bg:"#c8e6c9",c:"#1b5e20"},
-                                        "Défaite 1er Tour":{bg:"#ffebee",c:"#b71c1c"},
-                                        "Qualifié·e pour le 2nd Tour":{bg:"#fff3e0",c:"#e65100"},
-                                        "Victoire 2nd Tour":{bg:"#a5d6a7",c:"#1b5e20"},
-                                        "Défaite 2nd Tour":{bg:"#ef9a9a",c:"#c62828"},
+                                      "Victoire 1er Tour":{bg:"#c8e6c9",c:"#1b5e20"},
+                                      "Défaite 1er Tour":{bg:"#ffebee",c:"#b71c1c"},
+                                      "Qualifié·e pour le 2nd Tour":{bg:"#fff3e0",c:"#e65100"},
+                                      "Victoire 2nd Tour":{bg:"#a5d6a7",c:"#1b5e20"},
+                                      "Défaite 2nd Tour":{bg:"#ef9a9a",c:"#c62828"},
+                                      "Désistement":{bg:"#efebe9",c:"#6d4c41"},
                                       };
-                                      const sr = res?.statut ? SC_LISTE[res.statut] : null;
+
                                       return (
                                         <div key={li} style={{
                                           display:"flex",alignItems:"center",gap:8,
@@ -1645,7 +1658,10 @@ const exportExcel = async () => {
                                         const sr = finalStatut ? SC_LISTE[finalStatut] : null;
                                         return <>
                                           {res.score && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T1: </span>{res.score}%</span>}
-                                          {res.score_t2 && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T2: </span>{res.score_t2}%</span>}
+                                          {finalStatut==="Désistement"
+                                            ? <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T2: </span>—</span>
+                                            : (res.score_t2 && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T2: </span>{res.score_t2}%</span>)
+                                          }
                                           {sr && finalStatut && <span style={{fontSize:"8px",padding:"2px 7px",borderRadius:10,background:sr.bg,color:sr.c,fontWeight:700,whiteSpace:"nowrap"}}>{finalStatut}</span>}
                                         </>;
                                       })()}
@@ -1831,6 +1847,7 @@ const exportExcel = async () => {
           </> : <>
             <option value="Victoire 2nd Tour">Victoire 2nd Tour</option>
             <option value="Défaite 2nd Tour">Défaite 2nd Tour</option>
+            <option value="Désistement">Désistement</option>
           </>}
         </select>
       </div>
@@ -1911,6 +1928,7 @@ const exportExcel = async () => {
                   <option disabled>── Résultats 2nd Tour ──</option>
                   <option value="Victoire 2nd Tour">Victoire 2nd Tour</option>
                   <option value="Défaite 2nd Tour">Défaite 2nd Tour</option>
+                  <option value="Désistement">Désistement</option>
                 </select>
               </div>
               <div className="mr">
