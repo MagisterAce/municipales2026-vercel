@@ -977,12 +977,14 @@ useEffect(() => {
     const { data, error } = await supabase.from("resultats").select("*");
     if (error) { console.error("Supabase load error:", error); return; }
     if (!data || data.length === 0) return;
+
     const loaded = {};
     const crUpdates = [];
+
     data.forEach(row => {
       if (!row.result_key) return;
+
       if (row.result_key.startsWith("cr|")) {
-        // Résultat direct d'un CR
         const nomNorm = row.result_key.replace("cr|", "");
         crUpdates.push({
           nomNorm,
@@ -992,7 +994,6 @@ useEffect(() => {
           s2: row.score_t2 != null ? parseFloat(row.score_t2) : null,
         });
       } else {
-        // Résultat d'une liste commune
         loaded[row.result_key] = {
           statut: row.statut_t1 || "",
           score: row.score_t1 != null ? String(row.score_t1) : "",
@@ -1004,7 +1005,9 @@ useEffect(() => {
         };
       }
     });
+
     setListeResults(loaded);
+
     if (crUpdates.length > 0) {
       const norm = s => s.toLowerCase().trim()
         .replace(/[-\s]+/g, " ")
@@ -1013,25 +1016,28 @@ useEffect(() => {
         .replace(/[î]/g,"i").replace(/[ç]/g,"c")
         .replace(/[ë]/g,"e").replace(/[â]/g,"a")
         .replace(/[û]/g,"u");
-if (res && (res.statut || res.statut_t2)) {
-  setCrList(prev => prev.map(cr => {
-    if (cr.nom === crLie.nom || cr.commune === commune.nom) {
-      const score1 = res.score ? parseFloat(res.score) : cr.s1;
-      const score2 = res.score_t2 ? parseFloat(res.score_t2) : cr.s2;
-      const finalStatut = res.statut_t2 && res.statut_t2 !== "" ? res.statut_t2 : (res.statut || cr.statut);
 
-      return {
-        ...cr,
-        statut: finalStatut,
-        statut_t2: res.statut_t2 || "",
-        s1: score1,
-        s2: score2,
-      };
+      setCrList(prev => prev.map(cr => {
+        const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
+
+        if (cr.statut === "Non-candidat") return cr;
+
+        if (match && (match.statut || match.statut_t2)) {
+          return {
+            ...cr,
+            statut: match.statut_t2 && match.statut_t2 !== "" ? match.statut_t2 : match.statut,
+            statut_t2: match.statut_t2 || "",
+            s1: match.s1 !== null ? match.s1 : cr.s1,
+            s2: match.s2 !== null ? match.s2 : cr.s2,
+            _fromSupabase: true,
+          };
+        }
+
+        return cr;
+      }));
     }
-    return cr;
-  }));
-}
   };
+
   loadFromSupabase();
 }, []);
 
