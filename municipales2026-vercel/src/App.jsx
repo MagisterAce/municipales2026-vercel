@@ -916,43 +916,52 @@ const saveListe = async () => {
   };
 
   useEffect(() => {
-    if (Object.keys(listeResults).length === 0) return;
-    setCrList(prev => prev.map(cr => {
-      if (cr.statut === "Non-candidat") return cr;
-      if (cr._fromSupabase) return cr;
-      if (cr.statut_t2 && cr.statut_t2 !== "") return cr;
-      if (!cr.commune || cr.commune === "/" || cr.commune === "") return cr;
-      // Trouver la commune correspondante dans COMMUNES
-      const commune = COMMUNES.find(c => {
-        const normCR = cr.commune.toLowerCase().replace(/[-\s]/g,"");
-        const normC = c.nom.toLowerCase().replace(/[-\s]/g,"");
-        return c.dept === cr.dept && (normC === normCR || normC.includes(normCR) || normCR.includes(normC));
-      });
-      if (!commune) return cr;
-      const comKey = `${commune.dept}|${commune.nom}`;
-      const listes = LISTES_DATA[comKey] || [];
-      // Chercher la liste qui correspond au groupe de ce CR
-      for (let li = 0; li < listes.length; li++) {
-        const l = listes[li];
-        const grpFromNuance = NUANCE_TO_GROUPE_MAP[l.nuance] || l.nuance;
-        const match = grpFromNuance === cr.groupe
-          || l.nuance === cr.groupe
-          || (cr.groupe === "PS/PP" && ["PS","UG","DVG","PCF","PRG"].includes(l.nuance));
-        if (match) {
-          const rKey = `${commune.dept}|${commune.nom}|${li}`;
-          const res = listeResults[rKey];
-          if (res && res.statut) {
-            return {
-              ...cr,
-              statut: res.statut,
-              s1: res.score ? parseFloat(res.score) : cr.s1,
-            };
-          }
+useEffect(() => {
+  if (Object.keys(listeResults).length === 0) return;
+
+  setCrList(prev => prev.map(cr => {
+    if (cr.statut === "Non-candidat") return cr;
+    if (cr._fromSupabase) return cr;
+    if (!cr.commune || cr.commune === "/" || cr.commune === "") return cr;
+
+    const commune = COMMUNES.find(c => {
+      const normCR = cr.commune.toLowerCase().replace(/[-\s]/g, "");
+      const normC = c.nom.toLowerCase().replace(/[-\s]/g, "");
+      return c.dept === cr.dept && (normC === normCR || normC.includes(normCR) || normCR.includes(normC));
+    });
+    if (!commune) return cr;
+
+    const comKey = `${commune.dept}|${commune.nom}`;
+    const listes = LISTES_DATA[comKey] || [];
+
+    for (let li = 0; li < listes.length; li++) {
+      const l = listes[li];
+      const grpFromNuance = NUANCE_TO_GROUPE_MAP[l.nuance] || l.nuance;
+
+      const match =
+        grpFromNuance === cr.groupe ||
+        l.nuance === cr.groupe ||
+        (cr.groupe === "PS/PP" && ["PS","UG","DVG","PCF","PRG"].includes(l.nuance));
+
+      if (match) {
+        const rKey = `${commune.dept}|${commune.nom}|${li}`;
+        const res = listeResults[rKey];
+
+        if (res && (res.statut || res.statut_t2)) {
+          return {
+            ...cr,
+            statut: res.statut_t2 && res.statut_t2 !== "" ? res.statut_t2 : (res.statut || cr.statut),
+            statut_t2: res.statut_t2 || "",
+            s1: res.score ? parseFloat(res.score) : cr.s1,
+            s2: res.score_t2 ? parseFloat(res.score_t2) : cr.s2,
+          };
         }
       }
-      return cr;
-    }));
-  }, [listeResults]);
+    }
+
+    return cr;
+  }));
+}, [listeResults]);
 
   const [fDept, setFDept] = useState("all");
   const [fGroupe, setFGroupe] = useState("all");
@@ -1004,22 +1013,24 @@ useEffect(() => {
         .replace(/[î]/g,"i").replace(/[ç]/g,"c")
         .replace(/[ë]/g,"e").replace(/[â]/g,"a")
         .replace(/[û]/g,"u");
-      setCrList(prev => prev.map(cr => {
-        const match = crUpdates.find(u => u.nomNorm === norm(cr.nom));
-        if (cr.statut === "Non-candidat") return cr;
-        if (match && (match.statut || match.statut_t2)) {
-          return {
-            ...cr,
-            statut: match.statut_t2 && match.statut_t2 !== "" ? match.statut_t2 : match.statut,
-            statut_t2: match.statut_t2 || "",
-            s1: match.s1 !== null ? match.s1 : cr.s1,
-            s2: match.s2 !== null ? match.s2 : cr.s2,
-            _fromSupabase: true,
-          };
-        }
-        return cr;
-      }));
+if (res && (res.statut || res.statut_t2)) {
+  setCrList(prev => prev.map(cr => {
+    if (cr.nom === crLie.nom || cr.commune === commune.nom) {
+      const score1 = res.score ? parseFloat(res.score) : cr.s1;
+      const score2 = res.score_t2 ? parseFloat(res.score_t2) : cr.s2;
+      const finalStatut = res.statut_t2 && res.statut_t2 !== "" ? res.statut_t2 : (res.statut || cr.statut);
+
+      return {
+        ...cr,
+        statut: finalStatut,
+        statut_t2: res.statut_t2 || "",
+        s1: score1,
+        s2: score2,
+      };
     }
+    return cr;
+  }));
+}
   };
   loadFromSupabase();
 }, []);
