@@ -884,9 +884,19 @@ const saveListe = async () => {
     const comKey = `${commune.dept}|${commune.nom}`;
     const listes = LISTES_DATA[comKey] || [];
     commune.cr_lies.forEach(crLie => {
-      const listeIdx = listes.findIndex((l,li) => {
-        return isCompatibleNuanceForCr(crLie.groupe, l.nuance);
+      // Préférer la liste dont la tête correspond au nom du CR
+      const normNomSL = s => (s||"").toLowerCase().replace(/[éèê]/g,"e").replace(/[àâ]/g,"a").replace(/[ùû]/g,"u").replace(/[ôö]/g,"o").replace(/[îï]/g,"i").replace(/[ç]/g,"c").replace(/[-\s]+/g," ").trim();
+      let listeIdx = -1;
+      let fallbackIdx = -1;
+      listes.forEach((l,li) => {
+        if (!isCompatibleNuanceForCr(crLie.groupe, l.nuance)) return;
+        if (fallbackIdx < 0) fallbackIdx = li;
+        const teteParts = normNomSL(l.tete||"").split(" ");
+        const crParts   = normNomSL(crLie.nom||"").split(" ");
+        const common = teteParts.filter(p => p.length > 2 && crParts.includes(p));
+        if (common.length >= 1 && listeIdx < 0) listeIdx = li;
       });
+      if (listeIdx < 0) listeIdx = fallbackIdx;
       if (listeIdx >= 0) {
         const rKey = `${commune.dept}|${commune.nom}|${listeIdx}`;
         const res = normalizeListeResult(newResults[rKey]);
@@ -988,24 +998,29 @@ useEffect(() => {
     const comKey = `${commune.dept}|${commune.nom}`;
     const listes = LISTES_DATA[comKey] || [];
 
+    const normNom = s => (s||"").toLowerCase().replace(/[éèê]/g,"e").replace(/[àâ]/g,"a").replace(/[ùû]/g,"u").replace(/[ôö]/g,"o").replace(/[îï]/g,"i").replace(/[ç]/g,"c").replace(/[-\s]+/g," ").trim();
+    // Trouver la meilleure liste : priorité à celle dont la tête correspond au nom du CR
+    let bestLi = -1;
     for (let li = 0; li < listes.length; li++) {
       const l = listes[li];
-      const match = isCompatibleNuanceForCr(cr.groupe, l.nuance);
-
-      if (match) {
-        const rKey = `${commune.dept}|${commune.nom}|${li}`;
-        const res = normalizeListeResult(listeResults[rKey]);
-
-        if (res && (res.statut || res.statut_t2)) {
-          return {
-            ...cr,
-            statut: getFinalStatut(res) || cr.statut,
-            // Ne pas écraser un T2 existant avec vide
-            statut_t2: res.statut_t2 || cr.statut_t2 || "",
-            s1: res.score ? parseFloat(res.score) : cr.s1,
-            s2: res.score_t2 ? parseFloat(res.score_t2) : cr.s2,
-          };
-        }
+      if (!isCompatibleNuanceForCr(cr.groupe, l.nuance)) continue;
+      if (bestLi < 0) bestLi = li; // fallback premier match compatible
+      const teteParts = normNom(l.tete||"").split(" ");
+      const crParts   = normNom(cr.nom||"").split(" ");
+      const common = teteParts.filter(p => p.length > 2 && crParts.includes(p));
+      if (common.length >= 1) { bestLi = li; break; } // match par nom → stop
+    }
+    if (bestLi >= 0) {
+      const rKey = `${commune.dept}|${commune.nom}|${bestLi}`;
+      const res = normalizeListeResult(listeResults[rKey]);
+      if (res && (res.statut || res.statut_t2)) {
+        return {
+          ...cr,
+          statut: getFinalStatut(res) || cr.statut,
+          statut_t2: res.statut_t2 || cr.statut_t2 || "",
+          s1: res.score ? parseFloat(res.score) : cr.s1,
+          s2: res.score_t2 ? parseFloat(res.score_t2) : cr.s2,
+        };
       }
     }
 
