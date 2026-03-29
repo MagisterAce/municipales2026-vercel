@@ -920,7 +920,6 @@ const saveListe = async () => {
     "RE":"Centre/Indé","LFI":"LFI","Écolo":"Écologistes","FG":"PCF",
   };
 
-  };
 
   const isFilled = v => v !== null && v !== undefined && v !== "";
 
