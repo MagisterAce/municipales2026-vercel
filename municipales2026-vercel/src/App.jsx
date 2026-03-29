@@ -858,44 +858,49 @@ export default function App() {
 const saveListe = async () => {
   if (!listeModal) return;
   const key = `${listeModal.dept}|${listeModal.ville}|${listeModal.idx}`;
-  const newResults = {...listeResults, [key]: listeForm};
+  const current = normalizeListeResult(listeResults[key]);
+  const merged = normalizeListeResult(current, listeForm);
+  const newResults = {...listeResults, [key]: merged};
   setListeResults(newResults);
 
   if (listeForm.tour === "T2") {
     await supabase.from("resultats").upsert({
       result_key: key,
-      statut_t2: listeForm.statut,
-      score_t2: listeForm.score ? parseFloat(listeForm.score) : null,
-      voix_t2: listeForm.voix ? parseInt(listeForm.voix) : null,
+      statut_t2: merged.statut_t2 || null,
+      score_t2: isFilled(merged.score_t2) ? parseFloat(merged.score_t2) : null,
+      voix_t2: isFilled(merged.voix_t2) ? parseInt(merged.voix_t2, 10) : null,
     }, { onConflict: "result_key" });
   } else {
     await supabase.from("resultats").upsert({
       result_key: key,
-      statut_t1: listeForm.statut,
-      score_t1: listeForm.score ? parseFloat(listeForm.score) : null,
-      voix_t1: listeForm.voix ? parseInt(listeForm.voix) : null,
+      statut_t1: merged.statut || null,
+      score_t1: isFilled(merged.score) ? parseFloat(merged.score) : null,
+      voix_t1: isFilled(merged.voix) ? parseInt(merged.voix, 10) : null,
     }, { onConflict: "result_key" });
   }
 
-  // Report automatique vers crList
   const commune = COMMUNES.find(c => c.dept===listeModal.dept && c.nom===listeModal.ville);
   if (commune && commune.cr_lies.length > 0) {
     const comKey = `${commune.dept}|${commune.nom}`;
     const listes = LISTES_DATA[comKey] || [];
     commune.cr_lies.forEach(crLie => {
       const listeIdx = listes.findIndex((l,li) => {
-        const grp = NUANCE_TO_GROUPE[l.nuance] || l.nuance;
+        const grp = NUANCE_TO_GROUPE_MAP[l.nuance] || l.nuance;
         return grp === crLie.groupe || l.nuance === crLie.groupe;
       });
       if (listeIdx >= 0) {
         const rKey = `${commune.dept}|${commune.nom}|${listeIdx}`;
-        const res = newResults[rKey];
-        if (res && res.statut) {
+        const res = normalizeListeResult(newResults[rKey]);
+        if (isFilled(res.statut) || isFilled(res.statut_t2)) {
           setCrList(prev => prev.map(cr => {
             if (cr.nom === crLie.nom || cr.commune === commune.nom) {
-              const score1 = res.score ? parseFloat(res.score) : cr.s1;
-              const newStatut = res.statut || cr.statut;
-              return {...cr, statut: newStatut, s1: score1};
+              return {
+                ...cr,
+                statut: getFinalStatut(res) || cr.statut,
+                statut_t2: res.statut_t2 || "",
+                s1: isFilled(res.score) ? parseFloat(res.score) : cr.s1,
+                s2: isFilled(res.score_t2) ? parseFloat(res.score_t2) : cr.s2,
+              };
             }
             return cr;
           }));
@@ -915,6 +920,41 @@ const saveListe = async () => {
     "RE":"Centre/Indé","LFI":"LFI","Écolo":"Écologistes","FG":"PCF",
   };
 
+  };
+
+  const isFilled = v => v !== null && v !== undefined && v !== "";
+
+  const getFinalStatut = obj =>
+    isFilled(obj?.statut_t2) ? obj.statut_t2 : (obj?.statut || "");
+
+  const normalizeListeResult = (existing = {}, form = null) => {
+    const base = {
+      statut: existing?.statut || "",
+      score: existing?.score || "",
+      voix: existing?.voix || "",
+      statut_t2: existing?.statut_t2 || "",
+      score_t2: existing?.score_t2 || "",
+      voix_t2: existing?.voix_t2 || "",
+    };
+
+    if (!form) return base;
+
+    if (form.tour === "T2") {
+      return {
+        ...base,
+        statut_t2: form.statut || "",
+        score_t2: form.score || "",
+        voix_t2: form.voix || "",
+      };
+    }
+
+    return {
+      ...base,
+      statut: form.statut || "",
+      score: form.score || "",
+      voix: form.voix || "",
+    };
+  };
 
 useEffect(() => {
   if (Object.keys(listeResults).length === 0) return;
@@ -945,12 +985,12 @@ useEffect(() => {
 
       if (match) {
         const rKey = `${commune.dept}|${commune.nom}|${li}`;
-        const res = listeResults[rKey];
+        const res = normalizeListeResult(listeResults[rKey]);
 
         if (res && (res.statut || res.statut_t2)) {
           return {
             ...cr,
-            statut: res.statut_t2 && res.statut_t2 !== "" ? res.statut_t2 : (res.statut || cr.statut),
+            statut: getFinalStatut(res) || cr.statut,
             statut_t2: res.statut_t2 || "",
             s1: res.score ? parseFloat(res.score) : cr.s1,
             s2: res.score_t2 ? parseFloat(res.score_t2) : cr.s2,
@@ -1025,7 +1065,7 @@ useEffect(() => {
         if (match && (match.statut || match.statut_t2)) {
           return {
             ...cr,
-            statut: match.statut_t2 && match.statut_t2 !== "" ? match.statut_t2 : match.statut,
+            statut: getFinalStatut(match) || cr.statut,
             statut_t2: match.statut_t2 || "",
             s1: match.s1 !== null ? match.s1 : cr.s1,
             s2: match.s2 !== null ? match.s2 : cr.s2,
@@ -1047,12 +1087,12 @@ useEffect(() => {
     const opp  = crList.filter(c => ["LR","RN","Centre/Indé","Renaissance","RE","Modem","UDI","DVD"].includes(c.groupe));
     return {
       total:crList.length, pspp:pspp.length, maj:maj.length, opp:opp.length,
-      cands:crList.filter(c=>c.statut==="Candidat").length,
-      e1:crList.filter(c=>c.statut==="Victoire 1er Tour"||c.statut==="Élu 1er tour").length,
-      e2:crList.filter(c=>c.statut==="Victoire 2nd Tour"||c.statut==="Élu 2nd tour"||c.statut_t2==="Victoire 2nd Tour").length,
-      ball:crList.filter(c=>(c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage")&&!c.statut_t2).length,
-      def:crList.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite"||c.statut_t2==="Défaite 2nd Tour").length,
-      des:crList.filter(c=>c.statut_t2==="Désistement").length,
+      cands:crList.filter(c=>getFinalStatut(c)==="Candidat").length,
+      e1: crList.filter(c => getFinalStatut(c)==="Victoire 1er Tour" || getFinalStatut(c)==="Élu 1er tour").length,
+      e2: crList.filter(c => getFinalStatut(c)==="Victoire 2nd Tour" || getFinalStatut(c)==="Élu 2nd tour").length,
+      ball: crList.filter(c => getFinalStatut(c)==="Qualifié·e pour le 2nd Tour" || getFinalStatut(c)==="Ballottage").length,
+      def: crList.filter(c => getFinalStatut(c)==="Défaite 1er Tour" || getFinalStatut(c)==="Défaite 2nd Tour" || getFinalStatut(c)==="Défaite").length,
+      des: crList.filter(c => getFinalStatut(c)==="Désistement").length,
     };
   }, [crList]);
 
@@ -1060,7 +1100,7 @@ useEffect(() => {
     let r = [...crList];
     if (fDept !== "all") r = r.filter(c => c.dept === fDept);
     if (fGroupe !== "all") r = r.filter(c => c.groupe === fGroupe);
-    if (fStatut !== "all") r = r.filter(c => (c.statut_t2 || c.statut) === fStatut);
+    if (fStatut !== "all") r = r.filter(c => getFinalStatut(c) === fStatut);
     if (search) { const q = search.toLowerCase(); r = r.filter(c => c.nom.toLowerCase().includes(q) || c.commune.toLowerCase().includes(q)); }
     r.sort((a,b) => { const v = String(a[sortKey]??"").localeCompare(String(b[sortKey]??""), "fr"); return sortDir==="asc"?v:-v; });
     return r;
