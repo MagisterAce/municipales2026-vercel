@@ -999,7 +999,8 @@ useEffect(() => {
           return {
             ...cr,
             statut: getFinalStatut(res) || cr.statut,
-            statut_t2: res.statut_t2 || "",
+            // Ne pas écraser un T2 existant avec vide
+            statut_t2: res.statut_t2 || cr.statut_t2 || "",
             s1: res.score ? parseFloat(res.score) : cr.s1,
             s2: res.score_t2 ? parseFloat(res.score_t2) : cr.s2,
           };
@@ -1077,7 +1078,9 @@ useEffect(() => {
             statut_t2: match.statut_t2 || "",
             s1: match.s1 !== null ? match.s1 : cr.s1,
             s2: match.s2 !== null ? match.s2 : cr.s2,
-            _fromSupabase: true,
+            // _fromSupabase bloque la mise à jour par listeResults
+            // On ne le pose que si T2 est déjà renseigné dans la row cr|
+            _fromSupabase: !!(match.statut_t2),
           };
         }
 
