@@ -285,7 +285,7 @@ const COMMUNES = [
   {nom:"Biarritz",dept:"64",pop:25000,maire:"M. Arostéguy (LR)",couleur_pol:"LR",enjeu:"fort",analyse:"CR Arostéguy (LR) vs Serge Blanco (CR Motsch) vs Dussaussois-Larralde (Horizons). RN Fournier.",cr_lies:[{nom:"M. Arostéguy",groupe:"LR"},{nom:"N. Motsch",groupe:"UDI"}]},
   {nom:"Hendaye",dept:"64",pop:18000,maire:"K. Écénarro (PS)",couleur_pol:"PS",enjeu:"moyen",analyse:"PS sortant se représente. CR Tariol 20ème sur liste. Alliance PCF+PNB+centristes.",cr_lies:[{nom:"B. Tariol",groupe:"PCF"}]},
   {nom:"Niort",dept:"79",pop:62000,maire:"J.-F. Baloge (DVC)",couleur_pol:"DVC",enjeu:"moyen",analyse:"Baloge solide (67% 2020). CR Chassagne sur liste sortante.",cr_lies:[{nom:"C. Chassagne",groupe:"PS/PP"}]},
-  {nom:"Poitiers",dept:"86",pop:88600,maire:"L. Moncond'huy (Verts)",couleur_pol:"Verts",enjeu:"fort",analyse:"Verts (sortante) vs PS Blanchard vs Centre Brottier. CR Tirant sur liste sortante.",cr_lies:[{nom:"B. Tirant",groupe:"PP"}]},
+  {nom:"Poitiers",dept:"86",pop:88600,maire:"L. Moncond'huy (Verts)",couleur_pol:"Verts",enjeu:"fort",analyse:"Verts (sortante) vs PS Blanchard vs Centre Brottier. CR Tirant sur liste sortante.",cr_lies:[{nom:"B. Tirant",groupe:"PS/PP"}]},
   {nom:"Châtellerault",dept:"86",pop:31000,maire:"J.-P. Abelin (UDI)",couleur_pol:"Centre",enjeu:"moyen",analyse:"CR Trousselle candidat liste Renaissance contre PS/PC/LFI.",cr_lies:[{nom:"Y. Trousselle",groupe:"PP"}]},
   {nom:"Limoges",dept:"87",pop:130000,maire:"É.-R. Lombertie (DVD)",couleur_pol:"DVD",enjeu:"très fort",analyse:"Droite éclatée : Lombertie + CR Guérin (LR) + Léonie. Gauche : Miguel (PS-PCF) + CR Bergeron vs Maudet (LFI). RN CR Freychet.",cr_lies:[{nom:"G. Guérin",groupe:"LR"},{nom:"T. Bergeron",groupe:"PS/PP"},{nom:"A. Freychet",groupe:"RN"}]},
   // ── Charente (16) – communes ajoutées
@@ -922,14 +922,15 @@ const saveListe = async () => {
 
   const isCompatibleNuanceForCr = (crGroupe, nuance) => {
     const n = (nuance || "").trim().toUpperCase();
-    if (crGroupe === "PS/PP")       return ["PS","UG","DVG","PRG","PCF"].includes(n);
+    if (crGroupe === "PS/PP" || crGroupe === "PP") return ["PS","UG","DVG","PRG","PCF","ÉCOLO","ECOLO"].includes(n);
     if (crGroupe === "PCF")         return ["PCF","FG","UG"].includes(n);
     if (crGroupe === "PRG")         return ["PRG","UG","DVG"].includes(n);
     if (crGroupe === "DVG")         return ["DVG","UG"].includes(n);
     if (crGroupe === "LFI")         return ["LFI"].includes(n);
-    if (crGroupe === "Écologistes") return ["ECOLO","ECO","VEC","ÉCOLO","ÉCOLOGISTE","VERTS"].includes(n);
+    if (crGroupe === "Écologistes") return ["ECOLO","ECO","VEC","ÉCOLO","ÉCOLOGISTE","VERTS","UG"].includes(n);
     if (crGroupe === "LR")          return ["LR","DVD"].includes(n);
-    if (crGroupe === "Centre/Indé") return ["DVC","UDI","RE","UC","DVC"].includes(n);
+    if (crGroupe === "UDI")         return ["UDI","DVC","RE","UC"].includes(n);
+    if (crGroupe === "Centre/Indé") return ["DVC","UDI","RE","UC"].includes(n);
     if (crGroupe === "RN")          return ["RN","UXD","EXD"].includes(n);
     return crGroupe === nuance;
   };
