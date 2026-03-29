@@ -181,7 +181,7 @@ const CR_DATA = [
 {id:"c116",dept:"40",nom:"Sylvie Franceschini",groupe:"RN",commune:"/",mandat:"Pas de mandat municipal",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 /* ── 47 LOT-ET-GARONNE (9) ── */
 {id:"c117",dept:"47",nom:"Maud Caruhel",groupe:"PS/PP",commune:"Marmande",mandat:"Adjointe au maire de Marmande",perspective:"Liste maire sortant Hocquelet",statut:"Candidat",s1:null,s2:null},
-{id:"c118",dept:"47",nom:"Delphine Eychenne",groupe:"PS/PP",commune:"Le Passage",mandat:"Pas de mandat (ex-adjointe Agen)",perspective:"Candidate face au maire DVG sortant Garcia",statut:"Candidat",s1:null,s2:null},
+{id:"c118",dept:"47",nom:"Delphine Eychenne",groupe:"DVG",commune:"Le Passage",mandat:"Pas de mandat (ex-adjointe Agen)",perspective:"Candidate face au maire DVG sortant Garcia",statut:"Candidat",s1:null,s2:null},
 {id:"c119",dept:"47",nom:"Sandrine Lafforre",groupe:"PS/PP",commune:"Montagnac-sur-Auvignon",mandat:"CM majoritaire Montagnac",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c120",dept:"47",nom:"Guillaume Molierac",groupe:"PS/PP",commune:"Villeréal",mandat:"Maire démissionnaire Villeréal",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c121",dept:"47",nom:"Jean-Luc Armand",groupe:"PRG",commune:"Cocumont",mandat:"Maire de Cocumont",perspective:"Candidat à sa réélection",statut:"Candidat",s1:null,s2:null},
@@ -351,7 +351,7 @@ const COMMUNES = [
   {nom:"Tarnos",dept:"40",pop:14100,maire:"M. Mabillet (UG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"UG sortant vs DVC x2.",cr_lies:[]},
   // ── Lot-et-Garonne (47) – communes ajoutées
   {nom:"Aiguillon",dept:"47",pop:2400,maire:"C. Girardi (DVD)",couleur_pol:"DVD",enjeu:"moyen",analyse:"4 listes. DVD sortant vs DIV x2 vs EXG.",cr_lies:[]},
-  {nom:"Le Passage",dept:"47",pop:9600,maire:"F. Garcia (DVG)",couleur_pol:"DVG",enjeu:"fort",analyse:"DVG sortant vs DVG Eychenne vs DVC Griffond vs DVD Frémy.",cr_lies:[{nom:"Delphine Eychenne",groupe:"PS/PP"}]},
+  {nom:"Le Passage",dept:"47",pop:9600,maire:"F. Garcia (DVG)",couleur_pol:"DVG",enjeu:"fort",analyse:"DVG sortant vs DVG Eychenne vs DVC Griffond vs DVD Frémy.",cr_lies:[{nom:"Delphine Eychenne",groupe:"DVG"}]},
   // ── Pyrénées-Atlantiques (64) – communes ajoutées
   {nom:"Anglet",dept:"64",pop:40000,maire:"C. Olive (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"DVD sortant vs UG Fanchini vs régionaliste Alfaro.",cr_lies:[]},
   {nom:"Bidart",dept:"64",pop:6900,maire:"M. Lamarque (DVG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"DVG sortant vs DVD Alzuri.",cr_lies:[]},
