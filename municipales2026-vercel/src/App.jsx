@@ -915,7 +915,7 @@ const saveListe = async () => {
     "RE":"Centre/Indé","LFI":"LFI","Écolo":"Écologistes","FG":"PCF",
   };
 
-  useEffect(() => {
+
 useEffect(() => {
   if (Object.keys(listeResults).length === 0) return;
 
