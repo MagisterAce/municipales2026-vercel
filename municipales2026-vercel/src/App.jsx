@@ -1183,7 +1183,7 @@ const BLOC_EXCEL_URL =
     {n:stats.cands,l:"Candidats",c:"#1a1a1a"},
     {n:stats.e1,l:"Élus 1T",c:"#2e7d32"},
     {n:stats.e2,l:"Élus 2T",c:"#1b5e20"},
-    {n:stats.ball,l:"Ballottages",c:"#e65100"},
+    {n:stats.ball,l:"Désistements",c:"#e65100"},
     {n:stats.def,l:"Défaites",c:"#b71c1c"},
   ];
 
