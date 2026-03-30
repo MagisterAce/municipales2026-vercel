@@ -1146,12 +1146,16 @@ useEffect(() => {
   };
   const sortToggle = k => { if(sortKey===k) setSortDir(d => d==="asc"?"desc":"asc"); else {setSortKey(k);setSortDir("asc");} };
 
+  const EXCEL_URL =
+    "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_CR_synthese_v2.xlsx";
+
   const exportCSV = () => {
-    const h = ["Dept","Nom","Groupe","Commune","Mandat","Perspectives","Score 1T%","Score 2T%","Statut","Notes"];
-    const rows = filtered.map(c => [c.dept,c.nom,c.groupe,c.commune,c.mandat,c.perspective,c.s1??""  ,c.s2??"",c.statut,c.notes??""]);
-    const csv = [h,...rows].map(r => r.map(v => JSON.stringify(String(v))).join(';')).join('\n')
-    const blob = new Blob(["\uFEFF"+csv],{type:"text/csv"});
-    const a = document.createElement("a"); a.download="CR_mun2026.csv"; a.href=URL.createObjectURL(blob); a.click();
+    const a = document.createElement("a");
+    a.href = EXCEL_URL;
+    a.download = "Municipales_2026_NA_CR_synthese_v2.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Charger SheetJS via CDN dynamiquement
@@ -1517,7 +1521,7 @@ const exportExcel = async () => {
             <div className="tc">
               <div className="sh">
                 <div className="sh-l"><span className="stag">CR</span><span className="sh-title">Conseillers régionaux</span></div>
-                <div className="sh-act"><button className="btn" onClick={exportCSV}>↓ CSV</button></div>
+                <div className="sh-act"><button className="btn" onClick={exportCSV}>↓ Excel</button></div>
               </div>
               <div className="frow">
                 <input className="sinp" placeholder="🔍 Rechercher..." value={search} onChange={e=>setSearch(e.target.value)}/>
