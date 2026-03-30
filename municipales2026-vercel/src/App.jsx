@@ -1153,14 +1153,6 @@ useEffect(() => {
     window.open(EXCEL_URL, "_blank", "noopener,noreferrer");
   };
 
-  // Charger SheetJS via CDN dynamiquement
-  useEffect(() => {
-    if (window.XLSX) return;
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    s.async = true;
-    document.head.appendChild(s);
-  }, []);
 
 const BLOC_EXCEL_URL =
     "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_Global.xlsx";
@@ -1170,137 +1162,11 @@ const BLOC_EXCEL_URL =
   };
 
 
-  const generatePdf = async () => {
-    const nbSaisies = Object.keys(listeResults).filter(k => listeResults[k]?.statut).length;
-    if (nbSaisies === 0) {
-      alert("Aucun résultat n'a encore été saisi dans l'onglet Communes Clés.");
-      return;
-    }
+  const PDF_NOTE_URL =
+    "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_Note_Analyse.pdf";
 
-    try {
-      const blocs = {
-        "PS / PP / PCF / PRG": ["PS/PP","PS","PP","PCF","PC","PRG"],
-        "DVG": ["DVG"],
-        "LFI": ["LFI"],
-        "Écologistes / Verts": ["Écologistes","Écologistes","Écologiste","Écologistes"],
-        "Centre / UDI / Horizons": ["Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","DVC"],
-        "LR / DVD": ["LR","DVD"],
-        "RN / EXD": ["RN","EXD","UXD"],
-        "Régionaliste": ["Rég."],
-        "Divers / NC": ["NC","DIV","SE"],
-      };
-
-      const syntheseBlocs = Object.entries(blocs).map(([label, groupes]) => {
-        const crs = crList.filter(c => groupes.includes(c.groupe));
-        return {
-          bloc: label,
-          engages: crs.length,
-          victoires_1t: crs.filter(c => c.statut === "Victoire 1er Tour").length,
-          victoires_2t: crs.filter(c => c.statut === "Victoire 2nd Tour").length,
-          qualifies_2t: crs.filter(c => c.statut === "Qualifié·e pour le 2nd Tour").length,
-          defaites_1t: crs.filter(c => c.statut === "Défaite 1er Tour").length,
-          defaites_2t: crs.filter(c => c.statut === "Défaite 2nd Tour").length,
-          en_attente: crs.filter(c => c.statut === "Candidat").length,
-        };
-      });
-
-      const syntheseDepts = DEPTS.map(d => {
-        const crDept = crList.filter(c => c.dept === d.code);
-        const communesSuivies = COMMUNES.filter(c => c.dept === d.code).length;
-        const communesAvecResultats = COMMUNES.filter(c => {
-          if (c.dept !== d.code) return false;
-          const comKey = `${c.dept}|${c.nom}`;
-          const listes = LISTES_DATA[comKey] || [];
-          return listes.some((_, li) => {
-            const r = listeResults[`${comKey}|${li}`];
-            return r && (r.statut || r.score || r.voix);
-          });
-        }).length;
-        return {
-          dept: d.code,
-          departement: d.nom,
-          communes_suivies: communesSuivies,
-          communes_avec_resultats: communesAvecResultats,
-          cr_suivis: crDept.length,
-          victoires_1t: crDept.filter(c => getFinalStatut(c) === "Victoire 1er Tour").length,
-          victoires_2t: crDept.filter(c => getFinalStatut(c) === "Victoire 2nd Tour").length,
-          qualifies_2t: crDept.filter(c => getFinalStatut(c) === "Qualifié·e pour le 2nd Tour").length,
-          defaites: crDept.filter(c => ["Défaite 1er Tour", "Défaite 2nd Tour", "Défaite"].includes(getFinalStatut(c))).length,
-        };
-      }).filter(d => d.communes_avec_resultats > 0 || d.victoires_1t || d.victoires_2t || d.qualifies_2t || d.defaites);
-
-      const communesAnalysees = COMMUNES.map(c => {
-        const comKey = `${c.dept}|${c.nom}`;
-        const listes = LISTES_DATA[comKey] || [];
-        const resultats = listes.map((l, li) => {
-          const r = listeResults[`${comKey}|${li}`];
-          if (!r || (!r.statut && !r.score && !r.voix)) return null;
-          return {
-            liste: l.libelle,
-            nuance: l.nuance,
-            tete: l.tete,
-            statut: r.statut || "",
-            score: r.score || "",
-            voix: r.voix || "",
-          };
-        }).filter(Boolean);
-        if (resultats.length === 0) return null;
-        return {
-          dept: c.dept,
-          commune: c.nom,
-          enjeu: c.enjeu,
-          maire_sortant: c.maire,
-          analyse_initiale: c.analyse,
-          cr_lies: c.cr_lies,
-          resultats,
-        };
-      }).filter(Boolean);
-
-      const payload = {
-        generatedAt: new Date().toISOString(),
-        lastUpd,
-        stats,
-        blocs: syntheseBlocs,
-        depts: syntheseDepts,
-        communes: communesAnalysees,
-        crs: crList
-          .filter(c => getFinalStatut(c) !== "Non-candidat")
-          .map(c => ({
-            dept: c.dept,
-            nom: c.nom,
-            groupe: c.groupe,
-            commune: c.commune,
-            statut: c.statut_t2 || c.statut,
-            s1: c.s1,
-            s2: c.s2,
-            perspective: c.perspective,
-          })),
-      };
-
-      const response = await fetch('https://oqlfodtesrrbqlawrgez.supabase.co/functions/v1/generate-pdf', {
-
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Erreur de génération du PDF');
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
-      a.href = url;
-      a.download = `Municipales2026_Note_Analyse_${date}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Impossible de générer le PDF.');
-    }
+  const generatePdf = () => {
+    window.open(PDF_NOTE_URL, "_blank", "noopener,noreferrer");
   };
 
   const selDeptData = selDept ? DEPTS.find(d=>d.code===selDept) : null;
