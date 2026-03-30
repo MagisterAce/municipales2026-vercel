@@ -1149,13 +1149,8 @@ useEffect(() => {
   const EXCEL_URL =
     "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_CR_synthese_v2.xlsx";
 
-  const exportCSV = () => {
-    const a = document.createElement("a");
-    a.href = EXCEL_URL;
-    a.download = "Municipales_2026_NA_CR_synthese_v2.xlsx";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const downloadExcel = () => {
+    window.open(EXCEL_URL, "_blank", "noopener,noreferrer");
   };
 
   // Charger SheetJS via CDN dynamiquement
@@ -1521,7 +1516,7 @@ const exportExcel = async () => {
             <div className="tc">
               <div className="sh">
                 <div className="sh-l"><span className="stag">CR</span><span className="sh-title">Conseillers régionaux</span></div>
-                <div className="sh-act"><button className="btn" onClick={exportCSV}>↓ Excel</button></div>
+                <div className="sh-act"><button type="button" className="btn" onClick={downloadExcel}>↓ Excel</button></div>
               </div>
               <div className="frow">
                 <input className="sinp" placeholder="🔍 Rechercher..." value={search} onChange={e=>setSearch(e.target.value)}/>
