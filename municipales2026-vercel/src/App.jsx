@@ -1163,7 +1163,7 @@ useEffect(() => {
   }, []);
 
 const BLOC_EXCEL_URL =
-    "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_Global";
+    "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_Global.xlsx";
 
   const downloadBlocExcel = () => {
     window.open(BLOC_EXCEL_URL, "_blank", "noopener,noreferrer");
