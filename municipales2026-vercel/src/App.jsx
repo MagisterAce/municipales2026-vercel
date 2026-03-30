@@ -1162,46 +1162,11 @@ useEffect(() => {
     document.head.appendChild(s);
   }, []);
 
-const exportExcel = async () => {
-    try {
-      const liste_results_api = {};
-      Object.entries(listeResults).forEach(([k, v]) => {
-        liste_results_api[k] = {
-          statut_t1: v.statut || v.statut_t1 || null,
-          score_t1: v.score ? parseFloat(v.score) : (v.score_t1 ? parseFloat(v.score_t1) : null),
-          voix_t1: v.voix ? parseInt(v.voix) : (v.voix_t1 ? parseInt(v.voix_t1) : null),
-          statut_t2: v.statut_t2 || null,
-          score_t2: v.score_t2 ? parseFloat(v.score_t2) : null,
-          voix_t2: v.voix_t2 ? parseInt(v.voix_t2) : null,
-        };
-      });
-      const payload = {
-        depts: DEPTS,
-        communes: COMMUNES,
-        listes_data: LISTES_DATA,
-        liste_results: liste_results_api,
-        cr_list: crList,
-      };
-      const response = await fetch('/api/generate-excel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Erreur génération Excel');
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const date = new Date().toLocaleDateString('fr-FR').replace(/\//g,'-');
-      a.href = url;
-      a.download = `Municipales2026_NA_Resultats_${date}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert('Impossible de générer le fichier Excel : ' + err.message);
-    }
+const BLOC_EXCEL_URL =
+    "https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/Municipales_2026_NA_v2.xlsx";
+
+  const downloadBlocExcel = () => {
+    window.open(BLOC_EXCEL_URL, "_blank", "noopener,noreferrer");
   };
 
 
@@ -1853,7 +1818,8 @@ const exportExcel = async () => {
                     ↓ Note d'analyse PDF
                   </button>
                   <button
-                    onClick={exportExcel}
+                    type="button"
+                    onClick={downloadBlocExcel}
                     style={{
                       background:"#1b5e20",border:"2px solid #1b5e20",
                       color:"#fff",fontFamily:"'Source Code Pro',monospace",
