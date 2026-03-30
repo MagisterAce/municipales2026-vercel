@@ -194,7 +194,7 @@ const CR_DATA = [
 {id:"c127",dept:"64",nom:"Charline Claveau",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat municipal",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c128",dept:"64",nom:"Émilie Alonso",groupe:"PS/PP",commune:"Pau",mandat:"Pas de mandat municipal",perspective:"12ème liste UG Jérôme Marbot Pau",statut:"Candidat",s1:null,s2:null},
 {id:"c129",dept:"64",nom:"Frédérique Espagnac",groupe:"PS/PP",commune:"Pau",mandat:"Sénatrice",perspective:"52ème liste UG Jérôme Marbot Pau",statut:"Candidat",s1:null,s2:null},
-{id:"c130",dept:"64",nom:"Mathieu Bergé",groupe:"PS/PP",commune:"Bayonne",mandat:"CM opposition Bayonne",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
+{id:"c130",dept:"64",nom:"Mathieu Bergé",groupe:"PS/PP",commune:"Bayonne",mandat:"CM opposition Bayonne",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c131",dept:"64",nom:"Jean-Marie Bergeret-Tercq",groupe:"PS/PP",commune:"Artix",mandat:"Maire d'Artix",perspective:"Candidat à sa réélection (4ème mandat)",statut:"Candidat",s1:null,s2:null},
 {id:"c132",dept:"64",nom:"Pierre Chéret",groupe:"PS/PP",commune:"Oeyreluy (40)",mandat:"Pas de mandat municipal",perspective:"Tête de liste Oeyreluy",statut:"Candidat",s1:null,s2:null},
 {id:"c133",dept:"64",nom:"Émilie Dutoya",groupe:"PS/PP",commune:"Ciboure",mandat:"Adjointe maire Ciboure",perspective:"4ème liste maire sortant Ciboure",statut:"Candidat",s1:null,s2:null},
@@ -1117,7 +1117,7 @@ useEffect(() => {
       cands:crList.filter(c=>getFinalStatut(c)==="Candidat").length,
       e1: crList.filter(c => getFinalStatut(c)==="Victoire 1er Tour" || getFinalStatut(c)==="Élu 1er tour").length,
       e2: crList.filter(c => getFinalStatut(c)==="Victoire 2nd Tour" || getFinalStatut(c)==="Élu 2nd tour").length,
-      ball: crList.filter(c => getFinalStatut(c)==="Qualifié·e pour le 2nd Tour" || getFinalStatut(c)==="Ballottage").length,
+      ball: crList.filter(c => getFinalStatut(c)==="Qualifié·e pour le 2nd Tour" || getFinalStatut(c)==="Ballottage" || getFinalStatut(c)==="Désistement").length,
       def: crList.filter(c => getFinalStatut(c)==="Défaite 1er Tour" || getFinalStatut(c)==="Défaite 2nd Tour" || getFinalStatut(c)==="Défaite").length,
       des: crList.filter(c => getFinalStatut(c)==="Désistement").length,
     };
