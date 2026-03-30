@@ -99,11 +99,11 @@ const CR_DATA = [
 {id:"c037",dept:"23",nom:"Étienne Lejeune",groupe:"PS/PP",commune:"La Souterraine",mandat:"Maire de La Souterraine",perspective:"Tête de liste – Maire sortant",statut:"Candidat",s1:null,s2:null},
 {id:"c038",dept:"23",nom:"Marie-Hélène Michon",groupe:"PS/PP",commune:"Flayat",mandat:"Maire de Flayat",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 /* ── 24 DORDOGNE (13) ── */
-{id:"c039",dept:"24",nom:"Nathalie Arnaud",groupe:"PS/PP",commune:"Marsac-sur-l'Isle",mandat:"Adjointe maire Marsac",perspective:"Candidate majorité",statut:"Candidat",s1:null,s2:null},
+{id:"c039",dept:"24",nom:"Nathalie Arnaud",groupe:"PS/PP",commune:"Marsac-sur-l'Isle",mandat:"Adjointe maire Marsac",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c040",dept:"24",nom:"Christophe Cathus",groupe:"PS/PP",commune:"Calès",mandat:"Maire de Calès",perspective:"Candidat",statut:"Candidat",s1:null,s2:null},
 {id:"c041",dept:"24",nom:"Benjamin Delrieux",groupe:"PS/PP",commune:"Siorac-en-Périgord",mandat:"CM majoritaire Siorac",perspective:"Candidat majorité",statut:"Candidat",s1:null,s2:null},
 {id:"c042",dept:"24",nom:"Delphine Labails",groupe:"PS/PP",commune:"Périgueux",mandat:"CM Périgueux (ex-maire)",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c043",dept:"24",nom:"Colette Langlade",groupe:"PS/PP",commune:"Thiviers",mandat:"CM majoritaire Thiviers",perspective:"Candidate majorité",statut:"Candidat",s1:null,s2:null},
+{id:"c043",dept:"24",nom:"Colette Langlade",groupe:"PS/PP",commune:"Thiviers",mandat:"CM majoritaire Thiviers",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c044",dept:"24",nom:"Nicolas Platon",groupe:"PS/PP",commune:"Ribérac",mandat:"Maire de Ribérac",perspective:"Candidat naturel",statut:"Candidat",s1:null,s2:null},
 {id:"c045",dept:"24",nom:"Jacqueline Simonnet",groupe:"PRG",commune:"Bergerac",mandat:"CM d'opposition Bergerac",perspective:"Candidate opposition Bergerac",statut:"Candidat",s1:null,s2:null},
 {id:"c046",dept:"24",nom:"Fanny Castegnède",groupe:"PCF",commune:"Boulazac Isle Manoire",mandat:"Maire de Boulazac Isle Manoire",perspective:"Candidate naturelle",statut:"Candidat",s1:null,s2:null},
