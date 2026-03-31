@@ -1168,7 +1168,6 @@ const BLOC_EXCEL_URL =
 
 
   // APRÈS
-const [generatingPdf, setGeneratingPdf] = useState(false);
 
 const generatePdf = () => { window.open('https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/note_municipales2026_v4.html', '_blank', 'noopener,noreferrer'); };
 
@@ -1684,7 +1683,7 @@ const generatePdf = () => { window.open('https://oqlfodtesrrbqlawrgez.supabase.c
                       textTransform:"uppercase"
                     }}
                   >
-                    '↓ Note d'analyse PDF'
+                    ↓ Note d'analyse PDF
                   </button>
                   <button
                     type="button"
