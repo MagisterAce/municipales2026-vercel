@@ -118,7 +118,7 @@ const CR_DATA = [
 {id:"c050",dept:"24",nom:"Florence Joubert",groupe:"RN",commune:"/",mandat:"Pas de mandat municipal",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c051",dept:"24",nom:"Jacques Colombier",groupe:"RN",commune:"/",mandat:"Pas de mandat municipal",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 /* ── 33 GIRONDE (44) ── */
-{id:"c052",dept:"33",nom:"Alain Rousset",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
+{id:"c052",dept:"33",nom:"Alain Rousset",groupe:"PS/PP",commune:"Pessac",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c053",dept:"33",nom:"Jean-Louis Nembrini",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c054",dept:"33",nom:"Françoise Jeanson",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat local",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c055",dept:"33",nom:"Laurence Rouède",groupe:"PS/PP",commune:"Libourne",mandat:"Adjointe maire Libourne",perspective:"Ne repart pas – candidate sénatoriales 2026",statut:"Non-candidat",s1:null,s2:null},
