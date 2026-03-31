@@ -65,7 +65,7 @@ const CR_DATA = [
 {id:"c006",dept:"16",nom:"Thomas Chevalerias",groupe:"LR",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c007",dept:"16",nom:"Caroline Colombier",groupe:"RN",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c179",dept:"16",nom:"Françoise Coutant",groupe:"Écologistes",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
-{id:"c180",dept:"16",nom:"Xavier Bonnefont",groupe:"LR",commune:"Angoulême",mandat:"Maire d'Angoulême",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
+{id:"c180",dept:"16",nom:"Xavier Bonnefont",groupe:"LR",commune:"Angoulême",mandat:"Maire d'Angoulême",perspective:"Candidat à sa réélection",statut:"Candidat",s1:null,s2:null},
 /* ── 17 CHARENTE-MARITIME (20) ── */
 {id:"c008",dept:"17",nom:"Rémi Justinien",groupe:"PS/PP",commune:"Tonnay-Charente",mandat:"Adjoint au maire de Tonnay-Charente",perspective:"Tête de liste PS Tonnay-Charente",statut:"Candidat",s1:null,s2:null},
 {id:"c009",dept:"17",nom:"Gérard Blanchard",groupe:"PS/PP",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
@@ -106,7 +106,7 @@ const CR_DATA = [
 {id:"c040",dept:"24",nom:"Christophe Cathus",groupe:"PS/PP",commune:"Calès",mandat:"Maire de Calès",perspective:"Candidat",statut:"Candidat",s1:null,s2:null},
 {id:"c041",dept:"24",nom:"Benjamin Delrieux",groupe:"PS/PP",commune:"Siorac-en-Périgord",mandat:"CM majoritaire Siorac",perspective:"Candidat majorité",statut:"Candidat",s1:null,s2:null},
 {id:"c042",dept:"24",nom:"Delphine Labails",groupe:"PS/PP",commune:"Périgueux",mandat:"CM Périgueux (ex-maire)",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
-{id:"c182",dept:"24",nom:"Jean-Pierre Raynaud",groupe:"PS/PP",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
+{id:"c182",dept:"24",nom:"Jean-Pierre Raynaud",groupe:"PS/PP",commune:"/",mandat:"/",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c043",dept:"24",nom:"Colette Langlade",groupe:"PS/PP",commune:"Thiviers",mandat:"CM majoritaire Thiviers",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c044",dept:"24",nom:"Nicolas Platon",groupe:"PS/PP",commune:"Ribérac",mandat:"Maire de Ribérac",perspective:"Candidat naturel",statut:"Candidat",s1:null,s2:null},
 {id:"c045",dept:"24",nom:"Jacqueline Simonnet",groupe:"PRG",commune:"Bergerac",mandat:"CM d'opposition Bergerac",perspective:"Candidate opposition Bergerac",statut:"Candidat",s1:null,s2:null},
@@ -191,7 +191,7 @@ const CR_DATA = [
 {id:"c121",dept:"47",nom:"Jean-Luc Armand",groupe:"PRG",commune:"Cocumont",mandat:"Maire de Cocumont",perspective:"Candidat à sa réélection",statut:"Candidat",s1:null,s2:null},
 {id:"c122",dept:"47",nom:"Maryse Combres",groupe:"Écologiste",commune:"Agen",mandat:"CM opposition Agen",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c123",dept:"47",nom:"Jean Dionis du Séjour",groupe:"Centre/Indé",commune:"Agen",mandat:"Maire d'Agen – Pdt Agglo",perspective:"Candidat à sa réélection",statut:"Candidat",s1:null,s2:null},
-{id:"c183",dept:"47",nom:"Annick Cousin",groupe:"Centre/Indé",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
+{id:"c183",dept:"47",nom:"Annick Cousin",groupe:"RN",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c124",dept:"47",nom:"Marie Costes",groupe:"LR",commune:"Saint-Front-sur-Lémance",mandat:"Maire St-Front-sur-Lémance",perspective:"Candidate à sa réélection",statut:"Candidat",s1:null,s2:null},
 {id:"c125",dept:"47",nom:"Sébastien Delboscq",groupe:"RN",commune:"Agen",mandat:"Pas de mandat municipal",perspective:"Candidat RN Agen (tête de liste)",statut:"Candidat",s1:null,s2:null},
 /* ── 64 PYRÉNÉES-ATLANTIQUES (16) ── */
