@@ -1123,7 +1123,7 @@ useEffect(() => {
       cands:crList.filter(c=>c.statut !== "Non-candidat").length,
       e1: crList.filter(c => getFinalStatut(c)==="Victoire 1er Tour" || getFinalStatut(c)==="Élu 1er tour").length,
       e2: crList.filter(c => getFinalStatut(c)==="Victoire 2nd Tour" || getFinalStatut(c)==="Élu 2nd tour").length,
-      ball: crList.filter(c => getFinalStatut(c)==="Qualifié·e pour le 2nd Tour" || getFinalStatut(c)==="Ballottage" || getFinalStatut(c)==="Désistement").length,
+      ball: crList.filter(c => getFinalStatut(c)==="Qualifié·e pour le 2nd Tour" || getFinalStatut(c)==="Ballottage").length,
       def: crList.filter(c => getFinalStatut(c)==="Défaite 1er Tour" || getFinalStatut(c)==="Défaite 2nd Tour" || getFinalStatut(c)==="Défaite").length,
       des: crList.filter(c => getFinalStatut(c)==="Désistement").length,
     };
@@ -1186,7 +1186,8 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
     {n:stats.cands,l:"Engagés",c:"#1a1a1a"},
     {n:stats.e1,l:"Élus 1T",c:"#2e7d32"},
     {n:stats.e2,l:"Élus 2T",c:"#1b5e20"},
-    {n:stats.ball,l:"Désistements",c:"#e65100"},
+    {n:stats.ball,l:"Qualifiés 2T",c:"#e65100"},
+    {n:stats.des,l:"Désistements",c:"#6d4c41"},
     {n:stats.def,l:"Défaites",c:"#b71c1c"},
   ];
 
@@ -1646,7 +1647,8 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                   <div style={{display:"flex",flexWrap:"wrap",gap:16,justifyContent:"center",marginBottom:32}}>
                     {[
                       {label:"Victoires 1T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 1er Tour").length,bg:"#c8e6c9",c:"#1b5e20"},
-                      {label:"Qualifiés 2T",val:crList.filter(c=>getFinalStatut(c)==="Qualifié·e pour le 2nd Tour"||getFinalStatut(c)==="Désistement").length,bg:"#fff3e0",c:"#e65100"},
+                      {label:"Qualifiés 2T",val:crList.filter(c=>getFinalStatut(c)==="Qualifié·e pour le 2nd Tour"||getFinalStatut(c)==="Ballottage").length,bg:"#fff3e0",c:"#e65100"},
+                      {label:"Désistements",val:crList.filter(c=>getFinalStatut(c)==="Désistement").length,bg:"#efebe9",c:"#6d4c41"},
                       {label:"Défaites 1T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 1er Tour").length,bg:"#ffebee",c:"#b71c1c"},
                       {label:"Victoires 2T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 2nd Tour").length,bg:"#a5d6a7",c:"#1b5e20"},
                       {label:"Défaites 2T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 2nd Tour").length,bg:"#ef9a9a",c:"#b71c1c"},
