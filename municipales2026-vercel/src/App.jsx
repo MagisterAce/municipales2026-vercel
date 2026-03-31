@@ -1115,7 +1115,7 @@ useEffect(() => {
 
   const stats = useMemo(() => {
     const pspp = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG"].includes(c.groupe));
-    const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG","Écologistes","Écologistes","Écologiste","Écologistes","DVG","LFI"].includes(c.groupe));
+    const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG"].includes(c.groupe));
     const opp  = crList.filter(c => ["LR","RN","Centre/Indé","Renaissance","RE","Modem","UDI","DVD"].includes(c.groupe));
     return {
       total:crList.length, pspp:pspp.length, maj:maj.length, opp:opp.length,
