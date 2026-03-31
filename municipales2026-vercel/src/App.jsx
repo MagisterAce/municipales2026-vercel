@@ -1114,7 +1114,7 @@ useEffect(() => {
 }, []);
 
   const stats = useMemo(() => {
-    const pspp = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG"].includes(c.groupe));
+    const pspp = crList.filter(c => ["PS/PP","PS","PP"].includes(c.groupe));
     const maj  = crList.filter(c => ["PS/PP","PS","PP","PCF","PC","PRG"].includes(c.groupe));
     const opp  = crList.filter(c => ["LR","RN","Centre/Indé","Renaissance","RE","Modem","UDI","DVD"].includes(c.groupe));
     return {
