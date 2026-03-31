@@ -1684,7 +1684,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                       textTransform:"uppercase"
                     }}
                   >
-                    ↓ Note d'analyse PDF
+                    ↓ Note d'analyse
                   </button>
                   <button
                     type="button"
