@@ -1648,7 +1648,7 @@ const BLOC_EXCEL_URL =
                   <div style={{display:"flex",flexWrap:"wrap",gap:16,justifyContent:"center",marginBottom:32}}>
                     {[
                       {label:"Victoires 1T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 1er Tour").length,bg:"#c8e6c9",c:"#1b5e20"},
-                      {label:"Qualifiés 2T",val:crList.filter(c=>getFinalStatut(c)==="Qualifié·e pour le 2nd Tour").length,bg:"#fff3e0",c:"#e65100"},
+                      {label:"Qualifiés 2T",val:crList.filter(c=>getFinalStatut(c)==="Qualifié·e pour le 2nd Tour"||getFinalStatut(c)==="Désistement").length,bg:"#fff3e0",c:"#e65100"},
                       {label:"Défaites 1T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 1er Tour").length,bg:"#ffebee",c:"#b71c1c"},
                       {label:"Victoires 2T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 2nd Tour").length,bg:"#a5d6a7",c:"#1b5e20"},
                       {label:"Défaites 2T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 2nd Tour").length,bg:"#ef9a9a",c:"#b71c1c"},
