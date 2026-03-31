@@ -1114,7 +1114,7 @@ useEffect(() => {
     const opp  = crList.filter(c => ["LR","RN","Centre/Indé","Renaissance","RE","Modem","UDI","DVD"].includes(c.groupe));
     return {
       total:crList.length, pspp:pspp.length, maj:maj.length, opp:opp.length,
-      cands:crList.filter(c=>getFinalStatut(c)==="Candidat").length,
+      cands:crList.filter(c=>c.statut !== "Non-candidat").length,
       e1: crList.filter(c => getFinalStatut(c)==="Victoire 1er Tour" || getFinalStatut(c)==="Élu 1er tour").length,
       e2: crList.filter(c => getFinalStatut(c)==="Victoire 2nd Tour" || getFinalStatut(c)==="Élu 2nd tour").length,
       ball: crList.filter(c => getFinalStatut(c)==="Qualifié·e pour le 2nd Tour" || getFinalStatut(c)==="Ballottage" || getFinalStatut(c)==="Désistement").length,
@@ -1180,7 +1180,7 @@ const BLOC_EXCEL_URL =
     {n:stats.pspp,l:"PS / PP",c:"#E8186D"},
     {n:stats.maj,l:"Majorité",c:"#E8186D"},
     {n:stats.opp,l:"Opposition",c:"#1565c0"},
-    {n:stats.cands,l:"Candidats",c:"#1a1a1a"},
+    {n:stats.cands,l:"Engagés",c:"#1a1a1a"},
     {n:stats.e1,l:"Élus 1T",c:"#2e7d32"},
     {n:stats.e2,l:"Élus 2T",c:"#1b5e20"},
     {n:stats.ball,l:"Désistements",c:"#e65100"},
