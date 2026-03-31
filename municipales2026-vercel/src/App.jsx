@@ -1186,7 +1186,6 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
     {n:stats.cands,l:"Engagés",c:"#1a1a1a"},
     {n:stats.e1,l:"Élus 1T",c:"#2e7d32"},
     {n:stats.e2,l:"Élus 2T",c:"#1b5e20"},
-    {n:stats.ball,l:"Qualifiés 2T",c:"#e65100"},
     {n:stats.des,l:"Désistements",c:"#6d4c41"},
     {n:stats.def,l:"Défaites",c:"#b71c1c"},
   ];
@@ -1647,7 +1646,6 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                   <div style={{display:"flex",flexWrap:"wrap",gap:16,justifyContent:"center",marginBottom:32}}>
                     {[
                       {label:"Victoires 1T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 1er Tour").length,bg:"#c8e6c9",c:"#1b5e20"},
-                      {label:"Qualifiés 2T",val:crList.filter(c=>c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage").length,bg:"#fff3e0",c:"#e65100"},
                       {label:"Désistements",val:crList.filter(c=>c.statut_t2==="Désistement"||(c.statut==="Désistement"&&!c.statut_t2)).length,bg:"#efebe9",c:"#6d4c41"},
                       {label:"Défaites 1T",val:crList.filter(c=>getFinalStatut(c)==="Défaite 1er Tour").length,bg:"#ffebee",c:"#b71c1c"},
                       {label:"Victoires 2T",val:crList.filter(c=>getFinalStatut(c)==="Victoire 2nd Tour").length,bg:"#a5d6a7",c:"#1b5e20"},
