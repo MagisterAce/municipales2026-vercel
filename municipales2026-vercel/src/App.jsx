@@ -173,7 +173,7 @@ const CR_DATA = [
 {id:"c103",dept:"40",nom:"Frédérique Charpenel",groupe:"PS/PP",commune:"Soustons",mandat:"Maire de Soustons",perspective:"Candidate à sa réélection",statut:"Candidat",s1:null,s2:null},
 {id:"c104",dept:"40",nom:"Sophie Weber",groupe:"PS/PP",commune:"Mimizan",mandat:"CM déléguée Mimizan",perspective:"8ème liste Frédéric Pomarez Mimizan",statut:"Candidat",s1:null,s2:null},
 {id:"c105",dept:"40",nom:"Marie-Laure Lafargue",groupe:"PS/PP",commune:"Mont-de-Marsan",mandat:"Pas de mandat municipal",perspective:"2ème liste Frédéric Dutin Mont-de-Marsan",statut:"Candidat",s1:null,s2:null},
-{id:"c106",dept:"40",nom:"Éric Sargiocomo",groupe:"PS/PP",commune:"/",mandat:"Député européen",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
+{id:"c106",dept:"40",nom:"Éric Sargiacomo",groupe:"PS/PP",commune:"/",mandat:"Député européen",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c107",dept:"40",nom:"Serge Sore",groupe:"PS/PP",commune:"Luxey",mandat:"Maire de Luxey",perspective:"Candidat à sa réélection (3ème mandat)",statut:"Candidat",s1:null,s2:null},
 {id:"c108",dept:"40",nom:"Maryline Beyris",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat municipal",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c109",dept:"40",nom:"Alain Baché",groupe:"PCF",commune:"Mont-de-Marsan",mandat:"CM opposition Mont-de-Marsan",perspective:"5ème liste Frédéric Dutin Mont-de-Marsan",statut:"Candidat",s1:null,s2:null},
