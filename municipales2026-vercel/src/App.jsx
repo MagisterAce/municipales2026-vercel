@@ -187,7 +187,7 @@ const CR_DATA = [
 /* ── 47 LOT-ET-GARONNE (9) ── */
 {id:"c117",dept:"47",nom:"Maud Caruhel",groupe:"PS/PP",commune:"Marmande",mandat:"Adjointe au maire de Marmande",perspective:"Liste maire sortant Hocquelet",statut:"Candidat",s1:null,s2:null},
 {id:"c118",dept:"47",nom:"Delphine Eychenne",groupe:"PS/PP",commune:"Le Passage",mandat:"Pas de mandat (ex-adjointe Agen)",perspective:"Candidate face au maire DVG sortant Garcia",statut:"Candidat",s1:null,s2:null},
-{id:"c119",dept:"47",nom:"Sandrine Lafforre",groupe:"PS/PP",commune:"Montagnac-sur-Auvignon",mandat:"CM majoritaire Montagnac",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
+{id:"c119",dept:"47",nom:"Sandrine Laffore",groupe:"PS/PP",commune:"Montagnac-sur-Auvignon",mandat:"CM majoritaire Montagnac",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c120",dept:"47",nom:"Guillaume Molierac",groupe:"PS/PP",commune:"Villeréal",mandat:"Maire démissionnaire Villeréal",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c121",dept:"47",nom:"Jean-Luc Armand",groupe:"PRG",commune:"Cocumont",mandat:"Maire de Cocumont",perspective:"Candidat à sa réélection",statut:"Candidat",s1:null,s2:null},
 {id:"c122",dept:"47",nom:"Maryse Combres",groupe:"Écologiste",commune:"Agen",mandat:"CM opposition Agen",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
