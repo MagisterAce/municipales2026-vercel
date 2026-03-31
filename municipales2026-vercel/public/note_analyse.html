@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Note d'analyse – Municipales 2026 Nouvelle-Aquitaine</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Code+Pro:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;font-size:10pt;color:#1a1a1a;background:#fff;line-height:1.55}
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:60px 70px;
+  background:linear-gradient(160deg,#1a0a10 0%,#5c0e28 45%,#E8186D 100%);color:#fff;page-break-after:always}
+.ctag{font-family:'Source Code Pro',monospace;font-size:8pt;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:32px}
+.ctit{font-family:'Libre Baskerville',serif;font-size:32pt;font-weight:700;line-height:1.15;margin-bottom:12px}
+.cst{font-family:'Source Sans 3',sans-serif;font-size:13pt;color:rgba(255,255,255,.65);margin-bottom:44px}
+.cstats{display:flex;gap:36px;flex-wrap:wrap;margin-top:36px;padding-top:36px;border-top:1px solid rgba(255,255,255,.2)}
+.csn{font-family:'Libre Baskerville',serif;font-size:30pt;font-weight:700;display:block}
+.csl{font-family:'Source Code Pro',monospace;font-size:7pt;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.cfoot{margin-top:auto;padding-top:48px;font-family:'Source Code Pro',monospace;font-size:7pt;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase}
+.page{padding:36px 48px;max-width:920px;margin:0 auto}
+.stit{font-family:'Source Code Pro',monospace;font-size:7pt;letter-spacing:3px;text-transform:uppercase;color:#E8186D;border-left:3px solid #E8186D;padding-left:10px;margin-bottom:20px}
+.re-box{background:#fafafa;border:1px solid #e8e0d8;border-top:3px solid #E8186D;padding:20px 24px;margin-bottom:24px}
+.re-item{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+.re-bullet{color:#E8186D;font-weight:700;flex-shrink:0}
+.re-item p{font-family:'Source Sans 3',sans-serif;font-size:9.5pt;line-height:1.65;color:#2a2a2a;text-align:justify;margin:0}
+.bloc-table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:24px;border:1px solid #e8e0d8}
+.bloc-table thead{background:#f5f0ea}
+.bloc-table th{font-family:'Source Code Pro',monospace;font-size:7pt;letter-spacing:1.5px;text-transform:uppercase;color:#bbb;padding:8px 10px;text-align:left;border-bottom:1px solid #e8e0d8}
+.bloc-table td{padding:8px 10px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
+.bloc-table tr:last-child td{border-bottom:none}
+.num{text-align:center;font-family:'Source Code Pro',monospace;font-size:9.5pt}
+.ar-box{background:#fff;border:1px solid #e8e0d8;border-top:3px solid #1b5e20;padding:20px 24px;margin-bottom:12px}
+.ar-box p{font-family:'Source Sans 3',sans-serif;font-size:9.5pt;line-height:1.65;color:#2a2a2a;margin-bottom:8px;text-align:justify}
+.ar-box p:last-child{margin-bottom:0}
+.ds{margin-bottom:0}
+.dh{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#1a0a10,#8b1e3f);color:#fff;padding:16px 22px;border-radius:8px 8px 0 0}
+.dc{font-family:'Source Code Pro',monospace;font-size:20pt;font-weight:600;color:rgba(255,255,255,.35);min-width:48px}
+.dn{font-family:'Libre Baskerville',serif;font-size:14pt;font-weight:700}
+.dsy{font-family:'Source Code Pro',monospace;font-size:7.5pt;letter-spacing:1px;color:rgba(255,255,255,.55);margin-top:2px}
+.tt{font-family:'Source Code Pro',monospace;font-size:7pt;letter-spacing:2px;text-transform:uppercase;color:#999;padding:9px 12px 6px;border-left:3px solid #E8186D;background:#fafafa;border-bottom:1px solid #f0ebe4;border-right:1px solid #e8e0d8}
+.crt{width:100%;border-collapse:collapse;font-size:8.5pt;border:1px solid #e8e0d8;border-top:none}
+.crt thead{background:#f5f0ea}
+.crt th{font-family:'Source Code Pro',monospace;font-size:6.5pt;letter-spacing:1.5px;text-transform:uppercase;color:#bbb;padding:6px 9px;text-align:left;border-bottom:1px solid #e8e0d8}
+.crt td{padding:5px 9px;border-bottom:1px solid #f5f0ea;vertical-align:middle}
+.crt tr:last-child td{border-bottom:none}
+.crt-nc td{color:#bbb}
+.bg{display:inline-block;padding:1px 6px;font-family:'Source Code Pro',monospace;font-size:7pt;font-weight:600;border-radius:3px;white-space:nowrap}
+.bs{display:inline-block;padding:1px 7px;font-family:'Source Code Pro',monospace;font-size:6.5pt;font-weight:700;border-radius:3px;white-space:nowrap}
+.tc{font-size:8pt;color:#555}
+.sc{font-family:'Source Code Pro',monospace;font-size:8pt;font-weight:600;color:#E8186D;white-space:nowrap}
+.nc-bloc{border:1px solid #f0ebe4;border-top:none;background:#fafafa}
+.nc-bloc summary{font-family:'Source Code Pro',monospace;font-size:7.5pt;letter-spacing:1px;color:#ccc;padding:7px 12px;cursor:pointer;text-transform:uppercase}
+.ab{border:1px solid #e8e0d8;border-top:2px solid #1b5e20;padding:16px 18px;background:#fff}
+.at{font-family:'Source Code Pro',monospace;font-size:7pt;letter-spacing:2px;text-transform:uppercase;color:#1b5e20;margin-bottom:10px}
+.ab p{font-family:'Source Sans 3',sans-serif;font-size:9pt;line-height:1.65;color:#2a2a2a;margin-bottom:7px;text-align:justify}
+.ab p:last-child{margin-bottom:0}
+.pb{page-break-after:always}
+@media print{
+  body{font-size:9.5pt}
+  .cover{min-height:auto;padding:50px 60px}
+  .nc-bloc{display:block}
+  .nc-bloc summary{display:none}
+}
+@page{size:A4;margin:12mm 13mm 12mm 13mm}
+</style>
+</head>
+<body>
+
+<!-- COUVERTURE -->
+<div class="cover">
+  <div class="ctag">Note d'analyse interne · Usage restreint</div>
+  <div class="ctit">Municipales 2026<br>Nouvelle-Aquitaine</div>
+  <div class="cst">Bilan des élections municipales 2026 en Nouvelle-Aquitaine<br>Analyse des résultats et stratégies politiques</div>
+  <div class="cstats">
+    <div><span class="csn">183</span><span class="csl">CR suivis</span></div>
+    <div><span class="csn">102</span><span class="csl">Majorité</span></div>
+    <div><span class="csn">86</span><span class="csl">PS / PP</span></div>
+    <div><span class="csn">47</span><span class="csl">Victoires 1T</span></div>
+    <div><span class="csn">15</span><span class="csl">Victoires 2T</span></div>
+    <div><span class="csn">1</span><span class="csl">Désistement</span></div>
+    <div><span class="csn">41</span><span class="csl">Défaites</span></div>
+  </div>
+  <div class="cfoot">Groupe Socialiste, Place Publique et Apparentés · Conseil Régional Nouvelle-Aquitaine · Mars 2026</div>
+</div>
+
+<!-- PAGE RÉGIONALE -->
+<div class="page">
+  <div class="stit">Résumé exécutif</div>
+  <div class="re-box">
+    <div class="re-item"><span class="re-bullet">—</span><p>Le bloc PS / PP / PCF / PRG conserve un ancrage territorial réel en Nouvelle-Aquitaine, avec plusieurs reconductions nettes dès le premier tour et des victoires importantes dans des villes structurantes.</p></div>
+    <div class="re-item"><span class="re-bullet">—</span><p>Le scrutin confirme une géographie électorale contrastée : stabilité des bastions bien implantés, mais aussi basculements ciblés dans les villes où les exécutifs sortants étaient affaiblis, divisés ou en fin de cycle.</p></div>
+    <div class="re-item"><span class="re-bullet">—</span><p>Le RN ne transforme pas partout ses scores en conquêtes, mais il s'installe davantage comme force de structuration des seconds tours et comme pôle d'opposition dans plusieurs territoires.</p></div>
+  </div>
+
+  <div class="stit">Résultats par bloc politique</div>
+  <table class="bloc-table">
+    <thead><tr><th>Bloc politique</th><th>Engagés</th><th>Élus</th><th>Qualifiés</th><th>Défaites</th><th>Taux élus</th></tr></thead>
+    <tbody><tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E8186D;margin-right:6px;vertical-align:middle"></span><strong>PS / PP</strong></td>
+      <td class="num">48</td><td class="num" style="color:#1b5e20;font-weight:700">—</td>
+      <td class="num">—</td><td class="num" style="color:#b71c1c">—</td><td class="num"><strong>—</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#b71c1c;margin-right:6px;vertical-align:middle"></span><strong>PCF</strong></td>
+      <td class="num">5</td><td class="num" style="color:#1b5e20;font-weight:700">—</td>
+      <td class="num">—</td><td class="num" style="color:#b71c1c">—</td><td class="num"><strong>—</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d81b60;margin-right:6px;vertical-align:middle"></span><strong>PRG</strong></td>
+      <td class="num">4</td><td class="num" style="color:#1b5e20;font-weight:700">—</td>
+      <td class="num">—</td><td class="num" style="color:#b71c1c">—</td><td class="num"><strong>—</strong></td>
+    </tr>
+    <tr style="background:#fff8f5;font-weight:600">
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E8186D;margin-right:6px;vertical-align:middle"></span><strong>Majorité (PS/PP + PCF + PRG)</strong></td>
+      <td class="num">57</td><td class="num" style="color:#1b5e20;font-weight:700">39</td>
+      <td class="num">0</td><td class="num" style="color:#b71c1c">17</td><td class="num"><strong>68%</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2e7d32;margin-right:6px;vertical-align:middle"></span><strong>Écologistes / Verts</strong></td>
+      <td class="num">9</td><td class="num" style="color:#1b5e20;font-weight:700">4</td>
+      <td class="num">0</td><td class="num" style="color:#b71c1c">5</td><td class="num"><strong>44%</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#0277bd;margin-right:6px;vertical-align:middle"></span><strong>Centre / UDI / Horizons</strong></td>
+      <td class="num">7</td><td class="num" style="color:#1b5e20;font-weight:700">6</td>
+      <td class="num">0</td><td class="num" style="color:#b71c1c">3</td><td class="num"><strong>86%</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#0d47a1;margin-right:6px;vertical-align:middle"></span><strong>Renaissance / MoDem</strong></td>
+      <td class="num">2</td><td class="num" style="color:#1b5e20;font-weight:700">1</td>
+      <td class="num">0</td><td class="num" style="color:#b71c1c">0</td><td class="num"><strong>50%</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#1565c0;margin-right:6px;vertical-align:middle"></span><strong>LR / DVD</strong></td>
+      <td class="num">13</td><td class="num" style="color:#1b5e20;font-weight:700">9</td>
+      <td class="num">0</td><td class="num" style="color:#b71c1c">4</td><td class="num"><strong>69%</strong></td>
+    </tr>
+    <tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4a148c;margin-right:6px;vertical-align:middle"></span><strong>RN / EXD</strong></td>
+      <td class="num">14</td><td class="num" style="color:#1b5e20;font-weight:700">2</td>
+      <td class="num">1</td><td class="num" style="color:#b71c1c">12</td><td class="num"><strong>14%</strong></td>
+    </tr></tbody>
+  </table>
+
+  <div class="stit">Analyse politique régionale</div>
+  <div class="ar-box">
+    <p>Les municipales 2026 ne dessinent pas une dynamique uniforme en Nouvelle-Aquitaine. Elles montrent au contraire une région politiquement contrastée, où coexistent reconductions solides, alternances ciblées et recompositions locales parfois profondes.</p>
+    <p>La prime au sortant demeure puissante dans les communes où les exécutifs disposent d'un ancrage personnel fort et d'un bilan local lisible. À l'inverse, les villes marquées par l'usure, les divisions internes ou une transition municipale mal stabilisée ont davantage exposé la gauche comme la droite à des basculements.</p>
+    <p>La séquence est globalement défavorable au bloc écologiste. Dans plusieurs villes importantes, les exécutifs sortants sont battus ou fragilisés, à Bordeaux et à Poitiers. Cette évolution s'inscrit dans un contexte de remise en cause des bilans municipaux, mais aussi de difficulté à maintenir des majorités larges face à des offres concurrentes mieux structurées au second tour. Ce recul du bloc écologiste constitue l'un des axes structurants de la lecture régionale du scrutin.</p>
+    <p>La question de l'alliance avec La France insoumise traverse également ce scrutin, sans pouvoir être tranchée de manière uniforme. Elle tend trop souvent à devenir un point dogmatique, dans un sens comme dans l'autre, un théorème qui s'appliquerait de la même manière partout, comme si toutes les situations se valaient sur tous les territoires. Or la réalité du scrutin montre précisément l'inverse : les configurations locales diffèrent profondément et les résultats varient en conséquence.</p>
+    <p>Le RN poursuit sa mutation stratégique. Sans réussir partout à conquérir, il pèse davantage dans les rapports de force, capte une part du vote protestataire et contribue, dans plusieurs territoires, à réorganiser les seconds tours autour d'une logique de bloc anti-gauche.</p>
+  </div>
+</div>
+<div class="pb"></div>
+
+<!-- DÉPARTEMENTS -->
+<div class="page">
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">16</div>
+    <div><div class="dn">Charente</div><div class="dsy">9 CR · 4 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Patrice Boutenègre</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">St-Adjutory</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Mathieu Labrousse</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Fléac</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Virginie Lebraud</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Chirac</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>55.08%</strong></td>
+        </tr><tr>
+          <td><strong>Xavier Bonnefont</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Angoulême</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>48.26%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (5)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Martine Pinville</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Angoulême</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Edwige Gagneur</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Thomas Chevalerias</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Caroline Colombier</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Françoise Coutant</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Charente se caractérise par un scrutin globalement stabilisé, marqué par une forte prime au sortant dans la majorité des communes.</p><p>Les conseillers régionaux engagés confirment leur ancrage local, avec des réélections nettes dès le premier tour pour Patrice Boutenègre, Mathieu Labrousse et Virginie Lebraud. Dans ces communes, les scores élevés traduisent une implantation solide et une lisibilité politique qui ne laisse que peu d'espace à l'opposition.</p><p>À Angoulême, en revanche, la division de la gauche s'est révélée politiquement coûteuse. La multiplicité des listes issues du camp progressiste a morcelé l'électorat, brouillé la lisibilité de l'offre et empêché toute dynamique unitaire face à un exécutif sortant bien installé. Cette fragmentation a mécaniquement renforcé la prime au sortant de la droite et privé la gauche d'une chance réelle dans la principale ville du département.</p><p>Au total, le département reste dans une logique de continuité politique là où l'ancrage est solide, mais la séquence d'Angoulême rappelle que la division a un coût électoral direct, y compris dans des villes historiquement disputées.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">17</div>
+    <div><div class="dn">Charente-Maritime</div><div class="dsy">20 CR · 9 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Rémi Justinien</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Tonnay-Charente</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>63.85%</strong></td>
+        </tr><tr>
+          <td><strong>Françoise Mesnard</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">St-Jean-d'Angély</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>69.06%</strong></td>
+        </tr><tr>
+          <td><strong>Élise Laurent-Guégan</strong></td>
+          <td><span class="bg" style="background:#d81b6018;color:#d81b60;border:1px solid #d81b6035">PRG</span></td>
+          <td class="tc">Grand-Village-Plage</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>34.83%</strong></td>
+        </tr><tr>
+          <td><strong>Brahim Jlalji</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">La Rochelle</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>21.41%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>29.99%</strong></td>
+        </tr><tr>
+          <td><strong>Katia Bourdin</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">La Rochelle</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>21.41%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>29.99%</strong></td>
+        </tr><tr>
+          <td><strong>Marie-Line Cheminade</strong></td>
+          <td><span class="bg" style="background:#0288d118;color:#0288d1;border:1px solid #0288d135">UDI</span></td>
+          <td class="tc">Saintes</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>40.59%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>55.19%</strong></td>
+        </tr><tr>
+          <td><strong>David Labiche</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Châtelaillon</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>76.60%</strong></td>
+        </tr><tr>
+          <td><strong>Richard Guerit</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Marennes</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>38.94%</strong></td>
+        </tr><tr>
+          <td><strong>Séverine Werbrouck</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">La Rochelle</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>8.83%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (11)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Gérard Blanchard</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Jacky Emon</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Joëlle Marie-Reine Sciard</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Margarita Sola</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Jean-Philippe Plez</strong></td>
+          <td><span class="bg" style="background:#d81b6018;color:#d81b60;border:1px solid #d81b6035">PRG</span></td>
+          <td class="tc">La Rochelle</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Stéphane Trifiletti</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Port d'Envaux</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Daniel Dartigolles</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Véronique Laprée</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Yann Rivière</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Nathalie Collard</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Pascal Markowsky</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Charente-Maritime présente un scrutin contrasté, marqué à la fois par une forte prime au sortant dans de nombreuses communes et par des basculements significatifs dans plusieurs villes structurantes.</p><p>À La Rochelle, le scrutin se traduit par une sanction nette du maire sortant dès le premier tour. La séquence est marquée par une offre politique éclatée, dans laquelle la gauche apparaît affaiblie et surtout insuffisamment lisible face à une candidature déjà solidement installée.</p><p>Cette division de la gauche a été politiquement coûteuse. Elle a pesé sur la lisibilité de l'offre, dispersé les repères électoraux et empêché la constitution d'un rapport de forces crédible dans l'entre-deux-tours, où les offres de gauche sont battues au second tour.</p><p>À Tonnay-Charente, Rémi Justinien est réélu dès le premier tour avec un score élevé. La prime au sortant y est nette et confirme un ancrage local solide.</p><p>À Saint-Jean-d'Angély, Françoise Mesnard est reconduite largement. La gauche conserve ici un bastion structurant, avec une légitimité locale forte et peu contestée.</p><p>À Châtelaillon-Plage, David Labiche est réélu avec un score très élevé. La droite confirme un ancrage extrêmement solide dans une configuration peu contestée.</p><p>À Saintes, la réélection du maire sortant met fin à une période d'instabilité municipale. Ce résultat illustre la capacité d'un exécutif à se maintenir malgré un contexte local tendu.</p><p>Au total, le département combine une forte stabilité dans plusieurs communes et des basculements ciblés dans les grandes villes. Le RN échoue à conquérir, mais reste présent dans plusieurs configurations. La gauche conserve des points d'appui solides, mais ses divisions lui coûtent cher là où elle ne parvient pas à présenter une offre claire, unie et crédible.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">19</div>
+    <div><div class="dn">Corrèze</div><div class="dsy">8 CR · 5 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Philippe Nauche</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Brive</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>14.06%</strong></td>
+        </tr><tr>
+          <td><strong>Pascal Cavitte</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Tulle</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>17.00%</strong></td>
+        </tr><tr>
+          <td><strong>Françoise Serre</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Chanteix</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Sandra Delibite</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Ussel</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>37.55%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>45.23%</strong></td>
+        </tr><tr>
+          <td><strong>Valéry Elophe</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Brive</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>18.20%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (3)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Annabelle Reydy</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Amandine Dewaele</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Pascal Coste</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Corrèze est marquée par un scrutin difficile pour la gauche, avec plusieurs défaites dans des villes structurantes et une recomposition nette des équilibres locaux.</p><p>À Tulle, Bernard Combes, maire socialiste depuis 2008 après avoir succédé à François Hollande, perd la mairie malgré une fusion avec la liste LFI entre les deux tours. Laurent Melin (divers droite) l'emporte largement au second tour. Cette séquence traduit à la fois une fin de cycle et une incapacité à reconstituer une dynamique politique crédible dans l'entre-deux-tours.</p><p>À Brive, le maire sortant Frédéric Soulier est reconduit largement pour un troisième mandat. La droite confirme ici un ancrage solide et durable. La gauche, divisée en deux listes, s'effondre électoralement avec un score très faible, inférieur à 15 %, et ne parvient pas à exister dans le rapport de forces final.</p><p>À Ussel, le maire sortant Christophe Arfeuillère est battu par son ancien premier adjoint. Cette défaite illustre une recomposition interne à la droite locale, davantage qu'un basculement politique classique.</p><p>À Meymac, la gauche conserve un point d'appui avec la victoire de Philippe Brugère, confirmant la persistance d'ancrages locaux dans certaines communes.</p><p>À Chanteix, Françoise Serre est réélue sur une liste unique. La prime au sortant y est totale, dans une configuration sans concurrence.</p><p>Au total, le département connaît une recomposition défavorable à la gauche dans ses principales villes. Les divisions internes ont pesé lourdement, notamment à Brive et Tulle, tandis que la droite consolide ses positions. Le RN, sans conquérir, s'installe comme seconde force dans certains territoires.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">23</div>
+    <div><div class="dn">Creuse</div><div class="dsy">4 CR · 2 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Geneviève Barat</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">St-Germain-de-Beaupré</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Étienne Lejeune</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">La Souterraine</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>62.19%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (2)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Philippe Lafrique</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Azérables</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Marie-Hélène Michon</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Flayat</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Creuse se caractérise par un scrutin très stabilisé et peu conflictuel, avec une majorité de communes réglées dès le premier tour.</p><p>Les conseillers régionaux engagés confirment leur ancrage : Étienne Lejeune est réélu à La Souterraine et Geneviève Barat à Saint-Germain-de-Beaupré, tous deux dès le premier tour. La prime au sortant y est nette et peu contestée, y compris dans des communes structurantes.</p><p>Dans les villes principales, les équilibres sont également reconduits. À Aubusson, sous-préfecture et troisième ville du département, la gauche conserve la mairie confortablement, face à une liste soutenue par le député UDR Bartolomé Lenoir. Cela confirme la solidité de l'ancrage socialiste dans les villes intermédiaires.</p><p>À Guéret, Éric Correia, PRG et ancien conseiller régional, échoue une nouvelle fois à conquérir la préfecture.</p><p>Au-delà des cas locaux, un élément structurant doit être souligné : l'absence de division des forces politiques, en particulier à gauche. Contrairement à d'autres départements, il n'y a pas eu de multiplication de listes concurrentes issues du même camp, ce qui a limité la dispersion du vote et évité des configurations défavorables.</p><p>Dans le même temps, le RN reste marginal et ne structure pas les rapports de force. Il ne constitue ni une menace électorale, ni un facteur de recomposition.</p><p>Au total, la Creuse apparaît comme un département de continuité politique, où la stabilité repose à la fois sur l'ancrage des élus, la lisibilité de l'offre politique et l'absence de fragmentation électorale. C'est précisément cette cohérence qui permet d'éviter toute dynamique de basculement.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">24</div>
+    <div><div class="dn">Dordogne</div><div class="dsy">14 CR · 8 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Christophe Cathus</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Calès</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Benjamin Delrieux</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Siorac-en-Périgord</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Nicolas Platon</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Ribérac</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>38.61%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>43.28%</strong></td>
+        </tr><tr>
+          <td><strong>Jacqueline Simonnet</strong></td>
+          <td><span class="bg" style="background:#d81b6018;color:#d81b60;border:1px solid #d81b6035">PRG</span></td>
+          <td class="tc">Bergerac</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>26.82%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>29.47%</strong></td>
+        </tr><tr>
+          <td><strong>Fanny Castegnède</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">Boulazac Isle Manoire</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>52.88%</strong></td>
+        </tr><tr>
+          <td><strong>Maryline Forgeneuf</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologiste</span></td>
+          <td class="tc">Saint-Estèphe</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Jérôme Peyrat</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">Renaissance</span></td>
+          <td class="tc">La Roque Gageac</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Jonathan Prioleaud</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Bergerac</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>26.82%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>29.47%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (6)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Nathalie Arnaud</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Marsac-sur-l'Isle</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Delphine Labails</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Périgueux</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Jean-Pierre Raynaud</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Colette Langlade</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Thiviers</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Florence Joubert</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Jacques Colombier</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Dordogne présente un paysage globalement plus stabilisé que d'autres départements, mais traversé par des basculements significatifs dans plusieurs villes majeures.</p><p>À Périgueux, Michel Cadet l'emporte face à Émeric Lavitola. Il ne s'agit pas d'un dégagisme classique, puisque le maire sortant n'était en fonction que depuis un mandat. En revanche, la défaite s'inscrit dans une séquence politique fragilisée. La démission de Delphine Labails en cours de mandat, puis la transition municipale qui a suivi, ont laissé une majorité affaiblie et moins lisible. La droite a su capter cette fragilité et incarner une alternative crédible.</p><p>À Bergerac, la dynamique est inverse. La gauche reconquiert la ville et bat le maire sortant Jonathan Prioleaud. Dans une quadrangulaire où le RN se maintient à un niveau élevé, cette victoire montre qu'un sortant peut être battu dès lors qu'une alternative claire et crédible parvient à s'imposer.</p><p>À Ribérac, Nicolas Platon est réélu avec seulement 22 voix d'avance. La prime au sortant joue encore, mais de manière extrêmement fragile. L'ancrage local existe, mais il n'offre plus de marge de sécurité.</p><p>À Calès, la victoire nette de Christophe Cathus dès le premier tour, avec 100 % des suffrages, illustre à l'opposé la solidité d'un ancrage local total, dans une configuration sans concurrence où l'implantation personnelle et la continuité de l'équipe ont suffi à sécuriser complètement le scrutin.</p><p>Au total, la Dordogne reste un département relativement solide pour la gauche et ses alliés, avec plusieurs élus reconduits dès le premier tour. Mais cette stabilité apparente ne doit pas masquer les évolutions en cours : perte de Périgueux, reconquête de Bergerac, victoire serrée à Ribérac. Le département demeure structuré, mais il est désormais traversé par des fragilités réelles et des basculements ponctuels.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">33</div>
+    <div><div class="dn">Gironde</div><div class="dsy">49 CR · 27 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Stéphanie Anfray</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Villenave d'Ornon</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>22.51%</strong></td>
+        </tr><tr>
+          <td><strong>Dominique Astier</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Cenon</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>53.19%</strong></td>
+        </tr><tr>
+          <td><strong>Isabelle Boudineau</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Eysines</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>60.59%</strong></td>
+        </tr><tr>
+          <td><strong>Yasmina Boultam</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Lormont</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>48.73%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>50.75%</strong></td>
+        </tr><tr>
+          <td><strong>Pascale Bousquet-Pitt</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Bordeaux</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>27.68%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>49.05%</strong></td>
+        </tr><tr>
+          <td><strong>Marie-Laure Cuvelier</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Gradignan</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>25.09%</strong></td>
+        </tr><tr>
+          <td><strong>Jérôme Guillem</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Langon</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>62.69%</strong></td>
+        </tr><tr>
+          <td><strong>Mathieu Hazouard</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Bordeaux</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>27.68%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>49.05%</strong></td>
+        </tr><tr>
+          <td><strong>Lydia Héraud</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Val de Livenne</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>55.23%</strong></td>
+        </tr><tr>
+          <td><strong>Nathalie Le Yondre</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Audenge</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>53.84%</strong></td>
+        </tr><tr>
+          <td><strong>Baptiste Maurin</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Bordeaux</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>27.68%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>49.05%</strong></td>
+        </tr><tr>
+          <td><strong>Thierry Trijoulet</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Mérignac</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>51.77%</strong></td>
+        </tr><tr>
+          <td><strong>Isabelle Taris</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">Bègles</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>55.48%</strong></td>
+        </tr><tr>
+          <td><strong>Vital Baude</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Arcachon</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>20.45%</strong></td>
+        </tr><tr>
+          <td><strong>Karfa Diallo</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Bordeaux</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>9.36%</strong></td>
+        </tr><tr>
+          <td><strong>Émilie Sarrazin</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Gradignan</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>25.09%</strong></td>
+        </tr><tr>
+          <td><strong>Christine Seguinau</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Eysines</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>60.59%</strong></td>
+        </tr><tr>
+          <td><strong>Christelle Lapouge</strong></td>
+          <td><span class="bg" style="background:#d81b6018;color:#d81b60;border:1px solid #d81b6035">PRG</span></td>
+          <td class="tc">Salleboeuf</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>34.59%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>39.50%</strong></td>
+        </tr><tr>
+          <td><strong>Fabien Robert</strong></td>
+          <td><span class="bg" style="background:#75757518;color:#757575;border:1px solid #75757535">Modem</span></td>
+          <td class="tc">Bordeaux</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>20.20%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>50.95%</strong></td>
+        </tr><tr>
+          <td><strong>Christophe Duprat</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">St-Aubin-du-Médoc</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Hélène Estrade</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">DVD</span></td>
+          <td class="tc">Lapouyade</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>53.70%</strong></td>
+        </tr><tr>
+          <td><strong>Yves Foulon</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Arcachon</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>66.51%</strong></td>
+        </tr><tr>
+          <td><strong>Sandrine Chadourne</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Pineuilh</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>34.84%</strong></td>
+        </tr><tr>
+          <td><strong>Laurent Lamara</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Arcachon</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>13.04%</strong></td>
+        </tr><tr>
+          <td><strong>Damien Obrador</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Cabanac-et-Villagrains</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>42.17%</strong></td>
+        </tr><tr>
+          <td><strong>Bruno Paluteau</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>7.02%</strong></td>
+        </tr><tr>
+          <td><strong>Frédérique Joint</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">St-Savin de Blaye</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>51.37%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (22)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Alain Rousset</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Jean-Louis Nembrini</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Françoise Jeanson</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Laurence Rouède</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Libourne</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Gilles Boeuf</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Michel Durrieu</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Patrick Guillemoteau</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Sandrine Hernandez</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Saint André de Cubzac</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Claire Jacquinet</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Virginie Lenoir</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Henri Sabarot</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Frédéric Mellier</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Francis Wilsius</strong></td>
+          <td><span class="bg" style="background:#d81b6018;color:#d81b60;border:1px solid #d81b6035">PRG</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Anne-Laure Bedu</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Florent Boudié</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">RE</span></td>
+          <td class="tc">Libourne</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Véronique Hammerer</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">RE</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Muriel Boulmier</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Marie-Hélène Villanova</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Edwige Diaz</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">St-Savin de Blaye</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Pauline Garraud</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Pierre Le Camus</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Laurence Veyssiere</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Gironde présente un tableau très contrasté, mêlant des bastions de gauche solidement tenus, des basculements symboliques et plusieurs défaites lourdes dans des communes politiquement structurantes.</p><p>À Bordeaux, la défaite de Pierre Hurmic face à Thomas Cazenave marque un basculement majeur. La ville redevient le lieu d'une alternance centrale dans la lecture régionale du scrutin. Pour la gauche, la séquence bordelaise est coûteuse : elle se heurte à une offre éclatée, à des concurrences internes et à l'incapacité de structurer un rapport de forces suffisamment lisible face à une candidature de rassemblement plus efficace.</p><p>Cette division a pesé politiquement. À Bordeaux comme dans d'autres communes girondines, l'éparpillement des offres de gauche ou écologistes a brouillé la lisibilité du camp progressiste et facilité des défaites dans des scrutins pourtant disputés.</p><p>À Mérignac, en revanche, Thierry Trijoulet est reconduit dès le premier tour. À Eysines, la réélection conjointe d'Isabelle Boudineau et Christine Seguinau confirme la solidité d'un ancrage de gauche lorsque l'offre est claire, installée et cohérente.</p><p>À Lormont, la gauche conserve la main avec l'élection de Yasmina Boultam, ce qui montre que plusieurs bastions tiennent encore dès lors que la succession politique reste lisible et maîtrisée.</p><p>À Bègles, la défaite de la gauche constitue en revanche un signal important. Dans une commune historiquement ancrée à gauche, ce résultat traduit une sanction personnelle du maire, qui a fait l'objet d'un véritable désaveu de son bilan municipal dès le premier tour. Il montre que les positions anciennes ne sont plus automatiquement protégées, y compris là où l'ancrage historique semblait solide.</p><p>Sur le bassin d'Arcachon et dans plusieurs communes plus conservatrices, la droite confirme ses positions, tandis que le RN réussit à s'imposer localement à Saint-Savin. En métropole bordelaise, en revanche, le RN manque son objectif : il ne parvient pas à structurer une présence significative, avec un seul conseiller communautaire élu, loin de l'ambition initiale de constituer un groupe. Sans devenir une force hégémonique à l'échelle départementale, il confirme sa capacité à s'implanter ponctuellement hors des zones urbaines denses.</p><p>Au total, la Gironde reste un département majeur pour la gauche régionale, mais elle n'y domine plus sans partage. Le scrutin y met en lumière une double réalité : des ancrages locaux encore solides là où l'offre est cohérente, et des pertes significatives là où les divisions, les transitions ou l'usure fragilisent le camp progressiste.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">40</div>
+    <div><div class="dn">Landes</div><div class="dsy">16 CR · 10 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Julien Bazus</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Saint-Paul-lès-Dax</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>49.51%</strong></td>
+        </tr><tr>
+          <td><strong>Frédérique Charpenel</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Soustons</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>45.57%</strong></td>
+        </tr><tr>
+          <td><strong>Sophie Weber</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Mimizan</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>52.27%</strong></td>
+        </tr><tr>
+          <td><strong>Marie-Laure Lafargue</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Mont-de-Marsan</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>29.72%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>37.96%</strong></td>
+        </tr><tr>
+          <td><strong>Serge Sore</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Luxey</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Alain Baché</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">Mont-de-Marsan</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>29.72%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>37.96%</strong></td>
+        </tr><tr>
+          <td><strong>Guillaume Laussu</strong></td>
+          <td><span class="bg" style="background:#0288d118;color:#0288d1;border:1px solid #0288d135">UDI</span></td>
+          <td class="tc">Dax</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>71.22%</strong></td>
+        </tr><tr>
+          <td><strong>Pascale Requenna</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">Hagetmau</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>72.68%</strong></td>
+        </tr><tr>
+          <td><strong>Arnaud Tauzin</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Saint-Sever</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>53.45%</strong></td>
+        </tr><tr>
+          <td><strong>Michel Dufay</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>19.60%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (6)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Renaud Lagrave</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Éric Sargiocomo</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Maryline Beyris</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Laurence Motoman</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologiste</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Élodie Bourrel</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">Mimizan</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Sylvie Franceschini</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>Les Landes présentent un scrutin contrasté, combinant une forte stabilité locale et une séquence politique structurante à Mont-de-Marsan.</p><p>Dans plusieurs communes, la prime au sortant reste déterminante. À Dax, Hagetmau, Saint-Sever ou Luxey, les équipes en place sont reconduites avec des scores élevés, confirmant la solidité d'ancrages locaux bien installés.</p><p>À Mimizan, Sophie Weber est réélue dès le premier tour, illustrant la capacité de la gauche à conserver ses positions lorsqu'elle est implantée et lisible.</p><p>La séquence la plus structurante se joue à Mont-de-Marsan. La victoire de la gauche y est rendue possible par la division de la droite entre plusieurs candidatures concurrentes. Dans cette configuration fragmentée, Marie-Laure Lafargue et Alain Baché sont élus, ce qui donne à cette victoire une portée politique départementale réelle. Ce résultat ne doit cependant pas masquer une dynamique plus défavorable à l'échelle du département : les Landes enregistrent la perte de nombreuses communes, révélant un affaiblissement plus large que ne le laisse apparaître le seul gain de la préfecture.</p><p>À l'inverse, la gauche enregistre des défaites au premier tour à Saint-Paul-lès-Dax et à Soustons. Ces résultats montrent que certains territoires deviennent plus exposés et que l'ancrage local ne suffit plus systématiquement.</p><p>Le RN, bien que présent, ne parvient pas à s'imposer comme une force de conquête. Il reste en retrait dans les principales villes et ne transforme pas sa présence en victoire municipale significative.</p><p>Le résultat de Mont-de-Marsan ne doit cependant pas masquer une dynamique plus défavorable à l'échelle du département. Les Landes enregistrent la perte de nombreuses communes, révélant un affaiblissement plus large que ne le laisse apparaître le seul gain de la préfecture. Au total, les Landes demeurent un département globalement stable, où la prime au sortant structure encore largement les résultats, mais où les configurations ouvertes peuvent permettre des basculements lorsque les équilibres adverses se fragmentent.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">47</div>
+    <div><div class="dn">Lot-et-Garonne</div><div class="dsy">10 CR · 6 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Maud Caruhel</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Marmande</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>12.10%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>44.13%</strong></td>
+        </tr><tr>
+          <td><strong>Delphine Eychenne</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Le Passage</td>
+          <td><span class="bs" style="background:#fff3e0;color:#e65100;border:1px solid #e6510044;font-weight:700">Qualifié 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>20.04%</strong></td>
+        </tr><tr>
+          <td><strong>Jean-Luc Armand</strong></td>
+          <td><span class="bg" style="background:#d81b6018;color:#d81b60;border:1px solid #d81b6035">PRG</span></td>
+          <td class="tc">Cocumont</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Jean Dionis du Séjour</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">Agen</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>32.26%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>34.33%</strong></td>
+        </tr><tr>
+          <td><strong>Marie Costes</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Saint-Front-sur-Lémance</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Sébastien Delboscq</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Agen</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>30.55%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>26.62%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (4)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Sandrine Lafforre</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Montagnac-sur-Auvignon</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Guillaume Molierac</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Villeréal</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Maryse Combres</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologiste</span></td>
+          <td class="tc">Agen</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Annick Cousin</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>Le scrutin en Lot-et-Garonne se lit d'abord à travers ses principales villes, qui donnent une image claire des recompositions en cours.</p><p>À Agen, Laurent Bruneau l'emporte et met fin à dix-huit ans de mandat de Jean Dionis du Séjour. On est clairement dans une fin de cycle politique, avec un sortant battu dans une configuration éclatée et un RN élevé. La gauche l'emporte, mais dans un paysage fragmenté et sans domination nette.</p><p>À Marmande, la prime au sortant fonctionne pleinement. La gauche conserve un point d'appui solide, mais sous pression, dans une ville où le RN réalise une progression significative.</p><p>À Villeneuve-sur-Lot, la droite conserve la mairie et la gauche se retrouve reléguée derrière le RN. Ce point est politiquement structurant, car il confirme l'installation durable de l'extrême droite comme principal pôle d'opposition dans certaines villes du département.</p><p>Au Passage d'Agen, la présence de deux listes de gauche au premier tour a fortement pesé sur le rapport de forces. La division initiale, puis le désistement mal compris dans l'entre-deux-tours, ont contribué à fragiliser la gauche dans une séquence déjà tendue. Dans ce contexte, une logique de fusion des listes aurait sans doute été préférable à un retrait dans l'entre-deux-tours, afin de maintenir une cohérence politique plus lisible et de ne pas disperser les électeurs au moment décisif.</p><p>Au total, le département ne bascule pas de manière uniforme. Il combine une fin de cycle nette à Agen, une résistance à Marmande, une consolidation de la droite à Villeneuve-sur-Lot et une division coûteuse au Passage d'Agen. Le RN, sans conquérir de ville majeure, s'installe néanmoins comme force pivot dans plusieurs configurations locales.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">64</div>
+    <div><div class="dn">Pyrénées-Atlantiques</div><div class="dsy">23 CR · 14 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Émilie Alonso</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Pau</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>26.31%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>42.45%</strong></td>
+        </tr><tr>
+          <td><strong>Frédérique Espagnac</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Pau</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>26.31%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>42.45%</strong></td>
+        </tr><tr>
+          <td><strong>Jean-Marie Bergeret-Tercq</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Artix</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Pierre Chéret</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Oeyreluy (40)</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>38.45%</strong></td>
+        </tr><tr>
+          <td><strong>Émilie Dutoya</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Ciboure</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>58.80%</strong></td>
+        </tr><tr>
+          <td><strong>Florent Lacarrère</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Labatmale</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Béatrice Tariol</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">Hendaye</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>42.82%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>44.31%</strong></td>
+        </tr><tr>
+          <td><strong>Jean-François Blanco</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologiste</span></td>
+          <td class="tc">Pau</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>7.04%</strong></td>
+        </tr><tr>
+          <td><strong>Nathalie Motsch</strong></td>
+          <td><span class="bg" style="background:#0288d118;color:#0288d1;border:1px solid #0288d135">UDI</span></td>
+          <td class="tc">Biarritz</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>12.15%</strong></td>
+        </tr><tr>
+          <td><strong>Christian Devèze</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">Cambo-les-Bains</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>34.99%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>33.75%</strong></td>
+        </tr><tr>
+          <td><strong>Laurence Farreng</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">Pau</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>33.83%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>41.14%</strong></td>
+        </tr><tr>
+          <td><strong>Maider Arostéguy</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Biarritz</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>26.60%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>32.21%</strong></td>
+        </tr><tr>
+          <td><strong>Marc Oxibar</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Ogeu-les-Bains</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>François Verrière</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Lescar</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>14.29%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (9)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Sandrine Derville</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Anglet</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Charline Claveau</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Mathieu Bergé</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Bayonne</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Bixente Etcheaharreta</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Andde Sainte-Marie</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Bernard Uthurry</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Oloron-Sainte-Marie</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Isabelle Larrouy</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Sophie Bussière</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologiste</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Didier Damestoy</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologiste</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>Les Pyrénées-Atlantiques constituent l'un des départements les plus mouvants de la région, avec plusieurs basculements marquants dans les principales villes et une forte recomposition des rapports de force.</p><p>À Pau, la victoire de la gauche face à François Bayrou constitue un événement politique majeur. Elle marque clairement la fin d'un cycle et traduit l'usure d'un pouvoir local longtemps installé. La séquence paloise reste néanmoins complexe, car elle se déploie dans un contexte de forte fragmentation de l'offre politique, avec plusieurs candidatures issues de camps proches.</p><p>Cette fragmentation a rendu le scrutin plus incertain, mais elle n'a pas empêché la constitution d'une dynamique victorieuse. La victoire paloise donne au département l'un de ses principaux faits politiques, avec une portée bien au-delà du seul cadre local.</p><p>À Biarritz, la défaite de la maire sortante confirme également une logique de remise en cause des exécutifs installés. Le scrutin y a été très personnalisé, dans un contexte local tendu : Maider Arostéguy avait fortement durci son positionnement au cours du mandat, contribuant à accentuer son isolement politique et à fragiliser sa base électorale. Le résultat débouche sur un net affaiblissement de la droite sortante.</p><p>À Hendaye, la gauche conserve un ancrage réel, tandis qu'à Artix, Ciboure ou Labatmale, les positions locales solidement implantées résistent sans difficulté majeure. Cela montre que le département combine à la fois des zones de forte stabilité et des villes de recomposition beaucoup plus ouvertes.</p><p>Dans d'autres communes, comme Bayonne, la prime au sortant continue de jouer, ce qui confirme que la dynamique de basculement n'est pas homogène sur l'ensemble du territoire.</p><p>Le RN reste présent dans certaines configurations, mais il ne parvient pas à conquérir de ville majeure. Il participe toutefois à la fragmentation du paysage électoral et pèse indirectement sur plusieurs seconds tours.</p><p>Au total, les Pyrénées-Atlantiques se caractérisent par une forte instabilité politique, avec des alternances importantes, une fragmentation accrue et des équilibres locaux plus mouvants. La gauche y réalise des percées significatives, mais dans un environnement très concurrentiel.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">79</div>
+    <div><div class="dn">Deux-Sèvres</div><div class="dsy">9 CR · 5 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Guillaume Riou</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Marigny</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>57.94%</strong></td>
+        </tr><tr>
+          <td><strong>Emmanuel Charre</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Thouars</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>72.34%</strong></td>
+        </tr><tr>
+          <td><strong>Christelle Chassagne</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Niort</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>65.08%</strong></td>
+        </tr><tr>
+          <td><strong>Pascal Duforestel</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Magné</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>66.56%</strong></td>
+        </tr><tr>
+          <td><strong>Nicolas Gamache</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Les Châteliers</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (4)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Nathalie Lanzi</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Armelle Cassin</strong></td>
+          <td><span class="bg" style="background:#0277bd18;color:#0277bd;border:1px solid #0277bd35">Centre/Indé</span></td>
+          <td class="tc">Argentonnay</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Marie Jarry</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Bressuire</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Olivier Guibert</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Saint-Yzan-de-Soudiac (33)</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>Les Deux-Sèvres se distinguent nettement par un scrutin de très forte stabilité, sans aucune défaite parmi les conseillers régionaux suivis.</p><p>Dans l'ensemble du département, les communes sont largement réglées dès le premier tour. La prime au sortant y est particulièrement forte, portée par des équipes locales installées et peu contestées. Il convient néanmoins de noter la perte de Melle, qui constitue un signal politique notable : au-delà du seul enjeu municipal, ce résultat est susceptible d'avoir des conséquences directes à anticiper sur les équilibres sénatoriaux du département.</p><p>À Niort, la réélection du maire sortant avec un score élevé confirme un ancrage solide dans la principale ville du département. Ce type de résultat illustre une situation politique stabilisée, où la concurrence reste limitée.</p><p>À Thouars, comme à Magné ou Marigny, les résultats traduisent également une domination nette des équipes en place, avec des scores élevés et peu d'opposition structurée.</p><p>Contrairement à d'autres départements, il n'y a pas ici de division politique significative ni de multiplication de listes concurrentes. Cette lisibilité de l'offre contribue directement à la solidité des résultats. La perte de Melle constitue néanmoins un signal politique notable, avec des conséquences directes à anticiper sur les équilibres sénatoriaux du département.</p><p>Le RN reste marginal et ne structure pas les rapports de force locaux. Il ne constitue ni une alternative crédible ni un facteur de recomposition électorale.</p><p>Au total, les Deux-Sèvres apparaissent comme un département de continuité politique forte, où l'ancrage local, l'unité des équipes et la faible conflictualité électorale permettent de sécuriser largement les positions en place.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">86</div>
+    <div><div class="dn">Vienne</div><div class="dsy">11 CR · 6 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Benoît Tirant</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Poitiers</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>26.41%</strong></td>
+        </tr><tr>
+          <td><strong>Yves Trousselle</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Châtellerault</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>17.08%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>20.98%</strong></td>
+        </tr><tr>
+          <td><strong>Marion Latus</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Châtellerault</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>20.19%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>25.92%</strong></td>
+        </tr><tr>
+          <td><strong>Ronan Nedelec</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Mignaloux-Beauvoir</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>18.50%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>11.13%</strong></td>
+        </tr><tr>
+          <td><strong>Thierry Perreau</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">Ternay</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Éric Soulat</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Archigny</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>23.60%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (5)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>Karine Desroses</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Laurence Vallois-Rouet</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Reine-Marie Waszak</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Montmorillon</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Françoise Ballet-Blu</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">RE</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Christine Graval</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Vienne connaît un scrutin contrasté, marqué par un basculement important à Poitiers et une progression sensible de la droite et du RN dans plusieurs configurations locales.</p><p>À Poitiers, la défaite de la maire sortante écologiste constitue l'un des faits politiques majeurs du département. Le scrutin traduit une sanction nette de l'exécutif sortant et une recomposition du paysage local au profit du centre. La séquence est également marquée par le retrait de la liste de gauche entre les deux tours, dans une configuration où une fusion aurait sans doute permis de peser davantage sur le résultat final et d'éviter la dispersion des voix progressistes.</p><p>À Châtellerault, la situation est tout aussi révélatrice. Le RN s'y installe durablement dans le paysage politique local, tandis que la droite bénéficie d'une dynamique de rassemblement plus efficace. La gauche ne parvient pas à structurer une alternative suffisamment forte.</p><p>Dans les autres communes, la prime au sortant continue de jouer lorsqu'elle s'appuie sur un ancrage personnel solide, mais plusieurs résultats montrent aussi une montée de la fragmentation et une plus grande volatilité électorale.</p><p>Le RN confirme dans ce département une capacité à peser davantage qu'auparavant. Sans conquérir les principaux exécutifs, il structure certains rapports de force et contribue à déplacer le centre de gravité politique.</p><p>Au total, la Vienne apparaît comme un département en recomposition, où la gauche recule dans plusieurs villes importantes et où les équilibres deviennent plus ouverts, plus concurrentiels et plus instables.</p></div>
+</div>
+<div class="pb"></div>
+
+<div class="ds">
+  <div class="dh">
+    <div class="dc">87</div>
+    <div><div class="dn">Haute-Vienne</div><div class="dsy">10 CR · 6 engagés</div></div>
+  </div>
+  <div class="tt">Conseillers régionaux engagés</div>
+  <table class="crt">
+    <thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+    <tbody><tr>
+          <td><strong>Andréa Brouille</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Bessines-sur-Gartempe</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>100.00%</strong></td>
+        </tr><tr>
+          <td><strong>Mélanie Plazanet</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Eymoutiers</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>66.12%</strong></td>
+        </tr><tr>
+          <td><strong>Thibault Bergeron</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">Limoges</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>16.92%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>40.82%</strong></td>
+        </tr><tr>
+          <td><strong>Alain Darbon</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">St-Léonard-de-Noblat</td>
+          <td><span class="bs" style="background:#c8e6c9;color:#1b5e20;border:1px solid #1b5e2044;font-weight:700">Victoire 1T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>68.75%</strong></td>
+        </tr><tr>
+          <td><strong>Guillaume Guérin</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">LR</span></td>
+          <td class="tc">Limoges</td>
+          <td><span class="bs" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d3244;font-weight:700">Victoire 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>27.34%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>51.25%</strong></td>
+        </tr><tr>
+          <td><strong>Albin Freychet</strong></td>
+          <td><span class="bg" style="background:#4a148c18;color:#4a148c;border:1px solid #4a148c35">RN</span></td>
+          <td class="tc">Limoges</td>
+          <td><span class="bs" style="background:#ffebee;color:#b71c1c;border:1px solid #b71c1c44;font-weight:700">Défaite 2T</span></td><td class="sc"><span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T1 </span><strong>12.54%</strong> <span style="color:#ddd">·</span> <span style="font-size:7.5pt;color:#aaa;font-family:'Source Code Pro',monospace">T2 </span><strong>7.92%</strong></td>
+        </tr></tbody>
+  </table>
+  <details class="nc-bloc">
+        <summary>Non-candidats (4)</summary>
+        <table class="crt crt-nc"><thead><tr><th>Nom</th><th>Groupe</th><th>Commune</th><th>Statut</th><th>Score</th></tr></thead>
+        <tbody><tr>
+          <td><strong>François Vincent</strong></td>
+          <td><span class="bg" style="background:#e91e8c18;color:#e91e8c;border:1px solid #e91e8c35">PS/PP</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Catherine Bernardeau</strong></td>
+          <td><span class="bg" style="background:#b71c1c18;color:#b71c1c;border:1px solid #b71c1c35">PCF</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Jean-Louis Pagès</strong></td>
+          <td><span class="bg" style="background:#2e7d3218;color:#2e7d32;border:1px solid #2e7d3235">Écologistes</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr><tr>
+          <td><strong>Marie-Ange Magne</strong></td>
+          <td><span class="bg" style="background:#1565c018;color:#1565c0;border:1px solid #1565c035">RE</span></td>
+          <td class="tc">/</td>
+          <td><span class="bs" style="background:#f5f5f5;color:#bbb;border:1px solid #e0e0e0">Non-candidat</span></td>
+          <td class="sc">—</td>
+        </tr></tbody></table></details>
+  <div class="ab"><div class="at">Analyse politique</div><p>La Haute-Vienne reste globalement ancrée à gauche, mais le scrutin est marqué par un basculement majeur à Limoges, qui en structure toute la lecture politique.</p><p>Dans plusieurs communes du département, les positions de gauche restent solides. Andrea Brouille est réélue à Bessines-sur-Gartempe, Mélanie Plazanet à Eymoutiers et Alain Darbon à Saint-Léonard-de-Noblat, ce qui confirme la persistance d'ancrages locaux robustes lorsque les exécutifs restent lisibles et bien implantés.</p><p>À Limoges, en revanche, la séquence est toute autre. La défaite de la gauche dans la préfecture constitue un signal politique fort. Elle traduit à la fois l'usure du cycle municipal précédent, l'éclatement de l'offre politique et une difficulté à reconstituer une dynamique majoritaire crédible dans la principale ville du département.</p><p>La droite profite de cette fragmentation et parvient à s'imposer au second tour grâce à une dynamique d'union : Guillaume Guérin récupère les voix de la candidate UDR, ce qui lui permet de consolider son avance. Dans le même temps, Albin Freychet s'effondre entre les deux tours et voit une partie significative de son électorat se reporter sur Guérin plutôt que se maintenir. Cette séquence illustre à la fois la capacité de la droite à se rassembler et la limite du RN dans les configurations de second tour urbain.</p><p>Le département présente ainsi un visage contrasté : stabilité dans plusieurs bastions locaux, mais perte symbolique et politiquement lourde à Limoges.</p><p>Au total, la Haute-Vienne demeure un territoire important pour la gauche régionale, mais la perte de Limoges montre que cet ancrage n'est plus intangible et que les grandes villes deviennent plus exposées aux recompositions politiques.</p></div>
+</div>
+<div class="pb"></div>
+
+</div>
+
+</body>
+</html>
