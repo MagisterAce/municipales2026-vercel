@@ -1170,26 +1170,7 @@ const BLOC_EXCEL_URL =
   // APRÈS
 const [generatingPdf, setGeneratingPdf] = useState(false);
 
-const generatePdf = async () => {
-  setGeneratingPdf(true);
-  try {
-    const res = await fetch("https://oqlfodtesrrbqlawrgez.supabase.co/functions/v1/generate-note-pdf");
-    if (!res.ok) throw new Error("Erreur " + res.status);
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Municipales_2026_NA_Note_Analyse.pdf";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch(e) {
-    alert("Erreur PDF : " + e.message);
-  } finally {
-    setGeneratingPdf(false);
-  }
-};
+const generatePdf = () => { window.open('https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/note_municipales2026_v4.html', '_blank', 'noopener,noreferrer'); };
 
   const selDeptData = selDept ? DEPTS.find(d=>d.code===selDept) : null;
   const selDeptCRs   = selDept ? crList.filter(c=>c.dept===selDept) : [];
@@ -1703,7 +1684,7 @@ const generatePdf = async () => {
                       textTransform:"uppercase"
                     }}
                   >
-                    {generatingPdf ? "⏳ Génération..." : "↓ Note d'analyse PDF"}
+                    '↓ Note d'analyse PDF'
                   </button>
                   <button
                     type="button"
