@@ -1170,7 +1170,7 @@ const BLOC_EXCEL_URL =
 
   // APRÈS
 
-const generatePdf = () => { window.open('https://oqlfodtesrrbqlawrgez.supabase.co/storage/v1/object/public/exports/note_municipales2026_v4.html', '_blank', 'noopener,noreferrer'); };
+const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.app/note_analyse.html', '_blank', 'noopener,noreferrer'); };
 
   const selDeptData = selDept ? DEPTS.find(d=>d.code===selDept) : null;
   const selDeptCRs   = selDept ? crList.filter(c=>c.dept===selDept) : [];
