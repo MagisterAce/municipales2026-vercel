@@ -1074,6 +1074,7 @@ useEffect(() => {
           statut_t2: row.statut_t2 || "",
           score_t2: row.score_t2 != null ? String(row.score_t2) : "",
           voix_t2: row.voix_t2 != null ? String(row.voix_t2) : "",
+          fusion_avec: row.fusion_avec || "",
         };
       }
     });
@@ -1575,7 +1576,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                                         const finalStatut = res.statut_t2 && res.statut_t2 !== "" ? res.statut_t2 : res.statut;
                                         const sr = finalStatut ? SC_LISTE[finalStatut] : null;
                                         const labelStatut = (res.statut === "Qualifié·e pour le 2nd Tour" && res.statut_t2 === "Désistement")
-                                          ? "Qualifié·e → Désistement"
+                                          ? (res.fusion_avec ? `Fusion → ${res.fusion_avec}` : "Qualifié·e → Désistement")
                                           : finalStatut;
                                         return <>
                                           {res.score && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T1: </span>{res.score}%</span>}
