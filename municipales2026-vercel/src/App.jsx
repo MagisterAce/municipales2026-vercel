@@ -232,7 +232,7 @@ const CR_DATA = [
 /* ── 86 VIENNE (9) ── */
 {id:"c158",dept:"86",nom:"Karine Desroses",groupe:"PS/PP",commune:"/",mandat:"Présidence CMA 86",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
 {id:"c159",dept:"86",nom:"Benoît Tirant",groupe:"PS/PP",commune:"Poitiers",mandat:"Pas de mandat municipal",perspective:"Liste maire sortante Moncond'huy Poitiers (non éligible)",statut:"Candidat",s1:null,s2:null},
-{id:"c160",dept:"86",nom:"Yves Trousselle",groupe:"PS/PP",commune:"Châtellerault",mandat:"CM opposition Châtellerault",perspective:"Candidat liste Renaissance Châtellerault",statut:"Candidat",s1:null,s2:null},
+{id:"c160",dept:"86",nom:"Yves Trousselle",groupe:"PS/PP",commune:"Châtellerault",mandat:"CM opposition Châtellerault",perspective:"Élu sur liste Bourat (DVC) à Châtellerault",statut:"Candidat",s1:null,s2:null},
 {id:"c161",dept:"86",nom:"Laurence Vallois-Rouet",groupe:"PS/PP",commune:"/",mandat:"Pas de mandat actuel",perspective:"A retiré sa candidature liste PS",statut:"Non-candidat",s1:null,s2:null},
 {id:"c162",dept:"86",nom:"Reine-Marie Waszak",groupe:"PS/PP",commune:"Montmorillon",mandat:"CM Montmorillon – 4ème VP enfance-jeunesse",perspective:"Pressentie liste Montmorillon (non éligible)",statut:"Non-candidat",s1:null,s2:null},
 {id:"c163",dept:"86",nom:"Françoise Ballet-Blu",groupe:"RE",commune:"/",mandat:"Ancienne députée 2017-2022",perspective:"Pas de candidature",statut:"Non-candidat",s1:null,s2:null},
