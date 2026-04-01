@@ -371,7 +371,7 @@ const COMMUNES = [
   {nom:"Lons",dept:"64",pop:11700,maire:"N. Patriarche (LR)",couleur_pol:"LR",enjeu:"moyen",analyse:"LR sortant vs DVG Bourdet.",cr_lies:[]},
   {nom:"Mourenx",dept:"64",pop:7300,maire:"P. Laurent (DVG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"DVG vs DVG dissidence.",cr_lies:[]},
   {nom:"Nay",dept:"64",pop:3800,maire:"A. Dequidt (NC)",couleur_pol:"NC",enjeu:"moyen",analyse:"4 listes NC.",cr_lies:[]},
-  {nom:"Oloron-Sainte-Marie",dept:"64",pop:10300,maire:"M.-L. Bistué (UG)",couleur_pol:"DVG",enjeu:"fort",analyse:"UG sortante vs LR Couchinave vs DVD Servat.",cr_lies:[]},
+  {nom:"Oloron-Sainte-Marie",dept:"64",pop:10300,maire:"M.-L. Bistué (UG)",couleur_pol:"DVG",enjeu:"fort",analyse:"UG sortante vs LR Couchinave vs DVD Servat.",cr_lies:[{nom:"B. Uthurry",groupe:"PS/PP"}]},
   {nom:"Orthez",dept:"64",pop:10700,maire:"B. Moutet (DIV)",couleur_pol:"DIV",enjeu:"fort",analyse:"EXG Delteil vs DIV Moutet vs RN Cresson vs DVG.",cr_lies:[]},
   {nom:"Saint-Jean-de-Luz",dept:"64",pop:13800,maire:"J.-F. Irigoyen (UD)",couleur_pol:"DVD",enjeu:"fort",analyse:"UD sortant vs DVC De Lara vs DVG Lafitte vs EXG.",cr_lies:[]},
   {nom:"Salies-de-Béarn",dept:"64",pop:5100,maire:"T. Cabanne (DVD)",couleur_pol:"DVD",enjeu:"moyen",analyse:"DVD vs DIV.",cr_lies:[]},
