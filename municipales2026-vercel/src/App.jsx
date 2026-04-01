@@ -335,7 +335,7 @@ const COMMUNES = [
   {nom:"Le Bouscat",dept:"33",pop:25000,maire:"G. Lamarque (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"4 listes. DVD vs RN Gratte vs UG Castelneau vs DVG Layan.",cr_lies:[]},
   {nom:"Le Haillan",dept:"33",pop:13000,maire:"É. Poulliat (DVC)",couleur_pol:"DVC",enjeu:"moyen",analyse:"DVC sortant vs DVD Camps vs UG Kiss.",cr_lies:[]},
   {nom:"Lesparre-Médoc",dept:"33",pop:5800,maire:"B. Guiraud (DIV)",couleur_pol:"DIV",enjeu:"moyen",analyse:"RN Chapou vs DIV sortant.",cr_lies:[]},
-  {nom:"Libourne",dept:"33",pop:26000,maire:"C. Gigot (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"DVD sortant vs DVG Buisson vs LFI Mauget vs EXD.",cr_lies:[]},
+  {nom:"Libourne",dept:"33",pop:26000,maire:"C. Gigot (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"DVD sortant vs DVG Buisson vs LFI Mauget vs EXD.",cr_lies:[{nom:"L. Rouède",groupe:"PS/PP"}]},
   {nom:"Parempuyre",dept:"33",pop:8000,maire:"J. Michalak (DIV)",couleur_pol:"DIV",enjeu:"moyen",analyse:"DIV sortante vs DVD vs UG.",cr_lies:[]},
   {nom:"Saint-André-de-Cubzac",dept:"33",pop:12800,maire:"M. Vilatte (DVG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"5 listes. DVG sortant vs DVD Charrier vs RN Le Camus.",cr_lies:[]},
   {nom:"Saint-Médard-en-Jalles",dept:"33",pop:30000,maire:"S. Delpeyrat-Vincent (DVG)",couleur_pol:"DVG",enjeu:"fort",analyse:"DVG sortant vs RN Licata vs DIV Picard vs DVC Mangon.",cr_lies:[]},
@@ -359,7 +359,7 @@ const COMMUNES = [
   {nom:"Aiguillon",dept:"47",pop:2400,maire:"C. Girardi (DVD)",couleur_pol:"DVD",enjeu:"moyen",analyse:"4 listes. DVD sortant vs DIV x2 vs EXG.",cr_lies:[]},
   {nom:"Le Passage",dept:"47",pop:9600,maire:"F. Garcia (DVG)",couleur_pol:"DVG",enjeu:"fort",analyse:"DVG sortant vs DVG Eychenne vs DVC Griffond vs DVD Frémy.",cr_lies:[{nom:"Delphine Eychenne",groupe:"PS/PP"}]},
   // ── Pyrénées-Atlantiques (64) – communes ajoutées
-  {nom:"Anglet",dept:"64",pop:40000,maire:"C. Olive (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"DVD sortant vs UG Fanchini vs régionaliste Alfaro.",cr_lies:[]},
+  {nom:"Anglet",dept:"64",pop:40000,maire:"C. Olive (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"DVD sortant vs UG Fanchini vs régionaliste Alfaro.",cr_lies:[{nom:"S. Derville",groupe:"PS/PP"}]},
   {nom:"Bidart",dept:"64",pop:6900,maire:"M. Lamarque (DVG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"DVG sortant vs DVD Alzuri.",cr_lies:[]},
   {nom:"Billère",dept:"64",pop:13400,maire:"A. Jacottin (DVG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"DVG sortant vs DIV Escudé.",cr_lies:[]},
   {nom:"Boucau",dept:"64",pop:7800,maire:"M. Horn (DVG)",couleur_pol:"DVG",enjeu:"moyen",analyse:"4 listes dont PCF.",cr_lies:[]},
