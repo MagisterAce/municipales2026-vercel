@@ -64,7 +64,7 @@ const CR_DATA = [
 {id:"c004",dept:"16",nom:"Martine Pinville",groupe:"PS/PP",commune:"Angoulême",mandat:"CM d'opposition à Angoulême",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c005",dept:"16",nom:"Edwige Gagneur",groupe:"PCF",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c006",dept:"16",nom:"Thomas Chevalerias",groupe:"LR",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
-{id:"c007",dept:"16",nom:"Caroline Colombier",groupe:"RN",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
+{id:"c007",dept:"16",nom:"Caroline Colombier",groupe:"RN",commune:"Chasseneuil-sur-Bonnieure",mandat:"/",perspective:"Candidate à Chasseneuil-sur-Bonnieure, battue par le maire sortant Fabrice Point",statut:"Candidat",s1:null,s2:null},
 {id:"c179",dept:"16",nom:"Françoise Coutant",groupe:"Écologistes",commune:"/",mandat:"/",perspective:"/",statut:"Non-candidat",s1:null,s2:null},
 {id:"c180",dept:"16",nom:"Xavier Bonnefont",groupe:"LR",commune:"Angoulême",mandat:"Maire d'Angoulême",perspective:"Candidat à sa réélection",statut:"Candidat",s1:null,s2:null},
 /* ── 17 CHARENTE-MARITIME (20) ── */
