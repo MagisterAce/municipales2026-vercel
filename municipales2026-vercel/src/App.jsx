@@ -1587,12 +1587,14 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                                       "Désistement":{bg:"#efebe9",c:"#6d4c41"},
                                       "Fusion":{bg:"#e8eaf6",c:"#283593"},
                                       };
-                                        const sr = (finalStatut==="Désistement"||finalStatut==="Fusion") ? SC_LISTE["Désistement"] : (finalStatut ? SC_LISTE[finalStatut] : null);
+                                        const sr = finalStatut ? (SC_LISTE[finalStatut] || SC_LISTE["Désistement"]) : null;
                                         const labelStatut = (finalStatut==="Fusion" && res.fusion_avec)
                                           ? `Fusion → ${res.fusion_avec}`
-                                          : (res.statut === "Qualifié·e pour le 2nd Tour" && finalStatut === "Désistement")
-                                            ? (res.fusion_avec ? `Fusion → ${res.fusion_avec}` : "Qualifié·e → Désistement")
-                                            : finalStatut;
+                                          : (finalStatut === "Désistement" && res.fusion_avec)
+                                            ? `Fusion → ${res.fusion_avec}`
+                                            : (finalStatut === "Désistement")
+                                              ? "Qualifié·e → Désistement"
+                                              : finalStatut;
                                         return <>
                                           {res.score && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T1: </span>{res.score}%</span>}
                                           {(finalStatut==="Désistement"||finalStatut==="Fusion")
