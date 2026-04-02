@@ -1253,6 +1253,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                   <span className="ctag">{crList.filter(c=>getFinalStatut(c)==="Candidat").length} à saisir</span>
                 </div>
               </div>
+              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginBottom:10}}>⚠️ Données collectées manuellement — des erreurs peuvent subsister</div>
               {DEPTS.map(d => {
                 const deptCRs = crList.filter(c => c.dept === d.code);
                 const isOpen = !!openDepts[d.code];
@@ -1355,6 +1356,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                 <div className="sh-l"><span className="stag">CR</span><span className="sh-title">Conseillers régionaux</span></div>
                 <div className="sh-act"><button type="button" className="btn" onClick={downloadExcel}>↓ Excel</button></div>
               </div>
+              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginBottom:10}}>⚠️ Données collectées manuellement — des erreurs peuvent subsister</div>
               <div className="frow">
                 <input className="sinp" placeholder="🔍 Rechercher..." value={search} onChange={e=>setSearch(e.target.value)}/>
                 <select className="fsel" value={fGroupe} onChange={e=>setFGroupe(e.target.value)}>
@@ -1460,6 +1462,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                   {DEPTS.map(d=><option key={d.code} value={d.code}>{d.nom}</option>)}
                 </select>
               </div>
+              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginBottom:10}}>⚠️ Données collectées manuellement — des erreurs peuvent subsister</div>
               <div style={{padding:"0 0 40px"}}>
                 {DEPTS.map(dept => {
                   const deptCommunes = [...COMMUNES].filter(c=>c.dept===dept.code).sort((a,b)=>{
@@ -1621,6 +1624,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                 <div className="sh-l"><span className="stag">ANALYSE</span><span className="sh-title">Analyse par bloc politique</span></div>
 
               </div>
+              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginBottom:10}}>⚠️ Données collectées manuellement — des erreurs peuvent subsister</div>
               <div style={{
                 background:"#fff",border:"1px solid #e8e0d8",borderRadius:12,
                 padding:"60px 40px",textAlign:"center",
