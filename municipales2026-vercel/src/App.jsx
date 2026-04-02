@@ -1104,8 +1104,8 @@ useEffect(() => {
             s1: match.s1 !== null ? match.s1 : cr.s1,
             s2: match.s2 !== null ? match.s2 : cr.s2,
             // _fromSupabase bloque la mise à jour par listeResults
-            // On ne le pose que si T2 est déjà renseigné dans la row cr|
-            _fromSupabase: !!(match.statut_t2),
+            // On le pose dès qu'un statut T1 ou T2 est renseigné en base
+            _fromSupabase: !!(match.statut || match.statut_t2),
           };
         }
 
