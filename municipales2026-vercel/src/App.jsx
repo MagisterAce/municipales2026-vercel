@@ -1578,13 +1578,24 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                                       {(() => {
                                         if (!res) return null;
                                         const finalStatut = res.statut_t2 && res.statut_t2 !== "" ? res.statut_t2 : res.statut;
-                                        const sr = finalStatut ? SC_LISTE[finalStatut] : null;
-                                        const labelStatut = (res.statut === "Qualifié·e pour le 2nd Tour" && res.statut_t2 === "Désistement")
-                                          ? (res.fusion_avec ? `Fusion → ${res.fusion_avec}` : "Qualifié·e → Désistement")
-                                          : finalStatut;
+                                        const SC_LISTE = {
+                                      "Victoire 1er Tour":{bg:"#c8e6c9",c:"#1b5e20"},
+                                      "Défaite 1er Tour":{bg:"#ffebee",c:"#b71c1c"},
+                                      "Qualifié·e pour le 2nd Tour":{bg:"#fff3e0",c:"#e65100"},
+                                      "Victoire 2nd Tour":{bg:"#a5d6a7",c:"#1b5e20"},
+                                      "Défaite 2nd Tour":{bg:"#ef9a9a",c:"#c62828"},
+                                      "Désistement":{bg:"#efebe9",c:"#6d4c41"},
+                                      "Fusion":{bg:"#e8eaf6",c:"#283593"},
+                                      };
+                                        const sr = (finalStatut==="Désistement"||finalStatut==="Fusion") ? SC_LISTE["Désistement"] : (finalStatut ? SC_LISTE[finalStatut] : null);
+                                        const labelStatut = (finalStatut==="Fusion" && res.fusion_avec)
+                                          ? `Fusion → ${res.fusion_avec}`
+                                          : (res.statut === "Qualifié·e pour le 2nd Tour" && finalStatut === "Désistement")
+                                            ? (res.fusion_avec ? `Fusion → ${res.fusion_avec}` : "Qualifié·e → Désistement")
+                                            : finalStatut;
                                         return <>
                                           {res.score && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T1: </span>{res.score}%</span>}
-                                          {finalStatut==="Désistement"
+                                          {(finalStatut==="Désistement"||finalStatut==="Fusion")
                                             ? <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T2: </span>—</span>
                                             : (res.score_t2 && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:10,color:"#888"}}><span style={{fontSize:7,color:"#bbb"}}>T2: </span>{res.score_t2}%</span>)
                                           }
