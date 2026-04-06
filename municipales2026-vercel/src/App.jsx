@@ -647,109 +647,258 @@ const isFilled = v => v !== null && v !== undefined && v !== "";
 const getFinalStatut = obj =>
   isFilled(obj?.statut_t2) ? obj.statut_t2 : (obj?.statut || "");
 
-// ─── CARTE SVG NOUVELLE-AQUITAINE (paths IGN simplifiés, viewBox 0 0 400 500) ─
-// Coordonnées réelles NA repositionnées pour viewBox compact
-const NA_PATHS = {
-  "79":{d:"M 105 55 L 155 52 L 178 68 L 182 95 L 162 115 L 138 120 L 112 108 L 95 85 Z",cx:138,cy:87,nom:"Deux-Sèvres"},
-  "86":{d:"M 155 52 L 210 48 L 232 65 L 235 98 L 212 118 L 182 122 L 162 115 L 178 68 Z",cx:195,cy:87,nom:"Vienne"},
-  "87":{d:"M 210 48 L 265 44 L 288 62 L 286 98 L 260 118 L 232 125 L 212 118 L 235 98 L 232 65 Z",cx:248,cy:85,nom:"Haute-Vienne"},
-  "23":{d:"M 265 44 L 318 40 L 335 58 L 330 92 L 305 108 L 278 112 L 260 118 L 286 98 L 288 62 Z",cx:298,cy:78,nom:"Creuse"},
-  "19":{d:"M 260 118 L 286 98 L 305 108 L 330 92 L 342 118 L 335 148 L 308 162 L 280 158 L 262 140 Z",cx:302,cy:132,nom:"Corrèze"},
-  "16":{d:"M 95 108 L 112 108 L 138 120 L 145 152 L 130 175 L 105 180 L 80 165 L 75 140 L 85 118 Z",cx:110,cy:148,nom:"Charente"},
-  "24":{d:"M 182 122 L 212 118 L 232 125 L 260 118 L 262 140 L 250 170 L 225 185 L 195 188 L 172 172 L 168 148 Z",cx:215,cy:155,nom:"Dordogne"},
-  "17":{d:"M 52 148 L 75 140 L 80 165 L 105 180 L 110 210 L 90 238 L 65 248 L 40 235 L 32 205 L 45 175 Z",cx:72,cy:195,nom:"Charente-Maritime"},
-  "33":{d:"M 72 198 L 95 192 L 115 198 L 138 195 L 155 205 L 168 232 L 162 268 L 142 292 L 112 300 L 82 292 L 60 270 L 58 240 L 68 218 Z",cx:112,cy:248,nom:"Gironde"},
-  "47":{d:"M 155 205 L 180 198 L 195 188 L 225 185 L 238 210 L 230 242 L 208 258 L 182 262 L 160 250 L 148 228 Z",cx:193,cy:228,nom:"Lot-et-Garonne"},
-  "40":{d:"M 65 280 L 88 272 L 112 278 L 135 272 L 148 286 L 148 322 L 148 360 L 128 388 L 98 398 L 68 390 L 48 368 L 45 335 L 52 305 Z",cx:97,cy:333,nom:"Landes"},
-  "64":{d:"M 75 368 L 98 362 L 128 368 L 148 382 L 150 412 L 148 442 L 122 462 L 90 465 L 62 450 L 48 422 L 50 395 L 62 378 Z",cx:99,cy:415,nom:"Pyrénées-Atlantiques"},
-};
-
+// ─── PALETTE TENDANCES ───────────────────────────────────────────────────────
 const TEND_COL = {
-  "Gauche":"#f48fb1","Droite":"#90caf9","Mixte":"#ce93d8",
-  "Centre":"#ffe082","Verts":"#a5d6a7","Risque RN":"#ef9a9a",
+  "Gauche":"#ef9a9a","Droite":"#90caf9","Mixte":"#ce93d8",
+  "Centre":"#ffe082","Verts":"#a5d6a7","Risque RN":"#e57373",
+};
+// ─── COULEURS POLITIQUES RENFORCÉES (opacité + contraste) ────────────────────
+const TEND_COL_SEL = {
+  "Gauche":"#e53935","Droite":"#1565c0","Mixte":"#7b1fa2",
+  "Centre":"#f57f17","Verts":"#2e7d32","Risque RN":"#b71c1c",
 };
 
-function NaMap({crList, selDept, onSelect}) {
+// ─── PATHS SVG NA — VERSION 2 ────────────────────────────────────────────────
+// Paths re-tracés pour une meilleure fidélité géographique NA
+// Coordonnées normalisées dans un viewBox 0 0 500 560
+// Nord en haut : Deux-Sèvres (79) et Vienne (86) tout en haut
+// Sud en bas : Pyrénées-Atlantiques (64) en bas
+const NA_PATHS = {
+  // Deux-Sèvres (79) — NO
+  "79":{d:"M 88 32 L 148 28 L 176 40 L 188 66 L 180 90 L 158 108 L 128 114 L 98 102 L 76 80 L 72 58 Z",
+        cx:130,cy:72,nom:"Deux-Sèvres"},
+  // Vienne (86) — N centre
+  "86":{d:"M 148 28 L 214 22 L 242 36 L 250 64 L 244 94 L 218 112 L 188 116 L 180 90 L 188 66 L 176 40 Z",
+        cx:202,cy:72,nom:"Vienne"},
+  // Haute-Vienne (87) — NE centre
+  "87":{d:"M 214 22 L 278 18 L 308 34 L 312 68 L 300 100 L 272 118 L 244 118 L 244 94 L 250 64 L 242 36 Z",
+        cx:266,cy:72,nom:"Haute-Vienne"},
+  // Creuse (23) — NE
+  "23":{d:"M 278 18 L 340 14 L 368 30 L 372 64 L 352 96 L 318 108 L 300 100 L 312 68 L 308 34 Z",
+        cx:326,cy:62,nom:"Creuse"},
+  // Corrèze (19) — E centre
+  "19":{d:"M 300 100 L 318 108 L 352 96 L 368 30 L 392 128 L 376 162 L 344 176 L 312 170 L 294 148 Z",
+        cx:338,cy:138,nom:"Corrèze"},
+  // Charente (16) — O centre
+  "16":{d:"M 76 108 L 98 102 L 128 114 L 142 144 L 132 174 L 110 192 L 84 184 L 64 160 L 66 132 Z",
+        cx:106,cy:150,nom:"Charente"},
+  // Dordogne (24) — centre
+  "24":{d:"M 180 110 L 218 112 L 244 118 L 272 118 L 294 148 L 276 186 L 244 202 L 210 202 L 182 188 L 164 162 L 158 136 Z",
+        cx:226,cy:158,nom:"Dordogne"},
+  // Charente-Maritime (17) — O côte
+  "17":{d:"M 30 136 L 52 126 L 66 132 L 64 160 L 84 184 L 96 214 L 82 254 L 58 268 L 28 256 L 10 228 L 14 186 L 26 158 Z",
+        cx:54,cy:200,nom:"Charente-Maritime"},
+  // Gironde (33) — O grand
+  "33":{d:"M 58 232 L 82 218 L 96 214 L 120 210 L 142 208 L 162 218 L 178 248 L 172 290 L 154 318 L 128 332 L 96 332 L 66 318 L 46 290 L 48 258 Z",
+        cx:112,cy:272,nom:"Gironde"},
+  // Lot-et-Garonne (47) — centre S
+  "47":{d:"M 162 218 L 182 188 L 210 202 L 244 202 L 264 216 L 268 256 L 246 278 L 212 282 L 178 272 L 164 252 Z",
+        cx:214,cy:242,nom:"Lot-et-Garonne"},
+  // Landes (40) — SO
+  "40":{d:"M 48 290 L 66 290 L 96 296 L 124 288 L 154 292 L 168 316 L 162 362 L 148 406 L 116 428 L 78 428 L 46 408 L 34 372 L 36 330 L 42 306 Z",
+        cx:102,cy:358,nom:"Landes"},
+  // Pyrénées-Atlantiques (64) — S
+  "64":{d:"M 46 412 L 78 428 L 116 432 L 148 416 L 168 432 L 164 470 L 136 494 L 96 496 L 60 480 L 36 452 L 38 428 Z",
+        cx:102,cy:456,nom:"Pyrénées-Atl."},
+};
+
+// ─── COMPOSANT CARTE NA V2 ────────────────────────────────────────────────────
+// Inspiré AzukiGPT : données politiques superposées sur la carte
+// Inspiré maire.app : layout propre, stats par département, interactivité fluide
+function NaMap({crList, communes, selDept, onSelect}) {
   const [hov, setHov] = useState(null);
   const [tip, setTip] = useState({x:0,y:0});
 
+  // Statistiques par département — calculées une seule fois
   const dStats = useMemo(() => {
     const m = {};
     DEPTS.forEach(d => {
       const crs = crList.filter(c=>c.dept===d.code);
-      const left = crs.filter(c=>["PS/PP","PS","PP","PCF","PC","PRG","Écologistes","Écologistes","Écologiste","LFI","DVG"].includes(c.groupe));
-      const cands = left.filter(c=>getFinalStatut(c)==="Candidat");
-      const elus = left.filter(c=>getFinalStatut(c).startsWith("Élu"));
-      m[d.code] = {total:crs.length, left:left.length, cands:cands.length, elus:elus.length};
+      const candidats = crs.filter(c=>getFinalStatut(c)==="Candidat").length;
+      const elus = crs.filter(c=>["Victoire 1er Tour","Victoire 2nd Tour"].includes(getFinalStatut(c))).length;
+      const comsDept = (communes||[]).filter(c=>c.dept===d.code);
+      const fortsEnj = comsDept.filter(c=>c.enjeu==="très fort"||c.enjeu==="fort").length;
+      m[d.code] = {
+        total: crs.length,
+        candidats,
+        elus,
+        coms: comsDept.length,
+        forts: fortsEnj,
+      };
     });
     return m;
-  }, [crList]);
+  }, [crList, communes]);
 
   const hovDept = hov ? DEPTS.find(d=>d.code===hov) : null;
 
   return (
-    <div style={{background:"#fff",border:"1px solid #e8e0d8",borderRadius:"10px",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-      <div style={{padding:"12px 16px",borderBottom:"1px solid #f0ebe4",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+    <div style={{
+      background:"#fff",border:"1px solid #e4ddd5",borderRadius:12,
+      overflow:"hidden",boxShadow:"0 4px 20px rgba(0,0,0,.06)"
+    }}>
+      {/* En-tête — style maire.app : propre, informatif */}
+      <div style={{
+        padding:"14px 18px",borderBottom:"1px solid #f0ebe4",
+        display:"flex",alignItems:"center",justifyContent:"space-between",
+        background:"#fafaf9"
+      }}>
         <div>
-          <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:"13px",fontWeight:"700"}}>Nouvelle-Aquitaine — navigation par département</div>
-          <div style={{fontSize:"10px",color:"#bbb",fontFamily:"'Source Code Pro',monospace",marginTop:"2px"}}>Cliquer pour voir les communes suivies</div>
+          <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>
+            Nouvelle-Aquitaine
+          </div>
+          <div style={{fontSize:"10px",color:"#999",fontFamily:"'Source Code Pro',monospace",marginTop:2}}>
+            12 départements · cliquer pour explorer les communes
+          </div>
+        </div>
+        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+          {Object.entries(TEND_COL).map(([k,v])=>(
+            <div key={k} style={{display:"flex",alignItems:"center",gap:4,fontSize:"9px",color:"#888",fontFamily:"'Source Code Pro',monospace"}}>
+              <div style={{width:10,height:10,borderRadius:2,background:v,flexShrink:0,border:"1px solid rgba(0,0,0,.06)"}}/>
+              <span>{k}</span>
+            </div>
+          ))}
         </div>
       </div>
-      <div style={{position:"relative",background:"#f0ede8",padding:"8px"}}>
-        <svg viewBox="0 0 400 490" style={{width:"100%",height:"auto",display:"block"}}
+
+      {/* Carte SVG — paths nettement améliorés */}
+      <div style={{position:"relative",background:"linear-gradient(160deg,#f5f3ef 0%,#ede9e3 100%)",padding:"16px"}}>
+        <svg viewBox="0 0 500 516" style={{width:"100%",height:"auto",display:"block",maxHeight:480}}
           xmlns="http://www.w3.org/2000/svg">
+          {/* Fond océan stylisé — inspiré AzukiGPT */}
+          <rect x="0" y="0" width="500" height="516" fill="#e8f4f8" opacity="0.3" rx="4"/>
+
           {DEPTS.map(d => {
             const p = NA_PATHS[d.code];
             if (!p) return null;
             const isSel = selDept === d.code;
             const isHov = hov === d.code;
-            const col = isSel ? "#fce4ec" : isHov ? "#fff0f5" : (TEND_COL[d.tendance]||"#e0e0e0");
-            const strokeCol = isSel ? "#E8186D" : isHov ? "#E8186D" : "#fff";
-            const strokeW = isSel ? 2.5 : isHov ? 2 : 1.5;
+            const baseCol = TEND_COL[d.tendance] || "#e0d8d0";
+            const selCol = TEND_COL_SEL[d.tendance] || "#E8186D";
+            const col = isSel ? "#fce4ec" : isHov ? "#fff5f8" : baseCol;
+            const strokeCol = isSel ? "#E8186D" : isHov ? "#E8186D" : "rgba(255,255,255,0.9)";
+            const strokeW = isSel ? 2.5 : isHov ? 2 : 1.2;
+            const st = dStats[d.code] || {};
+
             return (
               <g key={d.code}
                 onMouseEnter={e=>{setHov(d.code);setTip({x:e.clientX,y:e.clientY});}}
                 onMouseLeave={()=>setHov(null)}
                 onMouseMove={e=>setTip({x:e.clientX,y:e.clientY})}
                 onClick={()=>onSelect(selDept===d.code?null:d.code)}
-                style={{cursor:"pointer"}}>
-                <path d={p.d} fill={col} stroke={strokeCol} strokeWidth={strokeW}
-                  style={{filter:isSel?"drop-shadow(0 3px 8px rgba(232,24,109,.4))":isHov?"drop-shadow(0 2px 6px rgba(232,24,109,.25))":"none",transition:"all .2s"}}/>
-                <text x={p.cx} y={p.cy-4}
-                  style={{fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:"600",fill:"#333",pointerEvents:"none",textAnchor:"middle"}}>
-                  {p.nom.split("-")[0].slice(0,8)}
+                style={{cursor:"pointer"}}
+              >
+                <path d={p.d}
+                  fill={col}
+                  stroke={strokeCol}
+                  strokeWidth={strokeW}
+                  style={{
+                    filter: isSel
+                      ? "drop-shadow(0 4px 12px rgba(232,24,109,.35))"
+                      : isHov
+                        ? "drop-shadow(0 2px 8px rgba(232,24,109,.2))"
+                        : "drop-shadow(0 1px 3px rgba(0,0,0,.08))",
+                    transition:"all .18s ease"
+                  }}
+                />
+                {/* Indicateur enjeux forts — point coloré si > 0 communes très fort */}
+                {st.forts > 0 && !isSel && (
+                  <circle cx={p.cx+12} cy={p.cy-10} r={4}
+                    fill="#E8186D" opacity={0.85}
+                    style={{pointerEvents:"none"}}
+                  />
+                )}
+                {/* Nom département */}
+                <text x={p.cx} y={p.cy - 4}
+                  style={{
+                    fontFamily:"system-ui,sans-serif",
+                    fontSize: isSel||isHov ? "9px" : "8.5px",
+                    fontWeight: isSel ? "800" : "600",
+                    fill: isSel ? "#c01057" : "#2a2a2a",
+                    pointerEvents:"none",textAnchor:"middle",
+                    letterSpacing:"-0.2px"
+                  }}>
+                  {p.nom}
                 </text>
-                <text x={p.cx} y={p.cy+6}
-                  style={{fontFamily:"'Source Code Pro',monospace",fontSize:"7px",fill:"#E8186D",pointerEvents:"none",textAnchor:"middle"}}>
-                  ({d.code})
+                {/* Code département */}
+                <text x={p.cx} y={p.cy + 8}
+                  style={{
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"7.5px",
+                    fill: isSel ? "#E8186D" : "#666",
+                    fontWeight: isSel ? "700" : "500",
+                    pointerEvents:"none",textAnchor:"middle"
+                  }}>
+                  {d.code}
                 </text>
+                {/* Nb communes suivies — si sélectionné */}
+                {isSel && st.coms > 0 && (
+                  <text x={p.cx} y={p.cy + 20}
+                    style={{
+                      fontFamily:"'Source Code Pro',monospace",
+                      fontSize:"7px",fill:"#E8186D",
+                      fontWeight:"600",
+                      pointerEvents:"none",textAnchor:"middle"
+                    }}>
+                    {st.coms} com.
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
+
+        {/* Tooltip riche — inspiré AzukiGPT + maire.app */}
         {hov && hovDept && (
           <div style={{
-            position:"fixed",left:tip.x+12,top:tip.y-8,
-            background:"#1a1a1a",color:"#fff",padding:"8px 12px",
-            borderRadius:"6px",fontSize:"11px",pointerEvents:"none",zIndex:9999,
-            fontFamily:"'Source Code Pro',monospace",lineHeight:"1.6",
-            boxShadow:"0 4px 16px rgba(0,0,0,.3)",maxWidth:"200px"
+            position:"fixed",left:tip.x+14,top:tip.y-10,
+            background:"rgba(20,20,20,.96)",color:"#fff",
+            padding:"10px 14px",borderRadius:8,
+            fontSize:"11px",pointerEvents:"none",zIndex:9999,
+            fontFamily:"'Source Code Pro',monospace",lineHeight:"1.7",
+            boxShadow:"0 8px 24px rgba(0,0,0,.25)",
+            border:"1px solid rgba(255,255,255,.08)",
+            minWidth:160
           }}>
-            <div style={{fontWeight:"700",fontSize:"12px",marginBottom:"3px"}}>{hovDept.nom}</div>
-            <div>{hovDept.tendance}</div>
-            <div style={{color:"#E8186D"}}>{dStats[hov]?.left} CR gauche · {dStats[hov]?.total} total</div>
-            <div style={{color:"#aaa",fontSize:"10px"}}>{dStats[hov]?.cands} candidats · {dStats[hov]?.elus} élus</div>
+            <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:13,marginBottom:4,color:"#fff"}}>
+              {hovDept.nom}
+            </div>
+            <div style={{
+              display:"inline-block",
+              background:TEND_COL_SEL[hovDept.tendance]||"#555",
+              color:"#fff",fontSize:"8px",fontWeight:700,
+              padding:"1px 7px",borderRadius:10,marginBottom:5,letterSpacing:"0.5px"
+            }}>{hovDept.tendance}</div>
+            <div style={{color:"#ddd",fontSize:"10px"}}>
+              <div>{dStats[hov]?.coms || 0} commune{(dStats[hov]?.coms||0)>1?"s":""} suivie{(dStats[hov]?.coms||0)>1?"s":""}</div>
+              {dStats[hov]?.forts > 0 && (
+                <div style={{color:"#ff8a80"}}>{dStats[hov].forts} enjeu{dStats[hov].forts>1?"x":""} fort{dStats[hov].forts>1?"s":""}</div>
+              )}
+              <div style={{color:"#aaa",marginTop:2}}>{dStats[hov]?.total || 0} CR · {dStats[hov]?.candidats || 0} candidat{(dStats[hov]?.candidats||0)>1?"s":""}</div>
+            </div>
+            <div style={{color:"#E8186D",fontSize:"9px",marginTop:4,fontWeight:700}}>
+              Cliquer pour voir les communes →
+            </div>
           </div>
         )}
       </div>
-      {/* LÉGENDE */}
-      <div style={{display:"flex",flexWrap:"wrap",gap:"8px",padding:"10px 14px",borderTop:"1px solid #f0ebe4"}}>
-        {Object.entries(TEND_COL).map(([k,v])=>(
-          <div key={k} style={{display:"flex",alignItems:"center",gap:"5px",fontSize:"10px",color:"#666"}}>
-            <div style={{width:"12px",height:"12px",borderRadius:"3px",background:v,border:"1px solid rgba(0,0,0,.08)",flexShrink:0}}/>
-            <span>{k}</span>
-          </div>
-        ))}
+
+      {/* Pied de carte — note version */}
+      <div style={{
+        padding:"8px 16px",background:"#fafaf9",borderTop:"1px solid #f0ebe4",
+        display:"flex",alignItems:"center",justifyContent:"space-between"
+      }}>
+        <div style={{fontSize:"9px",color:"#bbb",fontFamily:"'Source Code Pro',monospace"}}>
+          Navigation départementale · carte communale détaillée en préparation
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          {DEPTS.filter(d=>(dStats[d.code]?.forts||0)>0).slice(0,3).map(d=>(
+            <div key={d.code} style={{
+              fontSize:"8px",fontFamily:"'Source Code Pro',monospace",
+              background:"#fce4ec",color:"#c01057",
+              padding:"2px 7px",borderRadius:10,fontWeight:700
+            }}>{d.code}</div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1365,16 +1514,14 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                 )}
               </div>
 
-              {/* ── GRILLE : CARTE + COMMUNES DU DEPT SÉLECTIONNÉ ── */}
-              {/* Inspiré AzukiGPT : carte à gauche, liste à droite */}
-              <div style={{display:"grid",gridTemplateColumns:"minmax(320px,1fr) minmax(280px,1fr)",gap:20,alignItems:"start"}}>
+              {/* ── GRILLE : CARTE (55%) + COMMUNES (45%) ── */}
+              {/* AzukiGPT : carte à gauche, liste communes à droite. maire.app : cartes communes style card */}
+              <div style={{display:"grid",gridTemplateColumns:"minmax(0,55fr) minmax(0,45fr)",gap:16,alignItems:"start"}}>
 
                 {/* CARTE SVG DÉPARTEMENTALE (réutilisée, pattern AzukiGPT : coloration politique) */}
                 <div>
-                  <NaMap crList={crList} selDept={selDept} onSelect={code=>{setSelDept(selDept===code?null:code);}}/>
-                  <div style={{marginTop:10,fontSize:"10px",color:"#ccc",fontFamily:"'Source Code Pro',monospace",textAlign:"center"}}>
-                    Carte détaillée commune par commune — prochaine version
-                  </div>
+                  <NaMap crList={crList} communes={COMMUNES} selDept={selDept} onSelect={code=>{setSelDept(selDept===code?null:code);}}/>
+
                 </div>
 
                 {/* PANNEAU DROIT : communes du département sélectionné */}
@@ -1416,45 +1563,51 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                     return (
                       <div style={{background:"#fff",border:"1px solid #f0ebe4",borderRadius:10,overflow:"hidden"}}>
                         <div style={{
-                          padding:"12px 16px",background:"#fff5f8",borderBottom:"1px solid #fce4ec",
+                          padding:"12px 16px",
+                          background:"linear-gradient(135deg,#fff5f8,#fff)",
+                          borderBottom:"1px solid #fce4ec",
                           display:"flex",alignItems:"center",justifyContent:"space-between"
                         }}>
                           <div>
-                            <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:15}}>{deptInfo?.nom} ({selDept})</div>
-                            <div style={{fontSize:"10px",fontFamily:"'Source Code Pro',monospace",color:"#aaa",marginTop:2}}>
-                              {communesDept.length} communes suivies
+                            <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:15,color:"#1a1a1a"}}>{deptInfo?.nom}</div>
+                            <div style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#aaa",marginTop:2}}>
+                              {selDept} · {communesDept.length} commune{communesDept.length>1?"s":""} suivie{communesDept.length>1?"s":""} · {communesDept.filter(c=>c.enjeu==="très fort"||c.enjeu==="fort").length} enjeu{communesDept.filter(c=>c.enjeu==="très fort"||c.enjeu==="fort").length>1?"x":""} fort{communesDept.filter(c=>c.enjeu==="très fort"||c.enjeu==="fort").length>1?"s":""}
                             </div>
                           </div>
                           <button onClick={()=>setSelDept(null)} style={{
-                            background:"none",border:"1px solid #f0ebe4",borderRadius:6,
-                            padding:"4px 10px",cursor:"pointer",fontSize:"10px",color:"#888"
-                          }}>✕ Fermer</button>
+                            background:"none",border:"1px solid #f8bbd0",borderRadius:20,
+                            padding:"4px 12px",cursor:"pointer",fontSize:"10px",color:"#E8186D",
+                            fontFamily:"'Source Code Pro',monospace",fontWeight:700
+                          }}>✕</button>
                         </div>
                         <div style={{maxHeight:420,overflowY:"auto",padding:"8px"}}>
                           {communesDept.map(c=>(
                             <div key={c.insee||c.nom}
                               onClick={()=>setCommunePage(c)}
                               style={{
-                                padding:"10px 12px",marginBottom:4,
-                                border:"1px solid #f5f0ea",borderRadius:7,
-                                cursor:"pointer",transition:"all .15s",
+                                padding:"10px 14px",marginBottom:5,
+                                border:"1px solid #f0ebe4",borderRadius:8,
+                                cursor:"pointer",background:"#fff",
+                                boxShadow:"0 1px 3px rgba(0,0,0,.04)",
+                                transition:"all .12s",
                                 display:"flex",alignItems:"center",gap:10
                               }}
-                              onMouseEnter={e=>e.currentTarget.style.background="#fff5f8"}
-                              onMouseLeave={e=>e.currentTarget.style.background="#fff"}
+                              onMouseEnter={e=>{e.currentTarget.style.background="#fff5f8";e.currentTarget.style.borderColor="#f8bbd0";e.currentTarget.style.boxShadow="0 2px 8px rgba(232,24,109,.08)";}}
+                              onMouseLeave={e=>{e.currentTarget.style.background="#fff";e.currentTarget.style.borderColor="#f0ebe4";e.currentTarget.style.boxShadow="0 1px 3px rgba(0,0,0,.04)";}}
                             >
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontWeight:700,fontSize:13}}>{c.nom}</div>
-                                <div style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#aaa",marginTop:1}}>
-                                  INSEE {c.insee} · {c.pop?.toLocaleString("fr-FR")} hab.
+                                <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{c.nom}</div>
+                                <div style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#bbb",marginTop:1}}>
+                                  {c.pop?.toLocaleString("fr-FR")} hab. · {c.insee}
                                 </div>
+                                {c.maire && <div style={{fontSize:"9px",color:"#aaa",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.maire}</div>}
                               </div>
                               <div style={{display:"flex",gap:4,flexShrink:0,alignItems:"center"}}>
                                 {c.enjeu && <span style={{
                                   fontSize:"8px",fontFamily:"'Source Code Pro',monospace",fontWeight:700,
-                                  padding:"2px 6px",borderRadius:3,background:ENJTAG[c.enjeu]||"#888",color:"#fff"
+                                  padding:"2px 7px",borderRadius:10,background:ENJTAG[c.enjeu]||"#888",color:"#fff"
                                 }}>{c.enjeu}</span>}
-                                <span style={{fontSize:11,color:"#E8186D"}}>→</span>
+                                <span style={{fontSize:"14px",color:"#E8186D",fontWeight:700}}>›</span>
                               </div>
                             </div>
                           ))}
