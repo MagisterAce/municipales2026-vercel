@@ -1,12 +1,12 @@
 // deploy:1774991074555
-// ── Architecture module Municipales (Phase 1 consolidée) ──────────────────
-// tab "cartes" → module Municipales avec 2 sous-vues :
-//   sousVue "carte"  → Carte & Recherche + page commune dédiée (communePage)
-//   sousVue "suivi"  → Suivi par département (ancien Tableau de Bord)
-// tab "cr"           → Conseillers régionaux (inchangé)
-// tab "communes"     → Communes clés (inchangé)
-// tab "analyse"      → Analyse par bloc (inchangé)
-// Phase 2 : React Router + MapLibre + GeoJSON NA + EPCI
+// ── Architecture module Municipales ─────────────────────────────────────────
+// tab "cartes"   → 🏠 Municipales 2026
+//                  carte SVG depts cliquables + recherche + page commune (communePage)
+// tab "cr"       → 👤 Conseillers régionaux (seule vue de suivi CR — onglet CR)
+// tab "communes" → 🏛 Communes clés (saisie résultats)
+// tab "analyse"  → 📊 Analyse par bloc
+// Décision : "Suivi par département" supprimé (redondant avec onglet CR)
+// Prochaine version : React Router + MapLibre GL JS + GeoJSON NA
 // ──────────────────────────────────────────────────────────────────────────
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
@@ -691,8 +691,8 @@ function NaMap({crList, selDept, onSelect}) {
     <div style={{background:"#fff",border:"1px solid #e8e0d8",borderRadius:"10px",overflow:"hidden",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
       <div style={{padding:"12px 16px",borderBottom:"1px solid #f0ebe4",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div>
-          <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:"13px",fontWeight:"700"}}>Nouvelle-Aquitaine — 12 départements</div>
-          <div style={{fontSize:"10px",color:"#bbb",fontFamily:"'Source Code Pro',monospace",marginTop:"2px"}}>Cliquer un département pour le détail</div>
+          <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:"13px",fontWeight:"700"}}>Nouvelle-Aquitaine — navigation par département</div>
+          <div style={{fontSize:"10px",color:"#bbb",fontFamily:"'Source Code Pro',monospace",marginTop:"2px"}}>Cliquer pour voir les communes suivies</div>
         </div>
       </div>
       <div style={{position:"relative",background:"#f0ede8",padding:"8px"}}>
@@ -873,9 +873,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
-  // Architecture modulaire : sous-vue du module Municipales
-  // "carte" = vue d'entrée Carte & Recherche | "suivi" = ancien Tableau de Bord
-  const [sousVue, setSousVue] = useState("carte");
+
   const [crList, setCrList] = useState(CR_DATA);
   const [selDept, setSelDept] = useState(null);
   const [openDepts, setOpenDepts] = useState({});
@@ -1250,7 +1248,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
         {/* NAV */}
         <nav className="nav">
           {[
-            {id:"cartes",label:"🗺 Carte & Recherche"},
+            {id:"cartes",label:"🏠 Municipales 2026"},
             {id:"cr",label:"👤 Conseillers régionaux"},
             {id:"communes",label:"🏛 Communes clés"},
             {id:"analyse",label:"📊 Analyse par bloc"},
@@ -1263,36 +1261,12 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
         <main className="main">
 
           {/* ══ CARTE & RECHERCHE ══ */}
-          {tab==="cartes" && !communePage && sousVue==="carte" && (
+          {tab==="cartes" && !communePage && (
             <div className="tc">
               {/* ── En-tête section (inspiré maire.app : titre clair + accroche) ── */}
-              {/* ── Navigation modulaire du module Municipales ── */}
-              <div style={{
-                display:"flex",gap:6,marginBottom:16,
-                borderBottom:"2px solid #f0ebe4",paddingBottom:0
-              }}>
-                {[
-                  {id:"carte",label:"🗺 Carte & Recherche"},
-                  {id:"suivi",label:"📋 Suivi par département"},
-                ].map(sv=>(
-                  <button key={sv.id}
-                    onClick={()=>setSousVue(sv.id)}
-                    style={{
-                      padding:"8px 16px",border:"none",cursor:"pointer",
-                      fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,
-                      letterSpacing:"0.5px",borderRadius:"6px 6px 0 0",
-                      background:sousVue===sv.id?"#E8186D":"transparent",
-                      color:sousVue===sv.id?"#fff":"#aaa",
-                      borderBottom:sousVue===sv.id?"2px solid #E8186D":"2px solid transparent",
-                      transition:"all .15s"
-                    }}
-                  >{sv.label}</button>
-                ))}
-              </div>
-
               <div className="sh" style={{marginBottom:14}}>
                 <div className="sh-l">
-                  <span className="sh-title">Carte & Recherche — Municipales 2026</span>
+                  <span className="sh-title">Communes de Nouvelle-Aquitaine</span>
                 </div>
                 <div className="sh-act">
                   <span className="ctag">{COMMUNES.length} communes enrichies</span>
@@ -1398,8 +1372,8 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                 {/* CARTE SVG DÉPARTEMENTALE (réutilisée, pattern AzukiGPT : coloration politique) */}
                 <div>
                   <NaMap crList={crList} selDept={selDept} onSelect={code=>{setSelDept(selDept===code?null:code);}}/>
-                  <div style={{marginTop:10,fontSize:"10px",color:"#aaa",fontFamily:"'Source Code Pro',monospace",textAlign:"center"}}>
-                    Phase 2 : carte exhaustive commune par commune (MapLibre + GeoJSON NA)
+                  <div style={{marginTop:10,fontSize:"10px",color:"#ccc",fontFamily:"'Source Code Pro',monospace",textAlign:"center"}}>
+                    Carte détaillée commune par commune — prochaine version
                   </div>
                 </div>
 
@@ -1498,114 +1472,6 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
             </div>
           )}
 
-          {/* ══ SUIVI PAR DÉPARTEMENT (anciennement Tableau de Bord) ══ */}
-          {/* Réintégré comme sous-vue "suivi" du module Municipales */}
-          {tab==="cartes" && !communePage && sousVue==="suivi" && (
-            <div className="tc">
-              <div className="flex" style={{gap:6,marginBottom:16,borderBottom:"2px solid #f0ebe4",paddingBottom:0,display:"flex"}}>
-                {[
-                  {id:"carte",label:"🗺 Carte & Recherche"},
-                  {id:"suivi",label:"📋 Suivi par département"},
-                ].map(sv=>(
-                  <button key={sv.id}
-                    onClick={()=>setSousVue(sv.id)}
-                    style={{
-                      padding:"8px 16px",border:"none",cursor:"pointer",
-                      fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,
-                      letterSpacing:"0.5px",borderRadius:"6px 6px 0 0",
-                      background:sousVue===sv.id?"#E8186D":"transparent",
-                      color:sousVue===sv.id?"#fff":"#aaa",
-                      borderBottom:sousVue===sv.id?"2px solid #E8186D":"2px solid transparent",
-                      transition:"all .15s"
-                    }}
-                  >{sv.label}</button>
-                ))}
-              </div>
-              <div className="sh">
-                <div className="sh-l"><span className="sh-title">Suivi par département</span></div>
-                <div className="sh-act">
-                  <span className="ctag">{crList.filter(c=>getFinalStatut(c)==="Candidat").length} à saisir</span>
-                </div>
-              </div>
-              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginBottom:10}}>⚠️ Données collectées manuellement — des erreurs peuvent subsister</div>
-              {DEPTS.map(d => {
-                const deptCRs = crList.filter(c => c.dept === d.code);
-                const isOpen = !!openDepts[d.code];
-                const groupesPresents = [...new Set(deptCRs.map(c=>c.groupe))].sort((a,b)=>{
-                  const order=["PS/PP","PS","PP","PCF","PRG","Écologistes","Écologistes","DVG","LFI","Centre/Indé","UDI","Horizons","Modem","Renaissance","RE","LR","DVD","RN","Société Civile","SE"];
-                  return (order.indexOf(a)>=0?order.indexOf(a):99)-(order.indexOf(b)>=0?order.indexOf(b):99);
-                });
-                const elus = deptCRs.filter(c=>["Victoire 1er Tour","Victoire 2nd Tour","Élu 1er tour","Élu 2nd tour"].includes(getFinalStatut(c))).length;
-                const qualifies = deptCRs.filter(c=>(c.statut==="Qualifié·e pour le 2nd Tour"||c.statut==="Ballottage") && !c.statut_t2).length;
-                const defaites = deptCRs.filter(c=>c.statut==="Défaite 1er Tour"||c.statut==="Défaite 2nd Tour"||c.statut==="Défaite"||c.statut_t2==="Défaite 2nd Tour").length;
-                const desistements = deptCRs.filter(c=>c.statut_t2==="Désistement").length;
-                const candidats = deptCRs.filter(c=>getFinalStatut(c)==="Candidat").length;
-                return (
-                  <div key={d.code} className="panel" style={{marginBottom:10}}>
-                    <div onClick={()=>toggleDept(d.code)} style={{
-                      padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",
-                      background: isOpen ? "#fff5f8" : "#fafafa",cursor:"pointer",userSelect:"none",
-                      borderBottom: isOpen ? "1px solid #f0ebe4" : "none",
-                      borderRadius: isOpen ? "10px 10px 0 0" : "10px",
-                      flexWrap:"wrap",gap:8,transition:"background .15s"
-                    }}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:"700",color:"#fff",background:TEND_COLOR[d.tendance]||"#888",padding:"2px 8px",borderRadius:"3px",letterSpacing:"1px"}}>{d.code}</span>
-                        <span style={{fontFamily:"'Libre Baskerville',serif",fontSize:"14px",fontWeight:"700"}}>{d.nom}</span>
-                        <span style={{fontSize:"10px",color:"#aaa",fontFamily:"'Source Code Pro',monospace"}}>{d.chef} · {d.tendance}</span>
-                      </div>
-                      <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{fontSize:"10px",color:"#888",fontFamily:"'Source Code Pro',monospace"}}>{deptCRs.length} CR</span>
-                        {elus>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#c8e6c9",color:"#1b5e20",fontWeight:700}}>✓ {elus} élu·e·s</span>}
-                        {qualifies>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#fff3e0",color:"#e65100",fontWeight:700}}>→ {qualifies} qualifié·e·s 2T</span>}
-                        {desistements>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#efebe9",color:"#6d4c41",fontWeight:700}}>↺ {desistements} désistement{desistements>1?"s":""}</span>}
-                        {defaites>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#ffebee",color:"#b71c1c",fontWeight:700}}>✗ {defaites} défaite·s</span>}
-                        {candidats>0 && <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",padding:"2px 7px",borderRadius:"10px",background:"#fce4ec",color:"#E8186D",fontWeight:700}}>⏳ {candidats} à saisir</span>}
-                        <span style={{fontSize:"13px",color:"#bbb",marginLeft:4}}>{isOpen ? "▲" : "▼"}</span>
-                      </div>
-                    </div>
-                    {isOpen && (
-                      <div style={{padding:"10px 14px",display:"flex",flexDirection:"column",gap:10}}>
-                        {groupesPresents.map(groupe => {
-                          const groupeCRs = deptCRs.filter(c=>c.groupe===groupe);
-                          return (
-                            <div key={groupe}>
-                              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5,paddingBottom:4,borderBottom:"1px solid #f5f0ea"}}>
-                                <span className="badge" style={{background:GC[groupe]||"#888"}}>{groupe}</span>
-                                <span style={{fontSize:"10px",color:"#bbb",fontFamily:"'Source Code Pro',monospace"}}>{groupeCRs.length} CR</span>
-                              </div>
-                              <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                                {groupeCRs.map(cr => {
-                                  const fs=getFinalStatut(cr); const sc2 = SC[fs]||SC["Candidat"];
-                                  return (
-                                    <div key={cr.id} style={{
-                                      display:"flex",alignItems:"center",justifyContent:"space-between",
-                                      padding:"6px 10px",background:"#fafafa",border:"1px solid #f0ebe4",borderRadius:6,gap:8,flexWrap:"wrap"
-                                    }}>
-                                      <div style={{display:"flex",alignItems:"center",gap:7,flex:1,minWidth:0}}>
-                                        <span style={{fontWeight:700,fontSize:12}}>{cr.nom}</span>
-                                        {cr.commune && cr.commune!=="/" && <span style={{fontSize:10,color:"#aaa",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cr.commune}</span>}
-                                      </div>
-                                      <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                                        {cr.s1!=null && <span className="score" style={{fontSize:11}}><span style={{fontSize:8,color:"#aaa",fontWeight:400,fontFamily:"'Source Code Pro',monospace"}}>T1: </span>{cr.s1}%</span>}
-                                        {cr.s2!=null && <span className="score" style={{fontSize:11}}><span style={{fontSize:8,color:"#aaa",fontWeight:400,fontFamily:"'Source Code Pro',monospace"}}>T2: </span>{cr.s2}%</span>}
-                                        {(()=>{const f=cr.statut_t2&&cr.statut_t2!==""?cr.statut_t2:cr.statut;const s=SC[f]||SC["Candidat"];return <span className="pill" style={{color:s.c,background:s.bg,fontSize:"8px",padding:"2px 8px"}}>{f}</span>;})()}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
           {/* ══ LANDING PAGE COMMUNALE ÉLECTORALE ══════════════════════════════
                Architecture cible : 7 blocs extensibles
                Inspiré maire.app pour l'UX, mais conçu pour l'analyse
@@ -1653,7 +1519,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
               return {...cr, crFull, fs, sc: fs ? (SC[fs]||SC["Candidat"]) : null};
             });
 
-            // ── Thèmes comparatifs (cible Phase 2+) ───────────────────────
+            // ── 11 thèmes comparatifs (alimentés lors de l'intégration données) ──
             const THEMES = [
               "Sécurité","Espaces verts / Écologie","Écoles / Enfance",
               "Logement","Mobilités / Transports","Développement éco / Emploi",
@@ -1705,8 +1571,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                     </div>
                     <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
                       <span style={{background:polCol,color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,padding:"5px 14px",borderRadius:20}}>{c.couleur_pol||"—"}</span>
-                      <span style={{background:"#f0f0f0",color:"#555",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,padding:"5px 14px",borderRadius:20}}>{blocActuel}</span>
-                      {c.enjeu && <span style={{background:ENJTAG[c.enjeu]||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,padding:"5px 14px",borderRadius:20}}>Enjeu {c.enjeu}</span>}
+                      {c.enjeu && <span style={{background:ENJTAG[c.enjeu]||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,padding:"5px 14px",borderRadius:20}}>{c.enjeu}</span>}
                     </div>
                   </div>
 
@@ -1717,8 +1582,6 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                       {label:"Maire sortant",val:c.maire,icon:"🏛"},
                       {label:"Code INSEE",val:c.insee,icon:"#"},
                       {label:"Département",val:`${deptInfo?.nom||c.dept} (${c.dept})`,icon:"📍"},
-                      {label:"EPCI / Interco",val:"— Phase 2",icon:"🏙",dim:true},
-                      {label:"Bloc politique",val:blocActuel,icon:"🎯"},
                     ].map(item=>(
                       <div key={item.label} style={{background:item.dim?"#fafafa":"#f9f6f2",borderRadius:8,padding:"9px 12px",opacity:item.dim?0.5:1}}>
                         <div style={{fontSize:"8px",fontFamily:"'Source Code Pro',monospace",color:"#bbb",letterSpacing:"1px",textTransform:"uppercase",marginBottom:3}}>
@@ -1824,37 +1687,27 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                   <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#6d4c41",textTransform:"uppercase",marginBottom:12}}>
                     📅 Historique comparatif des scrutins
                   </div>
-                  {/* Structure cible : 3 colonnes scrutins × données résultats */}
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-                    {[
-                      {annee:"2026",disponible:true,note:"Résultats en cours de saisie"},
-                      {annee:"2020",disponible:false,note:"À intégrer via data.gouv"},
-                      {annee:"2014",disponible:false,note:"À intégrer via data.gouv"},
-                    ].map(sc=>(
-                      <div key={sc.annee} style={{
-                        background:sc.disponible?"#fff5f8":"#fafafa",
-                        border:`1px solid ${sc.disponible?"#f8bbd0":"#ece8e3"}`,
-                        borderRadius:8,padding:"14px 14px"
-                      }}>
-                        <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:18,color:sc.disponible?"#E8186D":"#bbb",marginBottom:6}}>{sc.annee}</div>
-                        <div style={{fontSize:"10px",color:sc.disponible?"#888":"#ccc",fontFamily:"'Source Code Pro',monospace",lineHeight:1.6}}>
-                          {sc.disponible ? (
-                            <>
-                              <div>Maire sortant : <strong>{c.maire||"—"}</strong></div>
-                              <div>Bloc : <strong>{blocActuel}</strong></div>
-                              <div style={{marginTop:4,color:"#E8186D"}}>Résultats → saisie Communes clés</div>
-                            </>
-                          ) : (
-                            <span style={{fontStyle:"italic"}}>{sc.note}</span>
-                          )}
-                        </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:10}}>
+                    {/* 2026 actif */}
+                    <div style={{background:"#fff5f8",border:"1px solid #f8bbd0",borderRadius:8,padding:"14px"}}>
+                      <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:18,color:"#E8186D",marginBottom:6}}>2026</div>
+                      <div style={{fontSize:"10px",color:"#888",fontFamily:"'Source Code Pro',monospace",lineHeight:1.7}}>
+                        <div>Sortant : <strong>{c.maire||"—"}</strong></div>
+                        <div>Nuance : <strong>{c.couleur_pol||"—"}</strong></div>
+                        {nbListesSaisies > 0
+                          ? <div style={{color:"#1b5e20",fontWeight:700,marginTop:4}}>{nbListesSaisies} liste{nbListesSaisies>1?"s":""} saisie{nbListesSaisies>1?"s":""}</div>
+                          : <div style={{color:"#aaa",marginTop:4}}>Résultats à venir</div>
+                        }
                       </div>
-                    ))}
-                  </div>
-                  {/* Lecture bascule/continuité (slot Phase 2+) */}
-                  <div style={{marginTop:12,padding:"10px 14px",background:"#f9f6f2",borderRadius:8,fontSize:"10px",color:"#bbb",fontFamily:"'Source Code Pro',monospace"}}>
-                    <span style={{fontWeight:700,color:"#aaa"}}>Lecture comparative — </span>
-                    bascule / continuité / recomposition politique · <em>données 2020 & 2014 à intégrer</em>
+                    </div>
+                    {/* 2020 + 2014 à venir */}
+                    <div style={{background:"#fafafa",border:"1px solid #ece8e3",borderRadius:8,padding:"14px",display:"flex",alignItems:"center",gap:14}}>
+                      <div style={{fontSize:22,opacity:.3}}>📅</div>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:13,color:"#bbb",marginBottom:4}}>2020 &amp; 2014</div>
+                        <div style={{fontSize:"10px",color:"#ccc",fontFamily:"'Source Code Pro',monospace"}}>Résultats historiques — à venir</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1876,8 +1729,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                               <div style={{fontWeight:700,fontSize:13}}>{l.tete}</div>
                               {l.libelle && <div style={{fontSize:"9px",color:"#aaa",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle}</div>}
                             </div>
-                            {/* Slot profil synthétique — Phase 2+ (AI/data.gouv) */}
-                            <span style={{fontSize:"8px",color:"#ddd",fontFamily:"'Source Code Pro',monospace"}}>profil →</span>
+
                           </div>
                         ))}
                       </div>
@@ -1909,47 +1761,28 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
 
                 {/* ══ BLOC 6 : PROGRAMMES PAR THÈME ═════════════════════ */}
                 {/* Structure cible : lignes=thèmes, colonnes=candidats */}
-                {/* Données à alimenter Phase 2+ via pipeline IA ou saisie */}
+                {/* Données programmes : intégration à venir */}
                 <div id="cp-programmes" style={{scrollMarginTop:50,background:"#fff",border:"1px solid #f0ebe4",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
                   <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#1b5e20",textTransform:"uppercase",marginBottom:12}}>
                     📋 Programmes par thème
                   </div>
-                  {/* Grille comparative thèmes × candidats */}
-                  <div style={{overflowX:"auto"}}>
-                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                      <thead>
-                        <tr>
-                          <th style={{padding:"7px 10px",background:"#f5f0ea",textAlign:"left",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"1px",color:"#888",fontWeight:700,borderRadius:"6px 0 0 0",whiteSpace:"nowrap"}}>THÈME</th>
-                          {listesVille.length > 0
-                            ? listesVille.map((l,i)=>(
-                                <th key={i} style={{padding:"7px 10px",background:"#f5f0ea",textAlign:"center",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",color:"#888",fontWeight:700,whiteSpace:"nowrap",maxWidth:120}}>
-                                  <span style={{background:l.color||"#888",color:"#fff",padding:"1px 6px",borderRadius:3,fontSize:"8px"}}>{l.nuance}</span>
-                                  <div style={{fontSize:"8px",color:"#aaa",marginTop:2,overflow:"hidden",textOverflow:"ellipsis"}}>{l.tete?.split(" ").slice(-1)[0]}</div>
-                                </th>
-                              ))
-                            : <th style={{padding:"7px 10px",background:"#f5f0ea",color:"#ccc",fontFamily:"'Source Code Pro',monospace",fontSize:"9px"}}>Candidats — données à venir</th>
-                          }
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {THEMES.map((theme,ti)=>(
-                          <tr key={ti} style={{borderBottom:"1px solid #f5f0ea"}}>
-                            <td style={{padding:"7px 10px",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",color:"#666",fontWeight:700,whiteSpace:"nowrap",background:ti%2===0?"#fafafa":"#fff"}}>{theme}</td>
-                            {listesVille.length > 0
-                              ? listesVille.map((_l,li)=>(
-                                  <td key={li} style={{padding:"7px 10px",textAlign:"center",background:ti%2===0?"#fafafa":"#fff"}}>
-                                    <span style={{fontSize:"9px",color:"#ddd",fontFamily:"'Source Code Pro',monospace",fontStyle:"italic"}}>—</span>
-                                  </td>
-                                ))
-                              : <td style={{padding:"7px 10px",background:ti%2===0?"#fafafa":"#fff"}}/>
-                            }
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {/* Tags thèmes + état sobre — inspiré maire.app : pas de tableau mort */}
+                  <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:12}}>
+                    {THEMES.map((t,i)=>(
+                      <span key={i} style={{
+                        fontSize:"10px",fontFamily:"'Source Code Pro',monospace",
+                        padding:"4px 11px",borderRadius:20,
+                        background:"#f5f0ea",color:"#888",border:"1px solid #ece8e3"
+                      }}>{t}</span>
+                    ))}
                   </div>
-                  <div style={{marginTop:10,fontSize:"9px",color:"#ccc",fontFamily:"'Source Code Pro',monospace",fontStyle:"italic"}}>
-                    Données programmes à intégrer Phase 2+ · Source : sites candidats / IA / saisie manuelle
+                  <div style={{
+                    padding:"14px 16px",background:"#f9f6f2",borderRadius:8,
+                    display:"flex",alignItems:"center",gap:10,
+                    fontSize:"11px",color:"#aaa",fontFamily:"'Source Code Pro',monospace"
+                  }}>
+                    <span style={{fontSize:18,opacity:.4}}>📋</span>
+                    <span>Programmes par thème disponibles après intégration des données candidats.</span>
                   </div>
                 </div>
 
@@ -1966,20 +1799,26 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                           <div style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"3px 10px",borderRadius:20,display:"inline-block",marginBottom:8}}>{l.nuance}</div>
                           <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>{l.tete}</div>
                           <div style={{fontSize:"9px",color:"#aaa",marginBottom:10}}>{l.libelle||"—"}</div>
-                          {/* Slots comparaison Phase 2+ */}
+
                           {["Profil","Programme clé","Positionnement","Expérience locale"].map(field=>(
                             <div key={field} style={{marginBottom:6}}>
                               <div style={{fontSize:"8px",fontFamily:"'Source Code Pro',monospace",color:"#ccc",letterSpacing:"0.8px",textTransform:"uppercase"}}>{field}</div>
-                              <div style={{fontSize:"10px",color:"#ddd",fontStyle:"italic"}}>— Phase 2+</div>
+                              <div style={{fontSize:"10px",color:"#e0e0e0"}}>—</div>
                             </div>
                           ))}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div style={{padding:"20px",background:"#f9f6f2",borderRadius:8,textAlign:"center",fontSize:12,color:"#bbb",fontStyle:"italic"}}>
-                      Comparateur disponible avec ≥ 2 candidats renseignés.<br/>
-                      <span style={{fontSize:"10px",fontFamily:"'Source Code Pro',monospace"}}>Données à intégrer Phase 2+</span>
+                    <div style={{
+                      padding:"16px 20px",background:"#f9f6f2",borderRadius:8,
+                      display:"flex",alignItems:"center",gap:12
+                    }}>
+                      <span style={{fontSize:22,opacity:.4}}>⚖️</span>
+                      <div style={{fontSize:"11px",color:"#aaa",fontFamily:"'Source Code Pro',monospace"}}>
+                        <div style={{fontWeight:700,color:"#999",marginBottom:2}}>Comparateur de candidats</div>
+                        <div>Disponible dès que ≥ 2 têtes de liste sont renseignées.</div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1992,7 +1831,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                     letterSpacing:"1.5px",padding:"10px 24px",borderRadius:8,cursor:"pointer",textTransform:"uppercase"
                   }}>← Retour à la carte</button>
                   <div style={{fontSize:"9px",color:"#bbb",fontFamily:"'Source Code Pro',monospace"}}>
-                    INSEE {c.insee} · {c.nom} · municipales2026-vercel
+                    INSEE {c.insee} · Municipales 2026 · Nouvelle-Aquitaine
                   </div>
                 </div>
 
