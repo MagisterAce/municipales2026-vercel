@@ -1,4 +1,4 @@
-// deploy:1775517912
+// deploy:1775524774
 // ── Architecture module Municipales ─────────────────────────────────────────
 // tab "cartes"   → 🏠 Municipales 2026
 //                  carte Leaflet depts cliquables + recherche + landing page commune
@@ -674,236 +674,373 @@ const DEPT_CENTROIDS = {
   "87":{lat:45.80,lng:1.25,nom:"Haute-Vienne"},
 };
 
-// ─── GEOJSON URL DÉPARTEMENTS FRANCE ────────────────────────────────────────
-const GEOJSON_URL = "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson";
-const NA_CODES = new Set(["16","17","19","23","24","33","40","47","64","79","86","87"]);
+// ─── HOOK : COUVERTURE COMMUNALE TOTALE NA ────────────────────────────────────
+// Charge toutes les communes NA depuis geo.api.gouv.fr
+// Merge avec la couche premium COMMUNES (127 enrichies)
+// Résultat : ~4300 communes, toutes exploitables
+function useCommunesNA(communesPremium) {
+  const [allCommunes, setAllCommunes]   = useState(null);   // null = loading
+  const [loadError,   setLoadError]     = useState(false);
 
-// ─── COMPOSANT CARTE LEAFLET NA V3 ──────────────────────────────────────────
-// Remplacement définitif de la carte SVG
-// Sources : pattern maire_app (MapLibre/Leaflet), AzukiGPT (coloration politique)
-// Fond CartoDB Light, GeoJSON data.gouv.fr, interactivité complète
-function NaMap({crList, communes, selDept, onSelect}) {
+  useEffect(() => {
+    const NA_DEPTS = ["16","17","19","23","24","33","40","47","64","79","86","87"];
+    const premiumIndex = {};
+    (communesPremium||[]).forEach(c => { premiumIndex[c.insee] = c; });
+
+    // Fetch toutes les communes NA en parallèle (12 requêtes)
+    const fetches = NA_DEPTS.map(dept =>
+      fetch(`https://geo.api.gouv.fr/communes?codeDepartement=${dept}&fields=nom,code,population,codesPostaux&format=json&limit=1000`)
+        .then(r => { if (!r.ok) throw new Error(dept); return r.json(); })
+        .then(arr => arr.map(c => {
+          const p = premiumIndex[c.code];
+          return p
+            ? { ...p, _premium: true }                          // enrichi
+            : {
+                nom:        c.nom,
+                insee:      c.code,
+                dept,
+                pop:        c.population || 0,
+                maire:      null,
+                couleur_pol:null,
+                enjeu:      null,
+                analyse:    null,
+                cr_lies:    [],
+                _premium:   false,
+              };
+        }))
+    );
+
+    Promise.all(fetches)
+      .then(results => {
+        const merged = results.flat().sort((a,b) => a.nom.localeCompare(b.nom, "fr"));
+        setAllCommunes(merged);
+      })
+      .catch(() => {
+        // Fallback : utiliser uniquement la couche premium si l'API échoue
+        setLoadError(true);
+        setAllCommunes(communesPremium || []);
+      });
+  }, []);
+
+  return { allCommunes, loadError };
+}
+
+// ─── HOOK : EPCI D'UNE COMMUNE ────────────────────────────────────────────────
+// Charge l'EPCI d'une commune depuis geo.api.gouv.fr
+function useEpci(insee) {
+  const [epci,     setEpci]     = useState(null);
+  const [epciDone, setEpciDone] = useState(false);
+
+  useEffect(() => {
+    if (!insee) { setEpciDone(true); return; }
+    fetch(`https://geo.api.gouv.fr/communes/${insee}?fields=epci`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { setEpci(d?.epci || null); setEpciDone(true); })
+      .catch(() => { setEpci(null); setEpciDone(true); });
+  }, [insee]);
+
+  return { epci, epciDone };
+}
+
+// ─── HOOK : GeoJSON COMMUNES D'UN DÉPARTEMENT ────────────────────────────────
+// Chargé à la demande quand un département est sélectionné
+// Source : gregoiredavid/france-geojson (GitHub, pas npm)
+const DEPT_NAMES_FOR_URL = {
+  "16":"charente","17":"charente-maritime","19":"correze",
+  "23":"creuse","24":"dordogne","33":"gironde","40":"landes",
+  "47":"lot-et-garonne","64":"pyrenees-atlantiques",
+  "79":"deux-sevres","86":"vienne","87":"haute-vienne",
+};
+
+function useGeoJsonDept(deptCode) {
+  const [geoData,  setGeoData]  = useState(null);
+  const [geoError, setGeoError] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
+
+  useEffect(() => {
+    if (!deptCode) { setGeoData(null); setGeoError(false); return; }
+    setGeoLoading(true);
+    setGeoData(null);
+    setGeoError(false);
+    const name = DEPT_NAMES_FOR_URL[deptCode];
+    const url  = `https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements/${deptCode}-${name}/communes-${deptCode}-${name}.geojson`;
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error("geo"); return r.json(); })
+      .then(d  => { setGeoData(d); setGeoLoading(false); })
+      .catch(() => { setGeoError(true); setGeoLoading(false); });
+  }, [deptCode]);
+
+  return { geoData, geoError, geoLoading };
+}
+
+// ─── NAMAP V4 — CARTE HYBRIDE RÉGION → DEPT → COMMUNES ──────────────────────
+// Niveaux d'exploration :
+//   1. Vue régionale NA : 12 départements colorés (Leaflet GeoJSON depts)
+//   2. Clic département → chargement GeoJSON communes du dept → polygones cliquables
+//   3. Clic commune → page commune (enrichie ou base)
+// Sources : maire_app pattern (MapLibre/GeoJSON) adapté Leaflet
+//           AzukiGPT : coloration politique communale
+function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
   const mapRef    = useRef(null);
-  const L         = useRef(null);    // instance Leaflet
-  const mapInst   = useRef(null);    // instance map
-  const geoLayer  = useRef(null);    // layer GeoJSON
-  const [ready, setReady] = useState(false);
-  const [tip,   setTip]   = useState(null); // {code, x, y}
+  const Lref      = useRef(null);
+  const mapInst   = useRef(null);
+  const deptLayer = useRef(null);   // GeoJSON 12 depts
+  const comLayer  = useRef(null);   // GeoJSON communes du dept actif
+  const selRef    = useRef(selDept);
+  const [ready,   setReady]   = useState(false);
+  const [tip,     setTip]     = useState(null);    // tooltip dept
+  const [comTip,  setComTip]  = useState(null);    // tooltip commune
 
-  // ── stats par département ──────────────────────────────────────────────────
+  // ── Stats dept pour tooltip/coloration ──────────────────────────────────
   const dStats = useMemo(() => {
     const m = {};
     DEPTS.forEach(d => {
       const crs  = crList.filter(c => c.dept === d.code);
-      const coms = (communes||[]).filter(c => c.dept === d.code);
+      const coms = (allCommunes||[]).filter(c => c.dept === d.code);
       m[d.code] = {
-        total:     crs.length,
+        total: crs.length,
         candidats: crs.filter(c => getFinalStatut(c) === "Candidat").length,
-        elus:      crs.filter(c => ["Victoire 1er Tour","Victoire 2nd Tour","Élu 1er tour","Élu 2nd tour"].includes(getFinalStatut(c))).length,
-        coms:      coms.length,
-        forts:     coms.filter(c => c.enjeu === "très fort" || c.enjeu === "fort").length,
-        tendance:  d.tendance,
+        elus: crs.filter(c => ["Victoire 1er Tour","Victoire 2nd Tour"].includes(getFinalStatut(c))).length,
+        coms: coms.length,
+        premium: coms.filter(c => c._premium).length,
+        forts: coms.filter(c => c.enjeu==="très fort"||c.enjeu==="fort").length,
       };
     });
     return m;
-  }, [crList, communes]);
+  }, [crList, allCommunes]);
 
-  // ── Charger Leaflet CSS+JS (CDN autorisé) ─────────────────────────────────
+  // ── Index communes par INSEE pour lookup rapide ─────────────────────────
+  const communesByInsee = useMemo(() => {
+    const idx = {};
+    (allCommunes||[]).forEach(c => { if (c.insee) idx[c.insee] = c; });
+    return idx;
+  }, [allCommunes]);
+
+  // ── Couleur d'une commune (par nuance ou gris si base) ─────────────────
+  const communeColor = useCallback(c => {
+    if (!c) return "#ccc";
+    const POL2COL = {
+      "PS":"#e91e63","DVG":"#ef5350","UG":"#e53935","PCF":"#c62828",
+      "LFI":"#7b1fa2","Verts":"#2e7d32","Écolo":"#2e7d32",
+      "DVC":"#1976d2","Centre":"#ef6c00","UDI":"#0288d1","RE":"#ef6c00",
+      "LR":"#1565c0","DVD":"#37474f","RN":"#212121",
+      "NC":"#90a4ae","SE":"#90a4ae","DIV":"#90a4ae",
+      "Rég.":"#00796b","EXG":"#880e4f","EXD":"#263238",
+    };
+    return POL2COL[c.couleur_pol] || "#b0bec5";
+  }, []);
+
+  // ── Charger Leaflet (CDN, une seule fois) ────────────────────────────────
   useEffect(() => {
-    // CSS
     if (!document.getElementById("lf-css")) {
       const lk = document.createElement("link");
-      lk.id   = "lf-css";
-      lk.rel  = "stylesheet";
+      lk.id = "lf-css"; lk.rel = "stylesheet";
       lk.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
       document.head.appendChild(lk);
     }
-    // JS
-    if (window.L) { L.current = window.L; setReady(true); return; }
+    if (window.L) { Lref.current = window.L; setReady(true); return; }
     const sc = document.createElement("script");
-    sc.src    = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
-    sc.onload = () => { L.current = window.L; setReady(true); };
+    sc.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
+    sc.onload = () => { Lref.current = window.L; setReady(true); };
     document.head.appendChild(sc);
   }, []);
 
-  // ── Style d'un feature GeoJSON ─────────────────────────────────────────────
-  const featureStyle = useCallback((feat, isSel) => {
-    const code  = feat?.properties?.code;
-    const dept  = DEPTS.find(d => d.code === code);
-    const tcol  = TEND_COL[dept?.tendance] || "#d4cfc9";
+  // ── Style GeoJSON département ────────────────────────────────────────────
+  const deptStyle = useCallback((feat, isSel) => {
+    const code = feat?.properties?.code;
+    const dept = DEPTS.find(d => d.code === code);
     return {
-      fillColor:   isSel ? "#fce4ec" : tcol,
-      fillOpacity: isSel ? 0.92 : 0.78,
-      color:       isSel ? "#E8186D" : "rgba(255,255,255,.9)",
+      fillColor:   isSel ? "#fce4ec" : (TEND_COL[dept?.tendance] || "#d4cfc9"),
+      fillOpacity: isSel ? 0.9 : 0.72,
+      color:       isSel ? "#E8186D" : "rgba(255,255,255,.85)",
       weight:      isSel ? 3 : 1.5,
     };
   }, []);
 
-  // ── Initialiser la carte (une seule fois) ─────────────────────────────────
+  // ── Initialiser la carte ─────────────────────────────────────────────────
   useEffect(() => {
     if (!ready || !mapRef.current || mapInst.current) return;
-    const Lf = L.current;
+    const L = Lref.current;
 
-    // Création de la carte — centrée sur NA, niveau 7
-    const map = Lf.map(mapRef.current, {
-      center:          [44.95, 0.0],
-      zoom:            7,
-      zoomControl:     false,
-      attributionControl: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      dragging:        true,
-      touchZoom:       false,
+    const map = L.map(mapRef.current, {
+      center: [44.95, 0.0], zoom: 7,
+      zoomControl: false, attributionControl: false,
+      scrollWheelZoom: false, doubleClickZoom: false,
     });
     mapInst.current = map;
 
-    // Fond CartoDB Light (épuré — style maire.app)
-    Lf.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
-      { subdomains: "abcd", maxZoom: 10 }
-    ).addTo(map);
+    // Fond CartoDB (style maire.app)
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
+      { subdomains:"abcd", maxZoom:14 }).addTo(map);
 
-    // Charger GeoJSON
-    fetch(GEOJSON_URL)
+    // GeoJSON 12 départements NA
+    fetch("https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson")
       .then(r => r.json())
       .then(data => {
-        const naData = {
-          type: "FeatureCollection",
-          features: data.features.filter(f => NA_CODES.has(f.properties.code)),
-        };
+        const NA_CODES = new Set(["16","17","19","23","24","33","40","47","64","79","86","87"]);
+        const naData = { type:"FeatureCollection", features: data.features.filter(f => NA_CODES.has(f.properties.code)) };
 
-        const selRef = { val: selDept }; // ref mutable pour l'event handler
-
-        const layer = Lf.geoJSON(naData, {
-          style: feat => featureStyle(feat, false),
+        const layer = L.geoJSON(naData, {
+          style: feat => deptStyle(feat, selRef.current === feat.properties.code),
           onEachFeature: (feat, fl) => {
             const code = feat.properties.code;
             fl.on({
               mouseover: e => {
-                fl.setStyle({ fillOpacity: 0.95, weight: 2.5, color: "#E8186D" });
-                setTip({ code, x: e.originalEvent.clientX, y: e.originalEvent.clientY });
+                if (selRef.current !== code) fl.setStyle({ fillOpacity:0.9, weight:2.5, color:"#E8186D" });
+                setTip({ code, x:e.originalEvent.clientX, y:e.originalEvent.clientY });
               },
-              mousemove: e => {
-                setTip(prev => prev ? { ...prev, x: e.originalEvent.clientX, y: e.originalEvent.clientY } : prev);
-              },
-              mouseout: () => {
-                fl.setStyle(featureStyle(feat, selRef.val === code));
-                setTip(null);
-              },
-              click: () => {
-                const next = selRef.val === code ? null : code;
-                selRef.val = next;
-                onSelect(next);
-              },
+              mousemove: e => setTip(t => t ? {...t, x:e.originalEvent.clientX, y:e.originalEvent.clientY} : t),
+              mouseout:  () => { fl.setStyle(deptStyle(feat, selRef.current===code)); setTip(null); },
+              click:     () => { const next = selRef.current===code ? null : code; selRef.current=next; onSelect(next); },
             });
-
-            // Label département via divIcon
-            const dept    = DEPTS.find(d => d.code === code);
-            const st      = dStats[code] || {};
-            const centroid = feat.properties;
-            // Calculer le centroïde approximatif depuis la bbox
-            const bounds = fl.getBounds();
-            const center = bounds.getCenter();
-
-            Lf.marker(center, {
-              icon: Lf.divIcon({
-                className: "",
-                html: `<div style="
-                  text-align:center;pointer-events:none;user-select:none;
-                  font-family:'Source Code Pro',monospace;
-                  text-shadow:0 1px 4px rgba(255,255,255,.95),0 0 8px rgba(255,255,255,.8);
-                ">
-                  <div style="font-size:10.5px;font-weight:800;color:#1a1a1a;line-height:1.2;letter-spacing:-.3px">${dept?.nom||code}</div>
-                  <div style="font-size:8px;color:#666;font-weight:600;margin-top:1px">${code}</div>
-                  ${st.forts > 0
-                    ? `<div style="font-size:7.5px;background:#E8186D;color:#fff;border-radius:8px;padding:0 5px;margin-top:3px;display:inline-block;font-weight:700">${st.forts} enjeu${st.forts>1?"x":""}</div>`
-                    : ""}
-                </div>`,
-                iconSize:   [90, 44],
-                iconAnchor: [45, 22],
-              }),
-              interactive: false,
-            }).addTo(map);
+            // Label département
+            const dept = DEPTS.find(d=>d.code===code);
+            const b = fl.getBounds(); const ctr = b.getCenter();
+            L.marker(ctr, { icon: L.divIcon({
+              className:"", iconSize:[90,40], iconAnchor:[45,20],
+              html:`<div style="text-align:center;pointer-events:none;font-family:'Source Code Pro',monospace;text-shadow:0 1px 4px rgba(255,255,255,.9)">
+                <div style="font-size:10px;font-weight:800;color:#1a1a1a">${dept?.nom||code}</div>
+                <div style="font-size:8px;color:#777;font-weight:600">${code}</div>
+              </div>`,
+            }), interactive:false }).addTo(map);
           },
         }).addTo(map);
-
-        geoLayer.current = { layer, selRef };
-        // Ajuster la vue sur NA
-        map.fitBounds(layer.getBounds(), { padding: [12, 12] });
+        deptLayer.current = layer;
+        map.fitBounds(layer.getBounds(), { padding:[10,10] });
       })
       .catch(() => {
-        // Fallback : marqueurs circulaires si GeoJSON inaccessible
+        // Fallback si GeoJSON département indisponible : cercles
         DEPTS.forEach(d => {
-          const CENTROIDS = {
+          const C = {
             "16":[45.65,0.15],"17":[45.75,-0.75],"19":[45.35,1.85],
             "23":[46.0,2.0],"24":[45.15,0.72],"33":[44.85,-0.56],
             "40":[43.95,-0.77],"47":[44.35,0.62],"64":[43.35,-0.75],
             "79":[46.45,-0.20],"86":[46.58,0.58],"87":[45.80,1.25],
           };
-          const pos = CENTROIDS[d.code];
-          if (!pos) return;
-          Lf.circleMarker(pos, {
-            radius:      26,
-            fillColor:   TEND_COL[d.tendance] || "#ccc",
-            fillOpacity: 0.82,
-            color:       "#fff",
-            weight:      2,
-          }).on("click", () => onSelect(selDept===d.code ? null : d.code)).addTo(map);
-          Lf.marker(pos, {
-            icon: Lf.divIcon({
-              className: "",
-              html: `<div style="text-align:center;pointer-events:none;font-family:'Source Code Pro',monospace">
-                <div style="font-size:9px;font-weight:800;color:#1a1a1a;text-shadow:0 1px 3px rgba(255,255,255,.9)">${d.nom}</div>
-                <div style="font-size:7px;color:#666">${d.code}</div>
-              </div>`,
-              iconSize:   [80, 34],
-              iconAnchor: [40, 17],
-            }),
-            interactive: false,
-          }).addTo(map);
+          if (!C[d.code]) return;
+          Lref.current.circleMarker(C[d.code], { radius:22, fillColor:TEND_COL[d.tendance]||"#ccc", fillOpacity:.8, color:"#fff", weight:2 })
+            .on("click", () => onSelect(selRef.current===d.code ? null : d.code)).addTo(map);
         });
       });
   }, [ready]);
 
-  // ── Mettre à jour les styles quand selDept change ──────────────────────────
+  // ── Mettre à jour le style des depts quand selDept change ─────────────────
   useEffect(() => {
-    if (!geoLayer.current) return;
-    const { layer, selRef } = geoLayer.current;
-    selRef.val = selDept;
-    layer.eachLayer(fl => {
+    selRef.current = selDept;
+    if (!deptLayer.current) return;
+    deptLayer.current.eachLayer(fl => {
       const code = fl.feature?.properties?.code;
-      if (!code) return;
-      fl.setStyle(featureStyle(fl.feature, selDept === code));
+      if (code) fl.setStyle(deptStyle(fl.feature, selDept===code));
     });
   }, [selDept]);
 
-  // ── Tooltip ────────────────────────────────────────────────────────────────
-  const hovDept = tip ? DEPTS.find(d => d.code === tip.code) : null;
-  const hovSt   = tip ? (dStats[tip.code] || {}) : {};
+  // ── Couche communale : chargée via prop geoData ────────────────────────
+  // (passée depuis App via useGeoJsonDept)
+  const {geoData:communeGeoData, geoError:communeGeoError, geoLoading:communeGeoLoading} = useGeoJsonDept(selDept);
+
+  useEffect(() => {
+    if (!mapInst.current || !Lref.current) return;
+    const L = Lref.current;
+    const map = mapInst.current;
+
+    // Supprimer la couche communale précédente
+    if (comLayer.current) { map.removeLayer(comLayer.current); comLayer.current = null; }
+    if (!selDept || !communeGeoData) return;
+
+    // Créer la couche communale
+    const layer = L.geoJSON(communeGeoData, {
+      style: feat => {
+        const insee = feat.properties.code;
+        const com   = communesByInsee[insee];
+        return {
+          fillColor:   communeColor(com),
+          fillOpacity: com?._premium ? 0.75 : 0.35,
+          color:       com?._premium ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.4)",
+          weight:      com?._premium ? 1.2 : 0.6,
+        };
+      },
+      onEachFeature: (feat, fl) => {
+        const insee = feat.properties.code;
+        const com   = communesByInsee[insee];
+        const nom   = feat.properties.nom || (com?.nom) || insee;
+
+        fl.on({
+          mouseover: e => {
+            fl.setStyle({ fillOpacity: 0.92, weight: 2, color: "#E8186D" });
+            setComTip({ insee, nom, com, x:e.originalEvent.clientX, y:e.originalEvent.clientY });
+          },
+          mousemove: e => setComTip(t => t ? {...t, x:e.originalEvent.clientX, y:e.originalEvent.clientY} : t),
+          mouseout:  () => {
+            fl.setStyle({
+              fillColor: communeColor(com),
+              fillOpacity: com?._premium ? 0.75 : 0.35,
+              color: com?._premium ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.4)",
+              weight: com?._premium ? 1.2 : 0.6,
+            });
+            setComTip(null);
+          },
+          click: () => {
+            // Créer un objet commune minimal si pas enrichi
+            const target = com || { nom, insee, dept:selDept, pop:0, cr_lies:[], _premium:false };
+            onCommuneClick(target);
+          },
+        });
+      },
+    }).addTo(map);
+
+    comLayer.current = layer;
+    // Zoomer sur le département
+    if (layer.getBounds().isValid()) {
+      map.fitBounds(layer.getBounds(), { padding:[20,20], maxZoom:11 });
+    }
+  }, [communeGeoData, selDept, communesByInsee]);
+
+  // ── Tooltip département ────────────────────────────────────────────────
+  const hovDept = tip ? DEPTS.find(d=>d.code===tip.code) : null;
+  const hovSt   = tip ? (dStats[tip.code]||{}) : {};
 
   return (
     <div style={{background:"#fff",border:"1px solid #e4ddd5",borderRadius:12,overflow:"hidden",boxShadow:"0 4px 20px rgba(0,0,0,.06)"}}>
-
-      {/* En-tête — style maire.app */}
-      <div style={{padding:"12px 18px",borderBottom:"1px solid #f0ebe4",display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fafaf9",gap:12,flexWrap:"wrap"}}>
+      {/* En-tête */}
+      <div style={{padding:"11px 18px",borderBottom:"1px solid #f0ebe4",display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fafaf9",flexWrap:"wrap",gap:10}}>
         <div>
-          <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:14,fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>Nouvelle-Aquitaine</div>
-          <div style={{fontSize:"9px",color:"#aaa",fontFamily:"'Source Code Pro',monospace",marginTop:2,letterSpacing:".4px"}}>
-            12 départements · carte interactive · cliquer pour explorer les communes
+          <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:14,fontWeight:700,color:"#1a1a1a"}}>Nouvelle-Aquitaine</div>
+          <div style={{fontSize:"9px",color:"#aaa",fontFamily:"'Source Code Pro',monospace",marginTop:1,letterSpacing:".4px"}}>
+            {allCommunes ? `${allCommunes.length.toLocaleString("fr-FR")} communes · ` : ""}
+            Cliquer un département pour explorer ses communes
           </div>
         </div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
           {Object.entries(TEND_COL).map(([k,v])=>(
-            <div key={k} style={{display:"flex",alignItems:"center",gap:4,fontSize:"9px",color:"#888",fontFamily:"'Source Code Pro',monospace"}}>
-              <div style={{width:9,height:9,borderRadius:2,background:v,flexShrink:0,border:"1px solid rgba(0,0,0,.09)"}}/>
+            <div key={k} style={{display:"flex",alignItems:"center",gap:3,fontSize:"8.5px",color:"#999",fontFamily:"'Source Code Pro',monospace"}}>
+              <div style={{width:8,height:8,borderRadius:2,background:v,border:"1px solid rgba(0,0,0,.09)"}}/>
               <span>{k}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Conteneur carte */}
+      {/* Carte */}
       <div style={{position:"relative"}}>
+        {/* Spinner chargement communal */}
+        {communeGeoLoading && (
+          <div style={{position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",
+            background:"rgba(26,26,26,.85)",color:"#fff",borderRadius:20,
+            padding:"6px 16px",fontSize:"10px",fontFamily:"'Source Code Pro',monospace",
+            zIndex:800,display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:10,height:10,border:"2px solid #E8186D",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
+            Chargement des communes…
+          </div>
+        )}
+        {communeGeoError && (
+          <div style={{position:"absolute",top:10,left:"50%",transform:"translateX(-50%)",
+            background:"rgba(183,28,28,.9)",color:"#fff",borderRadius:20,
+            padding:"6px 16px",fontSize:"9.5px",fontFamily:"'Source Code Pro',monospace",
+            zIndex:800}}>
+            ⚠ GeoJSON indisponible — zoom non disponible
+          </div>
+        )}
+
         {!ready && (
           <div style={{height:440,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(160deg,#f5f3ef,#ede9e3)",gap:10}}>
             <div style={{width:32,height:32,border:"3px solid #E8186D",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
@@ -913,59 +1050,111 @@ function NaMap({crList, communes, selDept, onSelect}) {
         )}
         <div ref={mapRef} style={{height:440,width:"100%",visibility:ready?"visible":"hidden"}}/>
 
-        {/* Contrôles zoom maison */}
+        {/* Contrôles zoom */}
         {ready && (
           <div style={{position:"absolute",bottom:12,right:12,zIndex:900,display:"flex",flexDirection:"column",gap:4}}>
             {["+","−"].map(s=>(
               <button key={s} onClick={()=>s==="+"?mapInst.current?.zoomIn():mapInst.current?.zoomOut()} style={{
                 width:30,height:30,background:"rgba(255,255,255,.95)",border:"1px solid #e4ddd5",
-                borderRadius:6,cursor:"pointer",fontFamily:"'Source Code Pro',monospace",
-                fontSize:16,fontWeight:700,color:"#333",
+                borderRadius:6,cursor:"pointer",fontSize:16,fontWeight:700,color:"#333",
                 boxShadow:"0 2px 8px rgba(0,0,0,.10)",display:"flex",alignItems:"center",justifyContent:"center",
               }}>{s}</button>
             ))}
-            <button onClick={()=>geoLayer.current && mapInst.current?.fitBounds(geoLayer.current.layer.getBounds(),{padding:[12,12]})} style={{
-              width:30,height:30,background:"rgba(255,255,255,.95)",border:"1px solid #e4ddd5",
-              borderRadius:6,cursor:"pointer",fontSize:12,color:"#666",
-              boxShadow:"0 2px 8px rgba(0,0,0,.10)",display:"flex",alignItems:"center",justifyContent:"center",
-            }}>⊙</button>
+            {selDept && (
+              <button onClick={()=>{onSelect(null);}} style={{
+                width:30,height:30,background:"rgba(232,24,109,.9)",border:"none",
+                borderRadius:6,cursor:"pointer",fontSize:11,color:"#fff",
+                boxShadow:"0 2px 8px rgba(232,24,109,.3)",display:"flex",alignItems:"center",justifyContent:"center",
+              }} title="Vue régionale">◉</button>
+            )}
           </div>
         )}
 
-        {/* Tooltip riche — pattern AzukiGPT */}
+        {/* Légende communale (si dept sélectionné) */}
+        {selDept && allCommunes && (
+          <div style={{position:"absolute",bottom:12,left:12,zIndex:800,
+            background:"rgba(255,255,255,.93)",borderRadius:8,padding:"8px 12px",
+            border:"1px solid #e4ddd5",boxShadow:"0 2px 8px rgba(0,0,0,.08)",
+            fontFamily:"'Source Code Pro',monospace",fontSize:"9px",color:"#666"}}>
+            <div style={{fontWeight:700,marginBottom:4,color:"#333"}}>
+              {DEPTS.find(d=>d.code===selDept)?.nom} · {(allCommunes.filter(c=>c.dept===selDept).length).toLocaleString("fr-FR")} communes
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:3}}>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <div style={{width:12,height:10,borderRadius:2,background:"#e91e63",border:"1px solid rgba(255,255,255,.7)"}}/>
+                <span>{allCommunes.filter(c=>c.dept===selDept&&c._premium).length} communes enrichies</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <div style={{width:12,height:10,borderRadius:2,background:"#b0bec5",opacity:.5,border:"1px solid rgba(255,255,255,.4)"}}/>
+                <span>Communes base</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tooltip département */}
         {tip && hovDept && (
-          <div style={{
-            position:"fixed",left:tip.x+16,top:tip.y-8,
-            background:"rgba(18,18,18,.97)",color:"#fff",
-            padding:"10px 14px",borderRadius:9,pointerEvents:"none",zIndex:9999,
+          <div style={{position:"fixed",left:tip.x+16,top:tip.y-8,
+            background:"rgba(18,18,18,.97)",color:"#fff",padding:"10px 14px",
+            borderRadius:9,pointerEvents:"none",zIndex:9999,
             fontFamily:"'Source Code Pro',monospace",lineHeight:1.75,
-            boxShadow:"0 10px 32px rgba(0,0,0,.28)",
-            border:"1px solid rgba(255,255,255,.09)",minWidth:170,maxWidth:220,
-          }}>
+            boxShadow:"0 10px 32px rgba(0,0,0,.28)",border:"1px solid rgba(255,255,255,.09)",
+            minWidth:170,maxWidth:220}}>
             <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:14,marginBottom:3}}>{hovDept.nom}</div>
             <div style={{background:TEND_COL_SEL[hovDept.tendance]||"#555",color:"#fff",fontSize:"8px",fontWeight:700,padding:"1px 8px",borderRadius:10,display:"inline-block",marginBottom:6,letterSpacing:".5px"}}>{hovDept.tendance}</div>
             <div style={{color:"#ddd",fontSize:"10px"}}>
-              <div>{hovSt.coms||0} commune{(hovSt.coms||0)>1?"s":""} suivie{(hovSt.coms||0)>1?"s":""}</div>
+              <div style={{color:"#aaa"}}>{hovSt.coms||"—"} communes · <span style={{color:"#f8bbd0"}}>{hovSt.premium||0} enrichies</span></div>
               {(hovSt.forts||0)>0 && <div style={{color:"#ff8a80"}}>{hovSt.forts} enjeu{hovSt.forts>1?"x":""} fort{hovSt.forts>1?"s":""}</div>}
-              <div style={{color:"#aaa",marginTop:2}}>{hovSt.total||0} CR · {hovSt.candidats||0} candidat{(hovSt.candidats||0)>1?"s":""}</div>
+              <div style={{color:"#aaa",marginTop:2}}>{hovSt.total||0} CR · {hovSt.candidats||0} candidat{(hovSt.candidats||0)!==1?"s":""}</div>
               {(hovSt.elus||0)>0 && <div style={{color:"#a5d6a7",fontWeight:700}}>{hovSt.elus} élu{hovSt.elus>1?"s":""} confirmé{hovSt.elus>1?"s":""}</div>}
             </div>
-            <div style={{color:"#E8186D",fontSize:"8.5px",marginTop:5,fontWeight:700,letterSpacing:".3px"}}>Cliquer pour voir les communes →</div>
+            <div style={{color:"#E8186D",fontSize:"8.5px",marginTop:5,fontWeight:700}}>Cliquer pour explorer →</div>
+          </div>
+        )}
+
+        {/* Tooltip commune */}
+        {comTip && (
+          <div style={{position:"fixed",left:comTip.x+16,top:comTip.y-8,
+            background:"rgba(18,18,18,.97)",color:"#fff",padding:"10px 14px",
+            borderRadius:9,pointerEvents:"none",zIndex:9999,
+            fontFamily:"'Source Code Pro',monospace",lineHeight:1.7,
+            boxShadow:"0 10px 32px rgba(0,0,0,.28)",border:"1px solid rgba(255,255,255,.09)",
+            minWidth:160,maxWidth:240}}>
+            <div style={{fontFamily:"'Libre Baskerville',serif",fontWeight:700,fontSize:14,marginBottom:2,color:"#fff"}}>{comTip.nom}</div>
+            <div style={{fontSize:"9px",color:"#aaa",marginBottom:5}}>INSEE {comTip.insee}</div>
+            {comTip.com?._premium ? (
+              <div style={{fontSize:"10px",color:"#ddd"}}>
+                {comTip.com.pop>0 && <div>{comTip.com.pop.toLocaleString("fr-FR")} hab.</div>}
+                {comTip.com.maire && <div style={{color:"#f8bbd0"}}>🏛 {comTip.com.maire}</div>}
+                {comTip.com.couleur_pol && (
+                  <div style={{marginTop:3}}>
+                    <span style={{background:communeColor(comTip.com),color:"#fff",fontSize:"8px",fontWeight:700,padding:"1px 7px",borderRadius:8}}>{comTip.com.couleur_pol}</span>
+                  </div>
+                )}
+                {comTip.com.enjeu && <div style={{color:comTip.com.enjeu==="très fort"?"#ff8a80":comTip.com.enjeu==="fort"?"#ffcc80":"#aaa",marginTop:2,fontWeight:700}}>Enjeu {comTip.com.enjeu}</div>}
+              </div>
+            ) : (
+              <div style={{fontSize:"10px",color:"#aaa"}}>
+                {comTip.com?.pop>0 ? `${comTip.com.pop.toLocaleString("fr-FR")} hab.` : "Données de base"}
+                <div style={{color:"#666",marginTop:3,fontSize:"9px"}}>Commune non encore enrichie</div>
+              </div>
+            )}
+            <div style={{color:"#E8186D",fontSize:"8.5px",marginTop:6,fontWeight:700}}>Cliquer pour ouvrir la fiche →</div>
           </div>
         )}
       </div>
 
-      {/* Pied de carte */}
+      {/* Pied */}
       <div style={{padding:"7px 16px",background:"#fafaf9",borderTop:"1px solid #f0ebe4",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
         <div style={{fontSize:"8.5px",color:"#c4bdb6",fontFamily:"'Source Code Pro',monospace"}}>
-          Leaflet · CartoDB · france-geojson
+          Leaflet · CartoDB · france-geojson · geo.api.gouv.fr
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           {DEPTS.filter(d=>(dStats[d.code]?.forts||0)>0).slice(0,4).map(d=>(
             <button key={d.code} onClick={()=>onSelect(d.code)} style={{
               fontSize:"8px",fontFamily:"'Source Code Pro',monospace",
-              background:"#fce4ec",color:"#c01057",
-              padding:"2px 8px",borderRadius:10,fontWeight:700,cursor:"pointer",border:"none"
+              background:"#fce4ec",color:"#c01057",padding:"2px 8px",
+              borderRadius:10,fontWeight:700,cursor:"pointer",border:"none",
             }}>{d.code}</button>
           ))}
         </div>
@@ -1085,6 +1274,359 @@ function AuthScreen({onAuth}) {
 const LISTES_DATA = {"16|Angoulême": [{"tete": "Xavier BONNEFONT", "libelle": "L'essentiel c'est vous !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Didier PEIRIN", "libelle": "REDESSINONS ANGOULÊME", "nuance": "RN", "color": "#37474f"}, {"tete": "Jean-Christophe COMPAIN", "libelle": "Agir Pour Angoulême", "nuance": "REC", "color": "#b71c1c"}, {"tete": "Patrick MARDIKIAN", "libelle": "CHOISISSONS ANGOULEME AVEC PATRICK MARDIKIAN", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Christophe DUHOUX-SALABERRY", "libelle": "Angoulême Collectif 2026", "nuance": "Écolo", "color": "#2e7d32"}, {"tete": "Anne-Aziliz PETIT-LOUBOUTIN", "libelle": "L'union populaire Angoulême", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Raphaël MANZANAS", "libelle": "CHANGER LA VILLE", "nuance": "PS", "color": "#E91E63"}, {"tete": "Olivier NICOLAS", "libelle": "Lutte ouvrière - Le camp des travailleurs", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Vincent YOU", "libelle": "ANGOULEME VOUS AIME", "nuance": "DVD", "color": "#5d4037"}], "16|Barbezieux-Saint-Hilaire": [{"tete": "Vincent RENAUDIN", "libelle": "Ensemble à Barbezieux Saint Hilaire, Agissons pour l'avenir", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Stéphane DEGAS", "libelle": "Un nouveau souffle à l'écoute de tous pour Barbezieux-St-Hilaire", "nuance": "DVD", "color": "#5d4037"}], "16|Chalais": [{"tete": "Jean-Philippe LÉTARD", "libelle": "Municipales 2026 Réenchantons Chalais", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jean-Louis FAYE", "libelle": "Bien vivre ensemble à Chalais", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Bernard JAMAIN", "libelle": "Bien vivre à Chalais", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Olivier BLANCHETON", "libelle": "Chalais Active et Attractive", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Françoise BOYER", "libelle": "UN AUTRE CHEMIN POUR CHALAIS", "nuance": "NC", "color": "#9e9e9e"}], "16|Chirac": [{"tete": "Virginie LEBRAUD", "libelle": "Chirac ensemble", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Chloé COURIVAUD", "libelle": "POUR CHIRAC, UN NOUVEL ÉLAN !", "nuance": "NC", "color": "#9e9e9e"}], "16|Châteauneuf-sur-Charente": [{"tete": "Jean-Louis LEVESQUE", "libelle": "Ensemble continuons à prendre soin de Châteauneuf", "nuance": "DVG", "color": "#ff7043"}], "16|Chasseneuil-sur-Bonnieure": [{"tete": "Fabrice POINT", "libelle": "Votre confiance, notre Engagement", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Aymeric MONGELOUS", "libelle": "Chasseneuil au coeur!", "nuance": "NC", "color": "#9e9e9e"}], "16|Cognac": [{"tete": "Morgan BERGER", "libelle": "Notre parti c'est Cognac", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Adrien HOFFMANN", "libelle": "RASSEMBLER COGNAC", "nuance": "RN", "color": "#37474f"}, {"tete": "Romuald CARRY", "libelle": "Cognac Mérite Mieux", "nuance": "DVG", "color": "#ff7043"}], "16|Confolens": [{"tete": "Jean-Noël DUPRÉ", "libelle": "CONFOLENS, UN ELAN VERS L'AVENIR", "nuance": "DVD", "color": "#5d4037"}], "16|Fléac": [{"tete": "Hélène GINGAST", "libelle": "RéUnis Pour Fléac", "nuance": "DVG", "color": "#ff7043"}], "16|Gond-Pontouvre": [{"tete": "Geoffroy ROBIN", "libelle": "Gond-Pontouvre, Un Nouvel Elan", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Maryline VINET", "libelle": "DEMAIN VOUS APPARTIENT", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Bertrand MAGNANON", "libelle": "Gond-Pontouvre c'est vous !", "nuance": "DVG", "color": "#ff7043"}], "16|Jarnac": [{"tete": "Jérôme ROYER", "libelle": "Pour Jarnac", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Anne MARTRON", "libelle": "Jarnac, un nouvel élan", "nuance": "DVC", "color": "#1976d2"}], "16|La Couronne": [{"tete": "Jean-François DAURÉ", "libelle": "LA COURONNE DEMAIN AVEC VOUS", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Fabienne DOUCET", "libelle": "La Couronne au coeur, agir ensemble pour vous", "nuance": "DIV", "color": "#9e9e9e"}], "16|La Rochefoucauld-en-Angoumois": [{"tete": "Danne AUMEYRAS-CHAIGNE", "libelle": "Réussir Ensemble", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Sébastien RIVIÈRE", "libelle": "CAP SUR L'AVENIR CONSTRUISONS ENSEMBLE", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Eric PINTAUD", "libelle": "La Rochefoucauld en Angoumois  Nos Territoires, Notre Ambition", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Michaël LABLANCHE", "libelle": "Collectif La Rochefoucauld St Projet en commun[e]", "nuance": "DVG", "color": "#ff7043"}], "16|Mansle": [{"tete": "Jimmy HENTRY", "libelle": "UN NOUVEL ELAN POUR MANSLE LES FONTAINES", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Christian CROIZARD", "libelle": "Ensemble Mansle-les-Fontaines", "nuance": "NC", "color": "#9e9e9e"}], "16|Rouillac": [{"tete": "Christian VIGNAUD", "libelle": "Rouillac les 27 de demain", "nuance": "NC", "color": "#9e9e9e"}], "16|Ruelle-sur-Touvre": [{"tete": "Murielle DEZIER", "libelle": "RUELLE TERRE DE LIENS", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Annie MARC", "libelle": "RUELLE AVEC VOUS", "nuance": "DVG", "color": "#ff7043"}], "16|Ruffec": [{"tete": "Julien GENDREAU", "libelle": "RUFFEC AVEC VOUS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Thierry BASTIER", "libelle": "Ruffec, au coeur de notre avenir", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Alexandre RAGUET", "libelle": "RUFFEC POPULAIRE", "nuance": "NC", "color": "#9e9e9e"}], "16|Saint-Adjutory": [{"tete": "Patrice BOUTENÈGRE", "libelle": "SAINT-ADJUTORY ENSEMBLE", "nuance": "NC", "color": "#9e9e9e"}], "16|Soyaux": [{"tete": "François NEBOUT", "libelle": "Ensemble préparons l'avenir", "nuance": "DVC", "color": "#1976d2"}, {"tete": "William JACQUILLARD", "libelle": "SOYAUX COLLECTIF 2026", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Sulay CHAZETTE", "libelle": "SOYAUX POPULAIRE", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Frédéric CROS", "libelle": "UNIS POUR SOYAUX", "nuance": "DIV", "color": "#9e9e9e"}], "17|Châtelaillon-Plage": [{"tete": "Jérôme BLAUTH", "libelle": "CHÂTELAILLON AUTREMENT !", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Stéphane VILLAIN", "libelle": "PASSIONNEMENT CHATELAILLON-PLAGE", "nuance": "DVD", "color": "#5d4037"}], "17|Dolus-d'Oléron": [{"tete": "Emma VALLAIN", "libelle": "DOLUSÉMENT VÔTRE", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Nicolas SINODINOS", "libelle": "DEMAIN DOLUS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Thibault BRECHKOFF", "libelle": "AGIR POUR DOLUS", "nuance": "NC", "color": "#9e9e9e"}], "17|Jonzac": [{"tete": "Christophe CABRI", "libelle": "Une énergie commune pour JONZAC", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Jean-François MOUGARD", "libelle": "JONZAC, COEUR BATTANT", "nuance": "DVC", "color": "#1976d2"}], "17|La Rochelle": [{"tete": "Maryline SIMONÉ", "libelle": "LA ROCHELLE UNIE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Olivier FALORNI", "libelle": "POUR LES ROCHELAISES ET LES ROCHELAIS", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Thibaut GUIRAUD", "libelle": "GÉNÉRATIONS LA ROCHELLE AVEC THIBAUT GUIRAUD", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Séverine WERBROUCK", "libelle": "RASSEMBLEMENT LA ROCHELLE", "nuance": "RN", "color": "#37474f"}, {"tete": "Véronique BONNET", "libelle": "LA ROCHELLE INSOUMISE ET POPULAIRE", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Antoine COLIN", "libelle": "LUTTE OUVRIERE", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Christophe BATCABE", "libelle": "Une vision pour La Rochelle", "nuance": "DVD", "color": "#5d4037"}], "17|Lagord": [{"tete": "Séverine LACOSTE", "libelle": "LAGORD ENSEMBLE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Bruno BARBIER", "libelle": "LAGORD AUTREMENT", "nuance": "DVC", "color": "#1976d2"}], "17|Marennes-Hiers-Brouage": [{"tete": "Mariane LUQUÉ", "libelle": "Nouvelle Equipe, Nouveau Cap avec Marianne Luqué", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Richard GUERIT", "libelle": "ENSEMBLE VERS UN AVENIR MEILLEUR POUR MARENNES-HIERS-BROUAGE", "nuance": "RN", "color": "#37474f"}], "17|Meschers-sur-Gironde": [{"tete": "Françoise FRIBOURG", "libelle": "MESCHERS AVEC VOUS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Catherine MORIN", "libelle": "ENSEMBLE POUR MESCHERS", "nuance": "NC", "color": "#9e9e9e"}], "17|Rochefort": [{"tete": "Anne-Catherine GODDE", "libelle": "Lutte ouvrière - le camp des travailleurs", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Romain MONROUX", "libelle": "Rochefort Collectif", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Hervé BLANCHÉ", "libelle": "HERVÉ BLANCHÉ 2026 CONTINUONS ENSEMBLE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Fabrice VERGNIER", "libelle": "ROCHEFORT, L'AVENIR AUTREMENT", "nuance": "DVG", "color": "#ff7043"}], "17|Royan": [{"tete": "Patrick MARENGO", "libelle": "AVEC VOUS POUR ROYAN", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Nicolas CALBRIX", "libelle": "ROYAN RENOUVEAU", "nuance": "RN", "color": "#37474f"}, {"tete": "Thomas LAFARIE", "libelle": "NOUVEL'R", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Jacques GUIARD", "libelle": "ROYAN A GAUCHE", "nuance": "UG", "color": "#E91E63"}], "17|Saint-Jean-d'Angély": [{"tete": "Françoise MESNARD", "libelle": "ANGERIENS ET FIERS D'AGIR", "nuance": "PS", "color": "#E91E63"}, {"tete": "Jacques CASTAGNET", "libelle": "ANGERIENS UNIS", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Frédéric RASSE", "libelle": "L'HUMAIN AU COEUR", "nuance": "DIV", "color": "#9e9e9e"}], "17|Saint-Martin-de-Ré": [{"tete": "Anne MÉMIN", "libelle": "SAINT-MARTIN-DE-RE CAP SUR L'AVENIR", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Véronique RICHEZ-LEROUGE", "libelle": "UNE NOUVELLE ENERGIE POUR SAINT-MARTIN-DE-RE", "nuance": "NC", "color": "#9e9e9e"}], "17|Saint-Pierre-d'Oléron": [{"tete": "Philippe RAYNAL", "libelle": "Saint-Pierre d'Oléron à Coeur", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Bernard NICLOT", "libelle": "Saint-Pierre réussir l'avenir avec vous", "nuance": "RN", "color": "#37474f"}, {"tete": "Christophe SUEUR", "libelle": "BIEN VIVRE EN OLÉRON", "nuance": "DVD", "color": "#5d4037"}], "17|Saintes": [{"tete": "Ludovic NORIGEON", "libelle": "SAINTES DEMAIN", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Rémy CATROU", "libelle": "SAINTES SOLIDAIRE ET CITOYENNE", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Bruno DRAPRON", "libelle": "L'IMPORTANT , C'EST VOUS", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Laurent DAVIET", "libelle": "SAINTES AU QUOTIDIEN", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Jean-Philippe MACHON", "libelle": "J'AIME SAINTES", "nuance": "DVC", "color": "#1976d2"}], "17|Saujon": [{"tete": "Jean-Luc GENSAC", "libelle": "SAUJON : OSONS LE CHANGEMENT !", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Pascal FERCHAUD", "libelle": "SAUJON - L'EXPÉRIENCE D'AUJOURD'HUI, L'ÉNERGIE DE DEMAIN", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Isabelle LEMAIRE", "libelle": "PROCHE DE VOUS, POUR SAUJON", "nuance": "RN", "color": "#37474f"}], "17|Tonnay-Charente": [{"tete": "Fernand TROALE", "libelle": "PROJETS TONNACQUOIS", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Rémi JUSTINIEN", "libelle": "Tonnay avec Vous", "nuance": "PS", "color": "#E91E63"}], "19|Brive-la-Gaillarde": [{"tete": "Valéry ELOPHE", "libelle": "TOUT POUR BRIVE ! AVEC VALÉRY ELOPHE", "nuance": "UXD", "color": "#263238"}, {"tete": "Paul ROCHE", "libelle": "Brive notre avenir", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Frédéric SOULIER", "libelle": "UN PROJET POUR BRIVE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Sophie MARCUCCI", "libelle": "UNI.E.S POUR BRIVE, DÉMOCRATIQUE,ÉCOLOGIQUE, SOCIALE", "nuance": "UG", "color": "#E91E63"}], "19|Chanteix": [{"tete": "Jean MOUZAT", "libelle": "CONTINUONS CHANTEIX", "nuance": "NC", "color": "#9e9e9e"}], "19|Tulle": [{"tete": "Bernard COMBES", "libelle": "Le pouvoir d'agir", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Thierry GRECK", "libelle": "Rassemblons-nous pour Tulle", "nuance": "RN", "color": "#37474f"}, {"tete": "Nicolas MARLIN", "libelle": "Ensemble pour Tulle", "nuance": "UG", "color": "#E91E63"}, {"tete": "Laurent MELIN", "libelle": "Tulle, l'énergie qui nous unit", "nuance": "DVD", "color": "#5d4037"}], "19|Ussel": [{"tete": "Christophe ARFEUILLERE", "libelle": "USSEL, CAP VERS DEMAIN", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Jean-Pierre GUITARD", "libelle": "Unis pour Ussel", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Pierrick CRONNIER", "libelle": "Ussel ensemble !", "nuance": "DVG", "color": "#ff7043"}], "23|Aubusson": [{"tete": "Marilyn MONBUREAU", "libelle": "ENSEMBLE FAISONS REVIVRE AUBUSSON", "nuance": "UDP", "color": "#9e9e9e"}, {"tete": "Gregorio YONG VIVAS", "libelle": "LA COMMUNE", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Stéphane DUCOURTIOUX", "libelle": "AUBUSSON, UNE ÉQUIPE, UN AVENIR", "nuance": "DVG", "color": "#ff7043"}], "23|Guéret": [{"tete": "Thierry DELAITRE", "libelle": "Avec vous, changeons Guéret !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Philippe MICARD", "libelle": "RÉVEILLONS GUÉRET !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Eric CORREIA", "libelle": "Guéret mérite mieux", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Eric RAPINAT", "libelle": "UNIS POUR GUÉRET, LISTE DE RASSEMBLEMENT DES DROITES", "nuance": "EXD", "color": "#263238"}, {"tete": "Didier HOELTGEN", "libelle": "S'ENGAGER POUR GUÉRET", "nuance": "UG", "color": "#E91E63"}, {"tete": "Marie-Françoise FOURNIER", "libelle": "L'ÉNERGIE DU COLLECTIF", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "François-Louis COULON", "libelle": "GUÉRET EN CAMPAGNE À GAUCHE", "nuance": "LFI", "color": "#8B0000"}], "23|La Souterraine": [{"tete": "André LEROY", "libelle": "UN NOUVEAU SOUFFLE POUR LA SOUTERRAINE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Étienne LEJEUNE", "libelle": "UNE VOLONTÉ PARTAGÉE POUR LA SOUTERRAINE", "nuance": "UG", "color": "#E91E63"}], "23|Saint-Germain-de-Beaupré": [{"tete": "Jean-Baptiste ALANORE", "libelle": "PROCHES DE VOUS, TOURNÉS VERS L'AVENIR", "nuance": "NC", "color": "#9e9e9e"}], "24|Bergerac": [{"tete": "Fabien RUET", "libelle": "Bergerac au Quotidien", "nuance": "UG", "color": "#E91E63"}, {"tete": "Christian GERARD", "libelle": "Bergerac, une vision pour l'avenir!", "nuance": "RN", "color": "#37474f"}, {"tete": "Thierry ROUX", "libelle": "BERGERAC POUR VOUS", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Jonathan PRIOLEAUD", "libelle": "PRIOLEAUD 2026-L'ENERGIE CITOYENNE", "nuance": "DVD", "color": "#5d4037"}], "24|Boulazac Isle Manoire": [{"tete": "Fanny CASTAIGNEDE", "libelle": "ENSEMBLE POUR BOULAZAC ISLE MANOIRE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Jérémy PIERRE-NADAL", "libelle": "VIVONS BOULAZAC ISLE MANOIRE", "nuance": "DVG", "color": "#ff7043"}], "24|Calès": [{"tete": "Christophe CATHUS", "libelle": "Ensemble pour Calès", "nuance": "NC", "color": "#9e9e9e"}], "24|La Roque-Gageac": [{"tete": "Jerome PEYRAT", "libelle": "UNIS POUR NOTRE VILLAGE", "nuance": "NC", "color": "#9e9e9e"}], "24|Marsac-sur-l'Isle": [{"tete": "Marie-Laure FAURE", "libelle": "MARSAC SUR L'ISLE ENSEMBLE ET AUTREMENT", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Williams AMBROISE", "libelle": "JOIE DE VIVRE A MARSAC SUR L'ISLE", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Yannick BIDAUD", "libelle": "BIEN VIVRE A MARSAC SUR L'ISLE", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jean-Bernard BISSON", "libelle": "REVOIR CLAIR A MARSAC-SUR-L'ISLE", "nuance": "NC", "color": "#9e9e9e"}], "24|Périgueux": [{"tete": "Emeric LAVITOLA", "libelle": "Périgueux nous rassemble", "nuance": "UG", "color": "#E91E63"}, {"tete": "Jonathan ALMOSNINO", "libelle": "LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Vincent BELLOTEAU", "libelle": "PERIGUEUX EN COMMUN", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Antoine AUDI", "libelle": "PERIGUEUX ENSEMBLE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Michel CADET", "libelle": "UNIR PERIGUEUX", "nuance": "DVD", "color": "#5d4037"}], "24|Ribérac": [{"tete": "Nicolas PLATON", "libelle": "RIBERAC DEMAIN !", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Franck BLANCHARDIE", "libelle": "UNIS POUR RIBERAC !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Philippe CHOTARD", "libelle": "AGIR ENSEMBLE POUR RIBERAC", "nuance": "DVC", "color": "#1976d2"}], "24|Saint-Estèphe": [{"tete": "Eric FORGENEUF", "libelle": "Bien vivre ensemble", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Michelle SAINTOUT", "libelle": "SAINT ESTEPHE TERRE DE COEUR", "nuance": "NC", "color": "#9e9e9e"}], "24|Sarlat-la-Canéda": [{"tete": "Luis FERREYRA", "libelle": "SARLAT 2026 LA RELEVE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Basile FANIER", "libelle": "AVEC ET POUR LES SARLADAIS", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Fabienne LAGOUBIE", "libelle": "AUJOURD'HUI ET DEMAIN SARLAT-LA-CANÉDA", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Franck DUVAL", "libelle": "AGIR ENSEMBLE POUR SARLAT-LA-CANÉDA", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Guillaume FORQUET DE DORNE", "libelle": "Sarlat un nouveau souffle", "nuance": "RN", "color": "#37474f"}], "24|Siorac-en-Périgord": [{"tete": "Didier ROQUES", "libelle": "Ensemble continons à écrire Siorac", "nuance": "NC", "color": "#9e9e9e"}], "24|Thiviers": [{"tete": "Isabelle HYVOZ", "libelle": "Thiviers, le coeur et l'action !", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Pascal MAZEAUD", "libelle": "Un Nouvel Elan pour Thiviers", "nuance": "NC", "color": "#9e9e9e"}], "33|Ambarès-et-Lagrave": [{"tete": "David POULAIN", "libelle": "UN NOUVEL ELAN", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Nordine GUENDEZ", "libelle": "AMBITIONS AMBARES ET LAGRAVE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Olivier MARTINEZ", "libelle": "REPENSONS NOTRE AVENIR", "nuance": "EXD", "color": "#263238"}, {"tete": "Stéphane MAVEYRAUD", "libelle": "AGIR ENSEMBLE POUR AMBARES ET LAGRAVE", "nuance": "DIV", "color": "#9e9e9e"}], "33|Arcachon": [{"tete": "Vital BAUDE", "libelle": "ARCACHON AVENIR", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Yves FOULON", "libelle": "Arcachon ensemble", "nuance": "LR", "color": "#6d4c41"}, {"tete": "Laurent LAMARA", "libelle": "VIVRE ARCACHON 2026 !", "nuance": "RN", "color": "#37474f"}], "33|Artigues-près-Bordeaux": [{"tete": "Alain GARNIER", "libelle": "Artigues J'aime", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Claude DAUVILLIER", "libelle": "Ensemble pour Artigues", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Éléonore DA GAMA", "libelle": "UN AVENIR SÛR POUR ARTIGUES", "nuance": "RN", "color": "#37474f"}], "33|Audenge": [{"tete": "Fabrice BROCHOT", "libelle": "AGIR POUR AUDENGE", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Kevin BRUSTIS", "libelle": "Audenge, Cap vers l'Avenir", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Nathalie LE YONDRE", "libelle": "AUDENGE DYNAMIQUE ET HUMAINE", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Alexandre CARTIGNY", "libelle": "AUDENGE2026 - VOTEZ POUR VOUS", "nuance": "DIV", "color": "#9e9e9e"}], "33|Bassens": [{"tete": "Floriane GOURCEAUD", "libelle": "Bassens, une ville qui nous rassemble", "nuance": "RN", "color": "#37474f"}, {"tete": "Alexandre RUBIO", "libelle": "L'ESPRIT BASSENS", "nuance": "DVG", "color": "#ff7043"}], "33|Blaye": [{"tete": "Bernard MOINET", "libelle": "Cap sur demain", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Virginie GIROTTI", "libelle": "Blaye, c'est vous !", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Eric JAPIOT", "libelle": "Blaye Territoire d'Avenir", "nuance": "DVC", "color": "#1976d2"}], "33|Bordeaux": [{"tete": "Esteban NADAL", "libelle": "NPA Révolutionnaires - Bordeaux Ouvrière et Révolutionnaire", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Medhi SABOULARD", "libelle": "UNION DE LA GAUCHE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Philippe POUTOU", "libelle": "ROUGE BORDEAUX ANTICAPITALISTE", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Thomas CAZENAVE", "libelle": "Faire Gagner Bordeaux", "nuance": "UC", "color": "#1976d2"}, {"tete": "Petra BERNUS", "libelle": "ARRACHER BORDEAUX AUX RICHES ET AUX SPÉCULATEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Pierre HURMIC", "libelle": "BORDEAUX EN CONFIANCE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Nordine RAYMOND", "libelle": "FAIRE MIEUX POUR BORDEAUX", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Virginie BONTOUX TOURNAY", "libelle": "A LA RECONQUÊTE DE BORDEAUX", "nuance": "REC", "color": "#b71c1c"}, {"tete": "Philippe DESSERTINE", "libelle": "PHILIPPE DESSERTINE- L'OPTIMISME EST UNE FORCE", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Fanny QUANDALLE", "libelle": "Lutte ouvrière - le camp des travailleurs", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Julie RECHAGNEUX", "libelle": "RASSEMBLEMENT NATIONAL POUR BORDEAUX", "nuance": "RN", "color": "#37474f"}], "33|Bruges": [{"tete": "Michaël GISQUET", "libelle": "UNE VOIX POUR BRUGES", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Frederic GIRO", "libelle": "BAC", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Fabienne DUMAS", "libelle": "ENSEMBLE BOUGEONS BRUGES", "nuance": "DVD", "color": "#5d4037"}], "33|Bègles": [{"tete": "Christian BAGATE", "libelle": "ESPOIR BÉGLAIS", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Jacques GULDNER", "libelle": "LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Clement ROSSIGNOL PUECH", "libelle": "VIVONS BEGLES ENSEMBLE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Maryvonne BASTÈRES", "libelle": "LE COURAGE D'AGIR POUR BEGLES", "nuance": "RN", "color": "#37474f"}, {"tete": "Loic PRUD'HOMME", "libelle": "FAIRE MIEUX POUR BEGLES", "nuance": "LFI", "color": "#8B0000"}], "33|Cabanac-et-Villagrains": [{"tete": "Damien OBRADOR", "libelle": "Allons ensemble pour Cabanac-et-Villagrains", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jean Georges CLAIR", "libelle": "CVCE", "nuance": "NC", "color": "#9e9e9e"}], "33|Carbon-Blanc": [{"tete": "Patrick LABESSE", "libelle": "VIVRE CARBON-BLANC", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Yohann GIACOMETTI", "libelle": "CAP2026 POUR CARBON-BLANC AVEC Yohann GIACOMETTI", "nuance": "DIV", "color": "#9e9e9e"}], "33|Castillon-la-Bataille": [{"tete": "Jacques BREILLAT", "libelle": "Nous construisons l'avenir ensemble", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Sandrine CHADOURNE", "libelle": "Notre Bataille : Castillon !", "nuance": "NC", "color": "#9e9e9e"}], "33|Cenon": [{"tete": "Fabrice DELAUNE", "libelle": "CIES", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Christine HÉRAUD", "libelle": "C'est nous qui travaillons, c'est nous qui decidons!", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Florence DAMET", "libelle": "ENSEMBLE POUR CENON", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Jean-François EGRON", "libelle": "ENSEMBLE, NOUS SOMMES CENON", "nuance": "UG", "color": "#E91E63"}], "33|Créon": [{"tete": "Sylvie DESMOND", "libelle": "Créon Notre Commune", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Stéphane SANCHIS", "libelle": "Créon avec Vous", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Alexis FEBBRARI", "libelle": "APC", "nuance": "RN", "color": "#37474f"}], "33|Eysines": [{"tete": "Arnaud DERUMAUX", "libelle": "FIERS D'EYSINES", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Pierre-Henri NIVET", "libelle": "Du Changement pour Eysines", "nuance": "RN", "color": "#37474f"}, {"tete": "Christine BOST", "libelle": "TOUJOURS AVEC VOUS POUR EYSINES", "nuance": "DVG", "color": "#ff7043"}], "33|Floirac": [{"tete": "Bernard LAUMONIER", "libelle": "FLOIRAC HORIZON 2030", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jean-Jacques PUYOBRAU", "libelle": "Floirac, une commune pour vous, avec vous!", "nuance": "UG", "color": "#E91E63"}, {"tete": "Caroline FOUCHIER", "libelle": "FLOIRAC, nos villages , une équipe", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Xavier MONIOT-LUNDY", "libelle": "POUR FLOIRAC 2026", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Didier PARIS", "libelle": "Faire mieux pour Floirac", "nuance": "LFI", "color": "#8B0000"}], "33|Gradignan": [{"tete": "Michel LABARDIN", "libelle": "GRADIGNAN POSITIVE ATTITUDE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Emilie SARRAZIN", "libelle": "GRADIGNAN DEMAIN AVEC ÉMILIE SARRAZIN", "nuance": "UG", "color": "#E91E63"}, {"tete": "Anaïs CURDY", "libelle": "UN NOUVEL ÉLAN POUR GRADIGNAN", "nuance": "RN", "color": "#37474f"}], "33|Lacanau": [{"tete": "Benoit BERQUE", "libelle": "LACANAU DEMAIN", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Rodolphe INDIA", "libelle": "LACANAU. NATURELLEMENT", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Laurent PEYRONDET", "libelle": "VIVONS LACANAU AVEC LAURENT PEYRONDET", "nuance": "DIV", "color": "#9e9e9e"}], "33|Langon": [{"tete": "François-Xavier MARQUES", "libelle": "Le renouveau pour Langon", "nuance": "RN", "color": "#37474f"}, {"tete": "Jean-Philippe DELCAMP", "libelle": "Lutte ouvrière - Le camp des travailleurs", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Jérôme GUILLEM", "libelle": "GUILLEM 2026", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Florence LASSARADE", "libelle": "REVEILLER LANGON", "nuance": "DVD", "color": "#5d4037"}], "33|Le Bouscat": [{"tete": "Gwenaël LAMARQUE", "libelle": "GL2026EB", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Ivan GRATTE", "libelle": "DYNAMISONS LE BOUSCAT !", "nuance": "RN", "color": "#37474f"}, {"tete": "Carola Tiana CASTELNEAU", "libelle": "LBC", "nuance": "UG", "color": "#E91E63"}, {"tete": "Claire LAYAN", "libelle": "L'ELAN CITOYEN", "nuance": "DVG", "color": "#ff7043"}], "33|Le Haillan": [{"tete": "Eric POULLIAT", "libelle": "LHAEP", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Xavier CAMPS", "libelle": "POUR LE HAILLAN 2026", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Andrea KISS", "libelle": "NOUS SOMMES LE HAILLAN", "nuance": "UG", "color": "#E91E63"}], "33|Lesparre-Médoc": [{"tete": "Valérie CHAPOU", "libelle": "PROTEGEONS ET DYNAMISONS LESPARRE", "nuance": "RN", "color": "#37474f"}, {"tete": "Bernard GUIRAUD", "libelle": "LA LISTE PLURIELLE LESPARRE 2026", "nuance": "DIV", "color": "#9e9e9e"}], "33|Libourne": [{"tete": "Christophe GIGOT", "libelle": "Notre parti c'est Libourne", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Denis MAUGET", "libelle": "Libourne s'engage pour la paix", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Philippe BUISSON", "libelle": "Libourne!", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Hélène HALBIN", "libelle": "Lutte ouvrière - Le camp des travailleurs", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Franck DANIEL DE ROLAND", "libelle": "Une ligne droite pour Libourne", "nuance": "EXD", "color": "#263238"}], "33|Lormont": [{"tete": "Philippe QUERTINMONT", "libelle": "POUR LORMONT AVEC LORMONT", "nuance": "UG", "color": "#E91E63"}, {"tete": "Patrick PRET", "libelle": "LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Taner OZKOSAR", "libelle": "ENSEMBLE LORMONT", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Serge BLÜGE", "libelle": "LORMONT : Transparence et Avenir", "nuance": "RN", "color": "#37474f"}, {"tete": "Monica CASANOVA", "libelle": "C'EST NOUS QUI TRAVAILLONS, C'EST NOUS QUI DECIDONS", "nuance": "EXG", "color": "#8B0000"}], "33|Martignas-sur-Jalle": [{"tete": "Grégory ADIER", "libelle": "Aimer Martignas 2026", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Jérôme PESCINA", "libelle": "ENSEMBLE, MARTIGNAS AVANCE !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Eric GENTIEU", "libelle": "VIVONS MARTIGNAS", "nuance": "DVG", "color": "#ff7043"}], "33|Mérignac": [{"tete": "Jean-Christophe COR", "libelle": "Liste d'Union pour la défense des Intérêts Communaux", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Philippe MENNEGUERRE", "libelle": "Ensemble pour l'avenir", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Thierry MILLET", "libelle": "MERIGNAC NOUS RASSEMBLE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Claude SALLEBERT", "libelle": "BIEN VIVRE ENSEMBLE", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jimmy BOURLIEUX", "libelle": "L'ALTERNANCE POUR MERIGNAC", "nuance": "RN", "color": "#37474f"}, {"tete": "Guillaume PERCHET", "libelle": "LO", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Loan PANIFOUS", "libelle": "Faire Mieux pour Mérignac", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Thierry TRIJOULET", "libelle": "ENSEMBLE, NOUS SOMMES MERIGNAC", "nuance": "UG", "color": "#E91E63"}], "33|Parempuyre": [{"tete": "Jennifer MICHALAK", "libelle": "PAREMPUYRE NOUS INSPIRE !", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Henri LAGARRIGUE", "libelle": "PAREMPUYRE AVENIR", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Loïc ROZIER-DUPLANTIER", "libelle": "PAREMPUYRE PROCHE DE VOUS", "nuance": "UG", "color": "#E91E63"}], "33|Pessac": [{"tete": "Hervé DOSSAT", "libelle": "L'ALTERNANCE POUR PESSAC", "nuance": "RN", "color": "#37474f"}, {"tete": "Sébastien SAINT-PASTEUR", "libelle": "PESSAC ENSEMBLE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Bérangère COUILLARD", "libelle": "UPP", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Franck RAYNAL", "libelle": "AVEC FRANCK RAYNAL, FIERS D'ÊTRE PESSACAIS", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Isabelle UFFERTE", "libelle": "ANTICAPITALISTES ET REVOLUTIONNAIRES", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Philippe JAOUEN", "libelle": "PESSAC INSOUMISE", "nuance": "LFI", "color": "#8B0000"}], "33|Saint-André-de-Cubzac": [{"tete": "Vincent CHARRIER", "libelle": "UNIS pour changer Saint-André", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Mickaël COURSEAUX", "libelle": "Saint André Nous Rassemble", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Michel VILATTE", "libelle": "Bien vivre à Saint-André", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Pierre LE CAMUS", "libelle": "L'alernance pour Saint-André", "nuance": "RN", "color": "#37474f"}, {"tete": "Thierry LIÈVRE-CORMIER", "libelle": "Collectif Citoyen: La Voix des Habitants", "nuance": "DIV", "color": "#9e9e9e"}], "33|Saint-Aubin-de-Médoc": [{"tete": "Christophe DUPRAT", "libelle": "AGIR POUR SAINT-AUBIN", "nuance": "DVD", "color": "#5d4037"}], "33|Saint-Médard-en-Jalles": [{"tete": "Stéphane DELPEYRAT-VINCENT", "libelle": "SMEJEC", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Patrice LICATA", "libelle": "LE CHANGEMENT N'ATTEND PLUS !", "nuance": "RN", "color": "#37474f"}, {"tete": "Marie-Odile PICARD", "libelle": "NOUVEL ELAN POUR SAINT-MEDARD", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Jacques MANGON", "libelle": "AGIR POUR SAINT MÉDARD", "nuance": "DVC", "color": "#1976d2"}], "33|Saint-Savin": [{"tete": "Jean-Luc BESSE", "libelle": "Saint-Savin, naturellement", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Charlie ILAMBE", "libelle": "UNIS POUR REUSSIR", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Frédérique JOINT", "libelle": "Saint-Savin : Nouveau cap, nouvelle ere", "nuance": "RN", "color": "#37474f"}, {"tete": "Pascal BONAVENTURE", "libelle": "Avançons ensemble pour Saint-Savin", "nuance": "NC", "color": "#9e9e9e"}], "33|Sainte-Foy-la-Grande": [{"tete": "Philippe CHASSAGNE", "libelle": "RENOUVEAUFOYEN2026", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Christelle GUIONIE", "libelle": "Ensemble, allons plus loin pour Sainte-Foy-la-Grande, avec Christelle GUIONIE", "nuance": "NC", "color": "#9e9e9e"}], "33|Salleboeuf": [{"tete": "Nathalie MAVIEL", "libelle": "LISTE D'ENTENTE MUNICIPALE PRÉSENTÉE PAR NATHALIE MAVIEL", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Emmanuel KERSAUDY", "libelle": "CONSTRUISONS SALLEBOEUF AUTREMENT", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Regis FALXA", "libelle": "SALLEBOEUF NOTRE VILLAGE", "nuance": "NC", "color": "#9e9e9e"}], "33|Talence": [{"tete": "Emmanuel SALLABERRY", "libelle": "TE", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Isabelle RAMI", "libelle": "VIVONS TALENCE", "nuance": "UG", "color": "#E91E63"}], "33|Villenave-d'Ornon": [{"tete": "Guillaume LATRILLE", "libelle": "Faisons mieux pour Villenave d'Ornon", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Michel POIGNONEC", "libelle": "Du Souffle, Du Sens", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Stéphanie ANFRAY", "libelle": "POUR VILLENAVE D'ORNON L'ALTERNATIVE ECOLOGIQUE ET SOCIALE", "nuance": "UG", "color": "#E91E63"}], "40|Aire-sur-l'Adour": [{"tete": "Jérémy MARTI", "libelle": "Mieux vivre à Aire", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Xavier LAGRAVE", "libelle": "AGIR ENSEMBLE POUR UN AVENIR SEREIN", "nuance": "DVD", "color": "#5d4037"}], "40|Biscarrosse": [{"tete": "Hélène LARREZET", "libelle": "Passionnément Biscarrosse", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Patrick DORVILLE", "libelle": "Biscarrosse Autrement", "nuance": "DVG", "color": "#ff7043"}], "40|Capbreton": [{"tete": "Jean-Luc ASCHARD", "libelle": "Capbreton par Nature", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Louis GALDOS", "libelle": "Capbreton au Coeur", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Serge MACKOWIAK", "libelle": "Capbreton Nouveau Cap", "nuance": "DVC", "color": "#1976d2"}], "40|Dax": [{"tete": "Julien DUBOIS", "libelle": "VIVONS DAX ! Notre énergie, votre avenir!", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Viviane LOUMÉ-SEIXO", "libelle": "Pour Dax à 100 %", "nuance": "UG", "color": "#E91E63"}], "40|Grenade-sur-l'Adour": [{"tete": "Marie-France GAUTHIER", "libelle": "GRENADE DEMAIN", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jean-Philippe PEDEHONTAA", "libelle": "UN NOUVEL ÉLAN POUR GRENADE", "nuance": "NC", "color": "#9e9e9e"}], "40|Hagetmau": [{"tete": "Pascale REQUENNA", "libelle": "HAGETMAU AU COEUR", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Jérôme TOFFOLI", "libelle": "HAGETMAU, une autre voie", "nuance": "DVG", "color": "#ff7043"}], "40|Labenne": [{"tete": "Stéphanie CHESSOUX", "libelle": "Pour Labenne avec vous! Liste de gauche et d'ouverture", "nuance": "DVG", "color": "#ff7043"}], "40|Labouheyre": [{"tete": "Jean MESPLÈDE", "libelle": "Labouheyre, unis pour demain", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Didier PRESSARD", "libelle": "Osons Labouheyre", "nuance": "NC", "color": "#9e9e9e"}], "40|Luxey": [{"tete": "Serge SORE", "libelle": "DES VALEURS QUI RESPIRENT, DES PROJETS QUI RASSEMBLENT", "nuance": "NC", "color": "#9e9e9e"}], "40|Mimizan": [{"tete": "Frédéric POMAREZ", "libelle": "MIMIZAN ENSEMBLE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Guy CASSAGNE", "libelle": "Mimizan pour vous, avec nous", "nuance": "DVC", "color": "#1976d2"}], "40|Mont-de-Marsan": [{"tete": "Nicolas LEREGLE", "libelle": "Se rassembler pour Mont-de-Marsan", "nuance": "RN", "color": "#37474f"}, {"tete": "Diane Laure LEGODOU", "libelle": "MARSAN CITOYEN", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Charles DAYOT", "libelle": "Pour Mont de Marsan aujourd'hui et demain", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Frédéric DUTIN", "libelle": "MONT-DE-MARSAN AUTREMENT", "nuance": "UG", "color": "#E91E63"}, {"tete": "Geneviève DARRIEUSSECQ", "libelle": "RASSEMBLER TOUT LE MONT2", "nuance": "DVC", "color": "#1976d2"}], "40|Morcenx-la-Nouvelle": [{"tete": "Fabrice LACHENMAIER", "libelle": "LA NOUVELLE MORCENX", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Paul CARRERE", "libelle": "La Nouvelle, Vivons Collectif !", "nuance": "DVG", "color": "#ff7043"}], "40|Ondres": [{"tete": "Patrick DE CASANOVE", "libelle": "ESPOIR ET SERENITE POUR LES ONDRAIS", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Murielle O'BYRNE", "libelle": "Ondres Unie", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Eva BELIN", "libelle": "ONDRES AVEC VOUS", "nuance": "DVG", "color": "#ff7043"}], "40|Parentis-en-Born": [{"tete": "Yoann DUBOURG", "libelle": "POURPARENTIS", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Marie-Françoise NADAU", "libelle": "UNION CITOYENNE POUR PARENTIS", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Georges LALUQUE", "libelle": "Mieux Vivre Ensemble à Parentis", "nuance": "DVG", "color": "#ff7043"}], "40|Peyrehorade": [{"tete": "Philippe LAFITTE", "libelle": "Ecouter, partager, agir pour Peyrehorade", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Michel DISCAZEAUX", "libelle": "VIVRE À PEYREHORADE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Patxi GRENADE", "libelle": "CONSTRUISONS ENSEMBLE LE PEYREHORADE DE DEMAIN", "nuance": "DIV", "color": "#9e9e9e"}], "40|Roquefort": [{"tete": "Bertrand PEDELUCQ", "libelle": "Agir avec Vous", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Delphine MAZET", "libelle": "DYNAMISONS ROQUEFORT", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Serife AUBERGER", "libelle": "Construire l'avenir de Roquefort", "nuance": "NC", "color": "#9e9e9e"}], "40|Saint-Martin-de-Seignanx": [{"tete": "Carine GLEIZES", "libelle": "SAINT-MARTIN, NOTRE PROJET", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Olivier BARRIERE", "libelle": "Saint Martin Coeur de Seignanx", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Julien FICHOT", "libelle": "VIVRE ENSEMBLE SAINT-MARTIN", "nuance": "DVG", "color": "#ff7043"}], "40|Saint-Paul-lès-Dax": [{"tete": "Julien BAZUS", "libelle": "ENSEMBLE, SAINT-PAUL AVANCE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Catherine RABA", "libelle": "Construisons notre avenir, Protégeons notre cadre de vie", "nuance": "DVC", "color": "#1976d2"}], "40|Saint-Pierre-du-Mont": [{"tete": "Julien PARIS", "libelle": "MIEUX VIVRE A SAINT PIERRE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Joël BONNET", "libelle": "LE COEUR DANS L'ACTION POUR SAINT-PIERRE-DU-MONT", "nuance": "DVC", "color": "#1976d2"}], "40|Saint-Sever": [{"tete": "Cedric MALLET", "libelle": "SAINT-SEVIVRE ENSEMBLE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Arnaud TAUZIN", "libelle": "J'aime Saint-Sever", "nuance": "UD", "color": "#1976d2"}], "40|Saint-Vincent-de-Tyrosse": [{"tete": "Régis GELEZ", "libelle": "Ensemble pour Tyrosse", "nuance": "DVG", "color": "#ff7043"}], "40|Sanguinet": [{"tete": "Laurent MOLIN", "libelle": "VIVRE SANGUINET", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Fabien LAINÉ", "libelle": "ESPRIT SANGUINET", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Nathalie SOUBAIGNE", "libelle": "SANGUINET AUTREMENT", "nuance": "DVG", "color": "#ff7043"}], "40|Soustons": [{"tete": "Philippe SAINT-MARTIN", "libelle": "SOUSTONS 2026 LE CHANGEMENT C'EST VOUS !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Frederique CHARPENEL", "libelle": "FREDERIQUE CHARPENEL 2026 SOUSTONS UNE VILLE A VIVRE", "nuance": "DVG", "color": "#ff7043"}], "40|Tarnos": [{"tete": "Antoine ROBLES", "libelle": "Agir pour Tarnos", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Marc MABILLET", "libelle": "Tarnos Ensemble", "nuance": "UG", "color": "#E91E63"}, {"tete": "Marie-Ange DELAVENNE", "libelle": "TARNOS POUR TOUS", "nuance": "DVC", "color": "#1976d2"}], "40|Tartas": [{"tete": "Jean-François BROQUERES", "libelle": "AVANÇONS POUR TARTAS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Dominique DEGOS", "libelle": "UN NOUVEL ÉLAN POUR TARTAS", "nuance": "NC", "color": "#9e9e9e"}], "40|Vieux-Boucau-les-Bains": [{"tete": "Pierre FROUSTEY", "libelle": "ENSEMBLE NOTRE VILLAGE", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Isabelle MAQUE", "libelle": "UN NOUVEAU PROJET POUR VIEUX-BOUCAU", "nuance": "NC", "color": "#9e9e9e"}], "40|Villeneuve-de-Marsan": [{"tete": "Catherine MILTON", "libelle": "VILLENEUVE DEMAIN", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Pascal CALIOT", "libelle": "VILLENEUVE POSITIVE", "nuance": "NC", "color": "#9e9e9e"}], "47|Agen": [{"tete": "Sébastien DELBOSQ", "libelle": "AGEN EN ACTION", "nuance": "UXD", "color": "#263238"}, {"tete": "Eric LAFOND", "libelle": "CONTRE LEUR ÉCONOMIE DE GUERRE, AGEN POUR LES TRAVAILLEURS ET LA JEUNESSE", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Laurent BRUNEAU", "libelle": "VIVEMENT AGEN", "nuance": "UG", "color": "#E91E63"}, {"tete": "Jean DIONIS", "libelle": "AGEN AU COEUR", "nuance": "UC", "color": "#1976d2"}], "47|Aiguillon": [{"tete": "Christian GIRARDI", "libelle": "CONTINUONS À AGIR POUR AIGUILLON", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Martine TOULMONDE", "libelle": "UN CAP POUR AIGUILLON", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Nicole MOSCHION", "libelle": "AIGUILLON, LE FUTUR NOUS APPARTIENT", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Sylvio GUINGAN", "libelle": "MIEUX VIVRE ENSEMBLE À AIGUILLON", "nuance": "EXG", "color": "#8B0000"}], "47|Cocumont": [{"tete": "Jean-Luc ARMAND", "libelle": "\"Ensemble pour Cocumont, bâtissons notre avenir\"", "nuance": "NC", "color": "#9e9e9e"}], "47|Le Passage": [{"tete": "Francis GARCIA", "libelle": "CONTINUONS ENSEMBLE POUR LE PASSAGE !", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Delphine EYCHENNE", "libelle": "LE PASSAGE AUTREMENT", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Corinne GRIFFOND", "libelle": "LE PASSAGE C'EST VOUS !", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Gilles FRÉMY", "libelle": "PASSAGE VERS L'AVENIR", "nuance": "DVD", "color": "#5d4037"}], "47|Marmande": [{"tete": "Joël HOCQUELET", "libelle": "POUR MARMANDE !", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Martine CALZAVARA", "libelle": "CLAIREMENT MARMANDE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "André BELACEL", "libelle": "UN NOUVEAU CAP POUR MARMANDE", "nuance": "UXD", "color": "#263238"}, {"tete": "Valérie PÉRALI", "libelle": "MARMANDE AVENIR", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Jean-Luc DUBOURG", "libelle": "RASSEMBLONS NOUS POUR MARMANDE", "nuance": "EXD", "color": "#263238"}], "47|Saint-Front-sur-Lémance": [{"tete": "Marie COSTES", "libelle": "SAINT-FRONT, ENTRE MEMOIRE ET AVENIR", "nuance": "NC", "color": "#9e9e9e"}], "47|Tonneins": [{"tete": "Jérémie BESPÉA", "libelle": "TONNEINS AU COEUR", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Dany TITONEL", "libelle": "UN ELAN DE PLUS POUR TONNEINS", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Denis BERTOLASO", "libelle": "ALLIANCE CITOYENNE POUR TONNEINS", "nuance": "DVC", "color": "#1976d2"}], "47|Villeneuve-sur-Lot": [{"tete": "Guillaume LEPERS", "libelle": "GARDONS LE CAP", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Geoffroy Ludovic Jean-Luc GARY", "libelle": "UNION POUR VILLENEUVE", "nuance": "UXD", "color": "#263238"}, {"tete": "Thomas BOUYSSONNIE", "libelle": "VILLENEUVE C'EST VOUS !", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Stephane BOUKHARI", "libelle": "Souffle citoyen 2026", "nuance": "DIV", "color": "#9e9e9e"}], "64|Anglet": [{"tete": "Claude OLIVE", "libelle": "NATURELLEMENT ANGLET", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Mahaut FANCHINI", "libelle": "ANGLET ENSEMBLE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Enaut Beñat ALFARO", "libelle": "Anglet se pense ici, Hemen Angelu", "nuance": "Rég.", "color": "#6a1b9a"}], "64|Artix": [{"tete": "Jean-Marie BERGERET-TERCQ", "libelle": "CONTINUONS À CONSTRUIRE ENSEMBLE UNE VIE MEILLEURE", "nuance": "NC", "color": "#9e9e9e"}], "64|Bayonne": [{"tete": "Henri ETCHETO", "libelle": "BAYONNE TOUT SIMPLEMENT !", "nuance": "UG", "color": "#E91E63"}, {"tete": "Jean-René ETCHEGARAY", "libelle": "BAYONNE L'ESSENTIEL C'EST VOUS !", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Jean Claude IRIART", "libelle": "BAYONNE EN MOUVEMENT-BAIONA MUGIMENDUAN", "nuance": "UG", "color": "#E91E63"}, {"tete": "Sandra PEREIRA-OSTANEL", "libelle": "Bayonne insoumise et populaire", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Pascal LESELLIER", "libelle": "Unis pour Bayonne l'Alternative !", "nuance": "EXD", "color": "#263238"}], "64|Biarritz": [{"tete": "Richard TARDITS", "libelle": "Biarritz d'abord", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Guillaume BARUCQ", "libelle": "BIARRITZ NOUVELLE VAGUE", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Serge BLANCO", "libelle": "MON EQUIPE C'EST BIARRITZ !", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Ana EZCURRA", "libelle": "BIARRITZ BERRI AVEC ET POUR LES BIARROTS", "nuance": "UG", "color": "#E91E63"}, {"tete": "Maïder AROSTEGUY", "libelle": "Ensemble, vivons Biarritz", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Jean-Baptiste DUSSAUSSOIS LARRALDE", "libelle": "CAP BIARRITZ", "nuance": "DVC", "color": "#1976d2"}], "64|Bidart": [{"tete": "Michel LAMARQUE", "libelle": "BIDART PAR NATURE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Emmanuel ALZURI", "libelle": "BIDART AU COEUR / BIDARTE BIHOTZETIK", "nuance": "DVD", "color": "#5d4037"}], "64|Billère": [{"tete": "Arnaud JACOTTIN", "libelle": "BILLÈRE POUR TOUS", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Vincent ESCUDÉ", "libelle": "IL EST TEMPS POUR BILLÈRE", "nuance": "DIV", "color": "#9e9e9e"}], "64|Boucau": [{"tete": "Mathieu HORN", "libelle": "VIVONS BOUCAU - Un élan citoyen", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Guy BOULANGER", "libelle": "AGIR ENSEMBLE POUR LE BOUCAU", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Francis GONZALEZ", "libelle": "BOUCAU CONVIVIAL ET DEVELOPPEMENT DURABLE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Hélène ETCHENIQUE", "libelle": "BOUCAU AU COEUR POUR UNE VILLE PLURIELLE ET SOLIDAIRE", "nuance": "PCF", "color": "#c62828"}], "64|Cambo-les-Bains": [{"tete": "Argitxu HIRIART-URRUTY", "libelle": "NAHI DUGUN HERRIA / LA COMMUNE QUE NOUS VOULONS", "nuance": "Rég.", "color": "#6a1b9a"}, {"tete": "Peio ETXELEKU", "libelle": "KANBO ELKARTU", "nuance": "Rég.", "color": "#6a1b9a"}, {"tete": "Christian DEVEZE", "libelle": "Cambo en avant - \"Jo Aintzina\"", "nuance": "DVD", "color": "#5d4037"}], "64|Ciboure": [{"tete": "Jean-Louis POULOU", "libelle": "CIBOURE AU COEUR", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Eneko ALDANA-DOUAT", "libelle": "ZIBURU BIZI 2026", "nuance": "Rég.", "color": "#6a1b9a"}], "64|Gan": [{"tete": "Francis PÉES", "libelle": "GAN, L'AVENIR ENSEMBLE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Valérie CAMBON", "libelle": "NATURELLEMENT GAN", "nuance": "DVG", "color": "#ff7043"}], "64|Hasparren": [{"tete": "Isabelle PARGADE", "libelle": "Hazparne bihotzean, Hasparren au coeur", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Michel OSPITAL", "libelle": "HERRITARREKIN", "nuance": "Rég.", "color": "#6a1b9a"}], "64|Hendaye": [{"tete": "Tristan PROTEAU", "libelle": "VIVRE HENDAYE - l'avenir vous appartient !", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Laetitia NAVARRON", "libelle": "HENDAIA BILTZEN - Uni.e.s pour Hendaye", "nuance": "Rég.", "color": "#6a1b9a"}, {"tete": "Kotte ECENARRO", "libelle": "HENDAYE EMSEMBLE - HENDAIA ELGARREKIN", "nuance": "UG", "color": "#E91E63"}], "64|Idron": [{"tete": "André NAHON", "libelle": "AVEC VOUS POUR IDRON", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Annie HILD", "libelle": "Valorisons Idron", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Karine PÉRÉ", "libelle": "Idron, tissons l'avenir ensemble", "nuance": "DIV", "color": "#9e9e9e"}], "64|Jurançon": [{"tete": "Michel BERNOS", "libelle": "JURANÇON AU COEUR", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Patrice BADUEL", "libelle": "JURANÇON A VENIR", "nuance": "DVG", "color": "#ff7043"}], "64|Labatmale": [{"tete": "Florent LACARRERE", "libelle": "LABATMALE NOTRE BIEN COMMUN", "nuance": "NC", "color": "#9e9e9e"}], "64|Lescar": [{"tete": "Valérie REVEL", "libelle": "POUR VOUS et AVEC VOUS, CONTINUONS ENSEMBLE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Jérôme MANGE", "libelle": "LESCAR A COEUR VAILLANT", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "François VERRIERE", "libelle": "L'ALTERNANCE POUR LESCAR", "nuance": "RN", "color": "#37474f"}], "64|Lons": [{"tete": "Nicolas PATRIARCHE", "libelle": "LONS POUR TOUS", "nuance": "LR", "color": "#6d4c41"}, {"tete": "Eric BOURDET", "libelle": "ALTERNATIVES LONSOISES", "nuance": "DVG", "color": "#ff7043"}], "64|Monein": [{"tete": "Bertrand VERGEZ-PASCAL", "libelle": "POUR MONEIN, CONTINUONS ENSEMBLE", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Yves SALANAVE-PÉHÉ", "libelle": "MONEIN, UNIS AUJOURD'HUI POUR DEMAIN - VAM CAMINAR", "nuance": "DIV", "color": "#9e9e9e"}], "64|Mourenx": [{"tete": "Patrice LAURENT", "libelle": "MOURENX AVEC VOUS", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Lindsey DEARY", "libelle": "VIVE MOURENX !", "nuance": "DVG", "color": "#ff7043"}], "64|Nay": [{"tete": "Alain DEQUIDT", "libelle": "NAY A COEUR", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Monique TRIEP-CAPDEVILLE", "libelle": "POUR NAY, TOUS UNIS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jean-Pierre BONNASSIOLLE", "libelle": "NAY, UNE VILLE POUR TOUS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "François ESCALÉ", "libelle": "DE L'AUDACE POUR NAY", "nuance": "NC", "color": "#9e9e9e"}], "64|Ogeu-les-Bains": [{"tete": "Marc OXIBAR", "libelle": "ENSEMBLE, AVANCONS POUR OGEU", "nuance": "NC", "color": "#9e9e9e"}], "64|Oloron-Sainte-Marie": [{"tete": "Marie-Lyse BISTUÉ", "libelle": "Oser Oloron Ensemble", "nuance": "UG", "color": "#E91E63"}, {"tete": "Hugo COUCHINAVE", "libelle": "Réveillons Oloron Avec Hugo Couchinave", "nuance": "LR", "color": "#6d4c41"}, {"tete": "Clément SERVAT", "libelle": "Le Renouveau Oloronais", "nuance": "DVD", "color": "#5d4037"}], "64|Orthez": [{"tete": "Eric DELTEIL", "libelle": "Une Mairie à l'offensive : 100% Services publics, 100% Jeunesse, 100% Citoyen.ne.s", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Benjamin MOUTET", "libelle": "ORTHEZ C'EST NOUS TOUS !", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Nicolas CRESSON", "libelle": "ORTHEZ RASSEMBLÉE", "nuance": "RN", "color": "#37474f"}, {"tete": "Jeanne LAMAZERE DESTUGUES", "libelle": "Ensemble Construisons l'Avenir ORTHEZ SAINTE-SUZANNE", "nuance": "DVG", "color": "#ff7043"}], "64|Pau": [{"tete": "François BAYROU", "libelle": "NOUS AIMONS PAU", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Cyrille MARCONI", "libelle": "LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Jean-François BLANCO", "libelle": "PAU INSOUMISE ECOLOGISTE ET CITOYENNE", "nuance": "LFI", "color": "#8B0000"}, {"tete": "Jérôme MARBOT", "libelle": "NOUVELLE ÈRE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Margaux TAILLEFER", "libelle": "L'ESPÉRANCE POUR PAU", "nuance": "RN", "color": "#37474f"}, {"tete": "Pascal BONIFACE", "libelle": "PAU, C'EST VOUS !", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Philippe ARRAOU", "libelle": "ARRAOU AVEC VOUS", "nuance": "DIV", "color": "#9e9e9e"}], "64|Saint-Jean-de-Luz": [{"tete": "Jacqueline Pierrette UHART", "libelle": "LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Manuel DE LARA", "libelle": "Manuel de LARA,un nouvel élan,avec vous", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Pascal LAFITTE", "libelle": "Donibanen Bizi : Vivre à Saint-Jean-de-Luz", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Jean-François IRIGOYEN", "libelle": "SAINT-JEAN PASSIONNEMENT", "nuance": "UD", "color": "#1976d2"}], "64|Saint-Pée-sur-Nivelle": [{"tete": "Mariana LAUGIER", "libelle": "ELGARREKIN SENPERERENTZAT-ENSEMBLE POUR SAINT-PEE", "nuance": "Rég.", "color": "#6a1b9a"}, {"tete": "Christophe JAUREGUY", "libelle": "HATS BERRI - NOUVEL ELAN", "nuance": "Rég.", "color": "#6a1b9a"}, {"tete": "Bernard ELHORGA", "libelle": "AGIR POUR SAINT PEE", "nuance": "DVD", "color": "#5d4037"}], "64|Salies-de-Béarn": [{"tete": "Thierry CABANNE", "libelle": "SALIES Pour Vous", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Frédéric DOMERCQ", "libelle": "Salies Unie", "nuance": "DIV", "color": "#9e9e9e"}], "64|Urrugne": [{"tete": "Martine MIGNOT-CARMÉ", "libelle": "DU COEUR ET DES ACTES", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Sébastien ETCHEBARNE", "libelle": "VIVONS URRUGNE AUTREMENT / ONGI BIZI URRUÑAN", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Philippe ARAMENDI", "libelle": "ELGARREKIN URRUGNE", "nuance": "Rég.", "color": "#6a1b9a"}], "64|Ustaritz": [{"tete": "Piero ROUGET", "libelle": "UZTARITZE BAI", "nuance": "Rég.", "color": "#6a1b9a"}, {"tete": "Bruno CENDRES", "libelle": "ENSEMBLE POUR USTARITZ", "nuance": "DVG", "color": "#ff7043"}], "79|Bressuire": [{"tete": "Emmanuelle MÉNARD", "libelle": "BRESSUIRE ET VOUS", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Pierre MORIN", "libelle": "Bressuire autrement", "nuance": "DVG", "color": "#ff7043"}], "79|Les Châteliers": [{"tete": "Nicolas GAMACHE", "libelle": "Les Châteliers : Coeur de Ruralité", "nuance": "NC", "color": "#9e9e9e"}], "79|Magné": [{"tete": "Gérard DORAY", "libelle": "MAGNÉ AUTREMENT", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Cyril HIVERT", "libelle": "Ensemble, cultivons l'avenir de notre village", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Sébastien BILLAUD", "libelle": "ENSEMBLE POUR MAGNE", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Murielle PHELIPPON", "libelle": "AGIR POUR MAGNÉ", "nuance": "NC", "color": "#9e9e9e"}], "79|Marigny": [{"tete": "Guillaume RIOU", "libelle": "VIVRE ET AGIR A MARIGNY", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Joel PARTHENAY", "libelle": "RACINES ET AVENIR POUR MARIGNY", "nuance": "NC", "color": "#9e9e9e"}], "79|Niort": [{"tete": "Jérôme BALOGE", "libelle": "Niort, c'est tous ensemble!", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Céline BONNET-DERISBOURG", "libelle": "ENSEMBLE, osons le changement pour Niort", "nuance": "RN", "color": "#37474f"}, {"tete": "Sébastien MATHIEU", "libelle": "Niort à Gauche", "nuance": "UG", "color": "#E91E63"}], "79|Parthenay": [{"tete": "Béatrice LARGEAU", "libelle": "NOUVEL ELAN POUR PARTHENAY", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Jean-Michel PRIEUR", "libelle": "DiverCité", "nuance": "DVC", "color": "#1976d2"}], "79|Melle": [{"tete": "Ryan LEQUIEN", "libelle": "MELLE AUTREMENT", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Sylvain GRIFFAULT", "libelle": "MELLE EN COMMUN", "nuance": "Écolo", "color": "#2e7d32"}, {"tete": "Muriel SABOURIN BENELHADJ", "libelle": "ENSEMBLE POUR MELLE", "nuance": "DVG", "color": "#ff7043"}], "79|Thouars": [{"tete": "Bernard PAINEAU", "libelle": "Thouars pour ambition", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Axel URBAIN", "libelle": "Thouars en commun", "nuance": "DVG", "color": "#ff7043"}], "86|Archigny": [{"tete": "Eric SOULAT", "libelle": "UNISSONS ARCHIGNY", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Romain MARTINEAU", "libelle": "Nouvel Elan Pour Archigny", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Jacky ROY", "libelle": "ARCHIGNY DEMAIN", "nuance": "NC", "color": "#9e9e9e"}], "86|Châtellerault": [{"tete": "Patrice VILLERET", "libelle": "LUTTE OUVRIERE-LE CAMP DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Thomas BAUDIN", "libelle": "NOUS SOMMES CHATELLERAULT", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Manuel COSTA NOBRE", "libelle": "AGIR POUR VOUS", "nuance": "UDI", "color": "#0288d1"}, {"tete": "Hager JACQUEMIN", "libelle": "RASSEMBLER POUR AGIR", "nuance": "RN", "color": "#37474f"}, {"tete": "David SIMON", "libelle": "AVEC VOUS CHATELLERAULT EN GRAND", "nuance": "MoDem", "color": "#1565c0"}, {"tete": "Anne-Florence BOURAT", "libelle": "ASSURONS VOTRE AVENIR", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Dominique PASQUET", "libelle": "CHANGER D'ÈRE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Maxime NOIROT", "libelle": "Fier(e)s de Châtellerault", "nuance": "LFI", "color": "#8B0000"}], "86|Mignaloux-Beauvoir": [{"tete": "Ronan NEDELEC", "libelle": "Pour vous, pour Mignaloux", "nuance": "LR", "color": "#6d4c41"}, {"tete": "Patrick FERRER", "libelle": "AGIR ENSEMBLE POUR MIGNALOUX-BEAUVOIR", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Sophie KEMDJI", "libelle": "Mignaloux-Beauvoir, Partageons l'Avenir", "nuance": "DVG", "color": "#ff7043"}], "86|Montmorillon": [{"tete": "Christophe MARTIN", "libelle": "TOUS ENSEMBLE POUR MONTMORILLON", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Juliette KOCHER", "libelle": "MONTMORILLON, ECRIVONS L'AVENIR ENSEMBLE", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Jean-Luc SOUCHAUD", "libelle": "UN NOUVEL ELAN POUR MONTMORILLON", "nuance": "DVD", "color": "#5d4037"}], "86|Poitiers": [{"tete": "Lucile PARNAUDEAU", "libelle": "Un nouveau souffle pour Poitiers", "nuance": "RE", "color": "#0d47a1"}, {"tete": "François BLANCHARD", "libelle": "POITIERS AMBITIEUSE ET SOLIDAIRE", "nuance": "PS", "color": "#E91E63"}, {"tete": "Anthony BROTTIER", "libelle": "Anthony BROTTIER Notre priorité, c'est vous !", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Leonore MONCOND'HUY", "libelle": "Poitiers collectif", "nuance": "Écolo", "color": "#2e7d32"}, {"tete": "Bertrand GEAY", "libelle": "Poitiers en Commun", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Ludovic GAILLARD", "libelle": "Lutte ouvière - Le camp des travailleurs", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Charles RANGHEARD", "libelle": "UN CIEL BLEU POUR POITIERS", "nuance": "RN", "color": "#37474f"}, {"tete": "Dolorès PROST", "libelle": "Liberté pour Poitiers", "nuance": "DVD", "color": "#5d4037"}], "86|Ternay": [{"tete": "Yannick PIERRE", "libelle": "Ensemble pour TERNAY", "nuance": "NC", "color": "#9e9e9e"}], "87|Aixe-sur-Vienne": [{"tete": "Gérard BRIOT", "libelle": "ENSEMBLE POUR AIXE", "nuance": "DVG", "color": "#ff7043"}, {"tete": "René ARNAUD", "libelle": "Aixe Avenir", "nuance": "DVC", "color": "#1976d2"}], "87|Ambazac": [{"tete": "Peggy BARIAT", "libelle": "AMBAZAC CONTINUONS ENSEMBLE", "nuance": "UG", "color": "#E91E63"}, {"tete": "Bernard TROUBAT", "libelle": "AMBITIONS", "nuance": "DIV", "color": "#9e9e9e"}], "87|Bessines-sur-Gartempe": [{"tete": "Andréa BROUILLE", "libelle": "Pour Bessines !", "nuance": "NC", "color": "#9e9e9e"}], "87|Couzeix": [{"tete": "Sébastien LARCHER", "libelle": "ENSEMBLE POUR COUZEIX", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Jean-Claude PASTUREAU", "libelle": "BIEN VIVRE COUZEIX", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Laetitia NARDI", "libelle": "AGIR POUR COUZEIX - L'HUMAIN AU COEUR DE L'ACTION MUNICIPALE", "nuance": "UG", "color": "#E91E63"}], "87|Eymoutiers": [{"tete": "Emmanuel GARNICHE", "libelle": "D'ICI ET D'AILLEURS, ENSEMBLE POUR EYMOUTIERS", "nuance": "NC", "color": "#9e9e9e"}, {"tete": "Mélanie PLAZANET", "libelle": "ENSEMBLE POUR L'AVENIR D'EYMOUTIERS", "nuance": "NC", "color": "#9e9e9e"}], "87|Feytiat": [{"tete": "Pascal BUSSIÈRE", "libelle": "ENSEMBLE POUR FEYTIAT 2026", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Laurent LAFAYE", "libelle": "FEYTIAT, AVEC VOUS, UNIS ET ENGAGÉS POUR L'AVENIR", "nuance": "DVG", "color": "#ff7043"}], "87|Isle": [{"tete": "Gilles BÉGOUT", "libelle": "ISLE ENSEMBLE", "nuance": "DVC", "color": "#1976d2"}, {"tete": "Vincent REY", "libelle": "ISLE EN MIEUX", "nuance": "DVD", "color": "#5d4037"}], "87|Le Palais-sur-Vienne": [{"tete": "Ludovic GÉRAUDIE", "libelle": "LE PALAIS, NOTRE AMBITION COMMUNE", "nuance": "UG", "color": "#E91E63"}], "87|Limoges": [{"tete": "Elisabeth FAUCON", "libelle": "LUTTE OUVRIERE - LE CAMPS DES TRAVAILLEURS", "nuance": "EXG", "color": "#8B0000"}, {"tete": "Thierry MIGUEL", "libelle": "POUR LIMOGES THIERRY MIGUEL", "nuance": "UG", "color": "#E91E63"}, {"tete": "Emile Roger LOMBERTIE", "libelle": "Avec Lombertie, soyons Fiers de Limoges", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Damien MAUDET", "libelle": "Limoges Front Populaire - Union de la gauche sociale et écologiste", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Albin FREYCHET", "libelle": "LIMOGES EN GRAND", "nuance": "RN", "color": "#37474f"}, {"tete": "Marie DE FERLUC", "libelle": "Nouveau Printemps pour Limoges", "nuance": "DIV", "color": "#9e9e9e"}, {"tete": "Guillaume GUERIN", "libelle": "LIMOGES EN PARTAGE", "nuance": "DVD", "color": "#5d4037"}, {"tete": "Vincent LEONIE", "libelle": "REUNIR LIMOGES", "nuance": "DVC", "color": "#1976d2"}], "87|Panazol": [{"tete": "Lysandre MERLIER", "libelle": "PANAZOL AUTREMENT", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Fabien DOUCET", "libelle": "AGIR ENSEMBLE POUR PANAZOL", "nuance": "DVC", "color": "#1976d2"}], "87|Saint-Junien": [{"tete": "Hervé BEAUDET", "libelle": "ENSEMBLE POUR SAINT-JUNIEN", "nuance": "UG", "color": "#E91E63"}, {"tete": "Yoann BALESTRAT", "libelle": "Saint-Junien de toutes nos forces ! Ensemble, construisons l'avenir", "nuance": "DVG", "color": "#ff7043"}], "87|Saint-Léonard-de-Noblat": [{"tete": "Alain DARBON", "libelle": "AVEC VOUS, CONTINUONS, POUR SAINT-LÉONARD", "nuance": "DVG", "color": "#ff7043"}, {"tete": "Xavier PIERRARD", "libelle": "UN NOUVEL ÉLAN POUR SAINT-LÉONARD", "nuance": "DVD", "color": "#5d4037"}], "87|Saint-Yrieix-la-Perche": [{"tete": "Laurent GORYL", "libelle": "AGIR ENSEMBLE POUR SAINT-YRIEIX", "nuance": "DVG", "color": "#ff7043"}]};
 
 
+
+
+// ─── COMPOSANT PAGE COMMUNE V7 ────────────────────────────────────────────────
+// Inspiré maire.app : page commune riche, progressive selon niveau d'enrichissement
+// Couches : base (toutes communes) → premium (127 enrichies) → live (résultats Supabase)
+function CommunePageV7({ c, crList, listeResults, onBack }) {
+  const deptInfo = DEPTS.find(d => d.code === c.dept);
+
+  // ── EPCI (fetch au montage) ────────────────────────────────────────────────
+  const { epci, epciDone } = useEpci(c.insee);
+
+  // ── Palettes ─────────────────────────────────────────────────────────────
+  const POLTAG = {
+    "PS":"#e91e63","DVG":"#ef5350","PCF":"#c62828","LFI":"#7b1fa2",
+    "Verts":"#2e7d32","Écolo":"#2e7d32","DVC":"#1976d2","Centre":"#ef6c00",
+    "LR":"#1565c0","DVD":"#0d47a1","SE":"#546e7a","RN":"#212121",
+    "NC":"#78909c","Rég.":"#00796b","UDI":"#0288d1","RE":"#ef6c00",
+    "DIV":"#607d8b","DV":"#607d8b","UG":"#e53935","EXG":"#880e4f",
+    "EXD":"#0a0a0a","UXD":"#263238","UD":"#1565c0",
+  };
+  const BLOC_LABEL = {
+    "PS":"Gauche","DVG":"Gauche","PCF":"Gauche","LFI":"Gauche radical",
+    "Verts":"Écologie","Écolo":"Écologie","DVC":"Centre","Centre":"Centre",
+    "UDI":"Centre","RE":"Centre","LR":"Droite","DVD":"Droite",
+    "RN":"Extrême droite","NC":"Sans étiquette","SE":"Sans étiquette",
+    "Rég.":"Régionaliste","UG":"Union gauche","DIV":"Divers",
+  };
+  const ENJTAG = {
+    "très fort":["#b71c1c","#ffcdd2"],
+    "fort":["#e65100","#ffe0b2"],
+    "moyen":["#1565c0","#bbdefb"],
+    "faible":["#2e7d32","#c8e6c9"],
+  };
+  const SC_COL = {
+    "Victoire 1er Tour":  {bg:"#1b5e20",txt:"#fff"},
+    "Victoire 2nd Tour":  {bg:"#2e7d32",txt:"#fff"},
+    "Élu 1er tour":       {bg:"#1b5e20",txt:"#fff"},
+    "Élu 2nd tour":       {bg:"#2e7d32",txt:"#fff"},
+    "Qualifié·e pour le 2nd Tour":{bg:"#e65100",txt:"#fff"},
+    "Ballottage":         {bg:"#e65100",txt:"#fff"},
+    "Défaite 1er Tour":   {bg:"#b71c1c",txt:"#fff"},
+    "Défaite 2nd Tour":   {bg:"#c62828",txt:"#fff"},
+    "Défaite":            {bg:"#b71c1c",txt:"#fff"},
+    "Désistement":        {bg:"#4e342e",txt:"#fff"},
+    "Candidat":           {bg:"#E8186D",txt:"#fff"},
+    "Non-candidat":       {bg:"#546e7a",txt:"#fff"},
+  };
+
+  const isPremium = c._premium !== false && (c.maire || c.couleur_pol || c.analyse || (c.cr_lies||[]).length > 0);
+  const polCol    = POLTAG[c.couleur_pol] || (isPremium ? "#607d8b" : "#90a4ae");
+
+  // ── Données live (résultats Supabase) ─────────────────────────────────────
+  const comKey       = `${c.dept}|${c.nom}`;
+  const listesVille  = (typeof LISTES_DATA !== "undefined" ? LISTES_DATA[comKey] : null) || [];
+  const crLiesEnr    = (c.cr_lies||[]).map(cr => {
+    const full = crList.find(x => x.nom===cr.nom || x.nom.includes(cr.nom.split(" ").slice(-1)[0]));
+    const fs   = full ? getFinalStatut(full) : null;
+    return { ...cr, full, fs, sc: fs ? (SC_COL[fs]||SC_COL["Candidat"]) : null };
+  });
+  const listesAvecRes = listesVille.map((l, i) => {
+    const r = listeResults[`${c.dept}|${c.nom}|${i}`] || {};
+    return { ...l, idx:i, res:r, statut: r.statut_t2||r.statut||"" };
+  });
+  const nbSaisies = listesAvecRes.filter(l => l.statut || l.res.score).length;
+  const vainqueur = listesAvecRes.find(l =>
+    ["Victoire 1er Tour","Victoire 2nd Tour","Élu 1er tour","Élu 2nd tour"].includes(l.statut)
+  );
+
+  // ── Navigation sections (adaptée au niveau) ───────────────────────────────
+  const sections = [
+    { id:"cp-analyse",   label:"Analyse",        show: isPremium },
+    { id:"cp-resultats", label:"Résultats 2026",  show: isPremium && listesVille.length > 0 },
+    { id:"cp-candidats", label:"Candidats & CR",  show: isPremium },
+    { id:"cp-epci",      label:"Intercommunalité",show: epciDone && epci },
+  ].filter(s => s.show);
+
+  return (
+    <div className="tc">
+
+      {/* ── Fil d'Ariane ──────────────────────────────────────────────── */}
+      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,
+        fontSize:"11px",color:"#aaa",fontFamily:"'Source Code Pro',monospace",flexWrap:"wrap"}}>
+        <button onClick={onBack} style={{
+          background:"none",border:"none",cursor:"pointer",color:"#E8186D",
+          fontFamily:"'Source Code Pro',monospace",fontSize:"11px",padding:0,fontWeight:700,
+        }}>← Retour à la carte</button>
+        <span style={{color:"#ddd"}}>/</span>
+        <span>{deptInfo?.nom||c.dept}</span>
+        <span style={{color:"#ddd"}}>/</span>
+        <span style={{color:"#333",fontWeight:700}}>{c.nom}</span>
+        {isPremium && (
+          <span style={{background:"#E8186D",color:"#fff",fontSize:"7.5px",fontWeight:700,padding:"1px 7px",borderRadius:8,marginLeft:4}}>
+            ENRICHIE
+          </span>
+        )}
+      </div>
+
+      {/* ══ HERO ════════════════════════════════════════════════════════ */}
+      {isPremium ? (
+        /* ── Hero Premium : fond sombre, identité politique forte ── */
+        <div style={{
+          background:`linear-gradient(135deg,#1a0a10 0%,#2d1020 50%,${polCol}33 100%)`,
+          borderRadius:14,padding:"28px 32px",marginBottom:16,
+          border:`2px solid ${polCol}`,position:"relative",overflow:"hidden",
+        }}>
+          <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:polCol,opacity:.07,pointerEvents:"none"}}/>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:16,position:"relative"}}>
+            <div style={{flex:1,minWidth:220}}>
+              <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,color:"rgba(255,255,255,.45)",letterSpacing:"2.5px",textTransform:"uppercase",marginBottom:8}}>
+                {deptInfo?.nom} · {c.dept}
+              </div>
+              <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:30,fontWeight:700,color:"#fff",lineHeight:1.1,marginBottom:8,letterSpacing:"-.5px"}}>
+                {c.nom}
+              </div>
+              <div style={{fontSize:"12px",color:"rgba(255,255,255,.5)",fontFamily:"'Source Code Pro',monospace",marginBottom:16}}>
+                INSEE {c.insee}{c.pop>0?` · ${c.pop.toLocaleString("fr-FR")} hab.`:""}
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                {c.couleur_pol && (
+                  <span style={{background:polCol,color:"#fff",fontWeight:700,fontFamily:"'Source Code Pro',monospace",fontSize:"11px",padding:"5px 14px",borderRadius:20}}>
+                    {c.couleur_pol}
+                  </span>
+                )}
+                {BLOC_LABEL[c.couleur_pol] && (
+                  <span style={{background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.75)",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",padding:"5px 12px",borderRadius:20,border:"1px solid rgba(255,255,255,.15)"}}>
+                    {BLOC_LABEL[c.couleur_pol]}
+                  </span>
+                )}
+                {c.enjeu && (() => {
+                  const [bg] = ENJTAG[c.enjeu]||["#888"];
+                  return <span style={{background:bg,color:"#fff",fontWeight:700,fontFamily:"'Source Code Pro',monospace",fontSize:"10px",padding:"5px 12px",borderRadius:20}}>Enjeu {c.enjeu}</span>;
+                })()}
+                {vainqueur && (() => {
+                  const sc = SC_COL[vainqueur.statut]||{bg:"#2e7d32",txt:"#fff"};
+                  return <span style={{background:sc.bg,color:sc.txt,fontWeight:700,fontFamily:"'Source Code Pro',monospace",fontSize:"10px",padding:"5px 12px",borderRadius:20}}>✓ {vainqueur.tete}</span>;
+                })()}
+              </div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:7,minWidth:165}}>
+              {[
+                {label:"Maire sortant",val:c.maire,icon:"🏛"},
+                listesVille.length>0 && {label:"Listes 2026",val:`${listesVille.length} liste${listesVille.length>1?"s":""}`,icon:"📋"},
+                crLiesEnr.length>0  && {label:"CR liés",val:`${crLiesEnr.length} suivi${crLiesEnr.length>1?"s":""}`,icon:"👤"},
+                nbSaisies>0         && {label:"Résultats saisis",val:`${nbSaisies}/${listesVille.length}`,icon:"📊"},
+                epci                && {label:"Intercommunalité",val:epci.nom,icon:"🏘"},
+              ].filter(Boolean).filter(m=>m.val).map(m=>(
+                <div key={m.label} style={{background:"rgba(255,255,255,.07)",borderRadius:8,padding:"7px 11px",border:"1px solid rgba(255,255,255,.10)"}}>
+                  <div style={{fontSize:"8px",fontFamily:"'Source Code Pro',monospace",color:"rgba(255,255,255,.4)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:2}}>{m.icon} {m.label}</div>
+                  <div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.88)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:160}}>{m.val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ── Hero Base : propre mais sobre, honnête ── */
+        <div style={{background:"#fff",border:"2px solid #e4ddd5",borderRadius:14,padding:"22px 26px",marginBottom:16,position:"relative"}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+            <div>
+              <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,color:"#aaa",letterSpacing:"2px",textTransform:"uppercase",marginBottom:8}}>
+                {deptInfo?.nom} · {c.dept}
+              </div>
+              <div style={{fontFamily:"'Libre Baskerville',serif",fontSize:28,fontWeight:700,color:"#1a1a1a",lineHeight:1.1,marginBottom:8}}>
+                {c.nom}
+              </div>
+              <div style={{fontSize:"12px",color:"#aaa",fontFamily:"'Source Code Pro',monospace"}}>
+                INSEE {c.insee}{c.pop>0?` · ${c.pop.toLocaleString("fr-FR")} hab.`:""}
+              </div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
+              <span style={{background:"#f0ebe4",color:"#888",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"4px 12px",borderRadius:20}}>
+                Commune de base
+              </span>
+              {epci && (
+                <span style={{background:"#e3f2fd",color:"#1565c0",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"4px 12px",borderRadius:20,maxWidth:180,textAlign:"right",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  🏘 {epci.nom}
+                </span>
+              )}
+            </div>
+          </div>
+          {/* Invitation enrichissement */}
+          <div style={{marginTop:14,padding:"10px 14px",background:"#f9f6f2",borderRadius:8,border:"1px dashed #e0d8d0",fontSize:"11px",color:"#aaa",fontFamily:"'Source Code Pro',monospace"}}>
+            Cette commune n'est pas encore dans la couche enrichie — données disponibles sur saisie.
+          </div>
+        </div>
+      )}
+
+      {/* ── Navigation interne (sections actives uniquement) ─────────── */}
+      {sections.length > 0 && (
+        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:14,padding:"8px 0",borderBottom:"2px solid #ede8e0",position:"sticky",top:0,background:"#f7f4f0",zIndex:10}}>
+          {sections.map(s=>(
+            <a key={s.id} href={`#${s.id}`} onClick={e=>{e.preventDefault();document.getElementById(s.id)?.scrollIntoView({behavior:"smooth",block:"start"});}}
+              style={{padding:"5px 13px",borderRadius:6,fontSize:"10px",fontFamily:"'Source Code Pro',monospace",fontWeight:700,background:"#fff",border:"1px solid #e0d8d0",color:"#888",cursor:"pointer",textDecoration:"none",letterSpacing:".3px",transition:"all .12s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background="#1a1a1a";e.currentTarget.style.color="#fff";e.currentTarget.style.borderColor="#1a1a1a";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="#fff";e.currentTarget.style.color="#888";e.currentTarget.style.borderColor="#e0d8d0";}}
+            >{s.label}</a>
+          ))}
+        </div>
+      )}
+
+      {/* ══ ÉPCI / INTERCOMMUNALITÉ ═════════════════════════════════════ */}
+      {epciDone && epci && (
+        <div id="cp-epci" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"16px 20px",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={{width:3,height:16,background:"#1976d2",borderRadius:2}}/>
+            <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#1976d2",textTransform:"uppercase",fontWeight:700}}>Intercommunalité</div>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+            <div style={{flex:1,minWidth:180}}>
+              <div style={{fontWeight:700,fontSize:"14px",color:"#1a1a1a",marginBottom:3}}>{epci.nom}</div>
+              <div style={{fontSize:"10px",color:"#aaa",fontFamily:"'Source Code Pro',monospace"}}>
+                Code EPCI {epci.code}
+                {epci.typepci && ` · ${epci.typepci}`}
+                {epci.populationTotale && ` · ${epci.populationTotale.toLocaleString("fr-FR")} hab.`}
+              </div>
+            </div>
+            <span style={{background:"#e3f2fd",color:"#1565c0",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"5px 14px",borderRadius:20,flexShrink:0}}>
+              {epci.typepci || "EPCI"}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ══ ANALYSE (premium) ═══════════════════════════════════════════ */}
+      {isPremium && (
+        <div id="cp-analyse" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={{width:3,height:16,background:"#E8186D",borderRadius:2}}/>
+            <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#E8186D",textTransform:"uppercase",fontWeight:700}}>Analyse électorale</div>
+          </div>
+          {c.analyse
+            ? <div style={{fontSize:"13px",lineHeight:1.8,color:"#333",fontFamily:"'Source Sans 3',sans-serif"}}>{c.analyse}</div>
+            : <div style={{fontSize:"12px",color:"#c0b8b0",fontStyle:"italic",fontFamily:"'Source Code Pro',monospace"}}>Analyse non encore renseignée.</div>
+          }
+        </div>
+      )}
+
+      {/* ══ RÉSULTATS 2026 (premium + listes) ══════════════════════════ */}
+      {isPremium && listesVille.length > 0 && (
+        <div id="cp-resultats" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:3,height:16,background:"#1565c0",borderRadius:2}}/>
+              <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#1565c0",textTransform:"uppercase",fontWeight:700}}>Résultats — Municipales 2026</div>
+            </div>
+            <span style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",fontWeight:700,
+              background:nbSaisies>0?"#c8e6c9":"#f3ede4",color:nbSaisies>0?"#1b5e20":"#b08040",padding:"3px 11px",borderRadius:10}}>
+              {nbSaisies>0?`${nbSaisies}/${listesVille.length} liste${nbSaisies>1?"s":""} saisie${nbSaisies>1?"s":""}`:"En attente"}
+            </span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            <div style={{display:"grid",gridTemplateColumns:"52px 1fr 56px 56px 110px",gap:6,padding:"0 4px",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",color:"#c0b8b0",letterSpacing:"1px",textTransform:"uppercase"}}>
+              <span>Nuance</span><span>Tête de liste</span><span style={{textAlign:"right"}}>T1</span><span style={{textAlign:"right"}}>T2</span><span>Résultat</span>
+            </div>
+            {listesAvecRes.map((l,i)=>{
+              const sc  = SC_COL[l.statut]||{};
+              const isWin = l.statut?.startsWith("Victoire")||l.statut?.startsWith("Élu");
+              return (
+                <div key={i} style={{display:"grid",gridTemplateColumns:"52px 1fr 56px 56px 110px",gap:6,alignItems:"center",padding:"9px 12px",background:isWin?"#f0faf2":"#fafaf9",borderRadius:8,border:isWin?"1px solid #a5d6a7":"1px solid #ede8e2"}}>
+                  <span style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 6px",borderRadius:4,textAlign:"center"}}>{l.nuance}</span>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:"12px",color:"#1a1a1a"}}>{l.tete}</div>
+                    {l.libelle&&<div style={{fontSize:"9px",color:"#aaa",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle}</div>}
+                  </div>
+                  <div style={{textAlign:"right",fontFamily:"'Source Code Pro',monospace",fontSize:"12px",fontWeight:700,color:l.res.score?"#333":"#ddd"}}>{l.res.score?`${l.res.score}%`:"—"}</div>
+                  <div style={{textAlign:"right",fontFamily:"'Source Code Pro',monospace",fontSize:"12px",fontWeight:700,color:l.res.score_t2?"#333":"#ddd"}}>{l.res.score_t2?`${l.res.score_t2}%`:"—"}</div>
+                  {l.statut
+                    ? <span style={{background:sc.bg||"#f0f0f0",color:sc.txt||"#666",fontFamily:"'Source Code Pro',monospace",fontSize:"8.5px",fontWeight:700,padding:"3px 9px",borderRadius:6,whiteSpace:"nowrap",textAlign:"center"}}>{l.statut}</span>
+                    : <span style={{fontSize:"9px",color:"#ddd",fontFamily:"'Source Code Pro',monospace",textAlign:"center"}}>—</span>
+                  }
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══ CANDIDATS & CR LIÉS (premium) ══════════════════════════════ */}
+      {isPremium && (listesVille.length > 0 || crLiesEnr.length > 0) && (
+        <div id="cp-candidats" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+            <div style={{width:3,height:16,background:"#4a148c",borderRadius:2}}/>
+            <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#4a148c",textTransform:"uppercase",fontWeight:700}}>Candidats & Conseillers régionaux</div>
+          </div>
+          {listesVille.length > 0 && (
+            <div style={{marginBottom:crLiesEnr.length>0?16:0}}>
+              <div style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#aaa",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8,fontWeight:600}}>Têtes de liste</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {listesVille.map((l,i)=>{
+                  const res = listeResults[`${c.dept}|${c.nom}|${i}`]||{};
+                  const st  = res.statut_t2||res.statut||"";
+                  const sc  = SC_COL[st]||{};
+                  return (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:"#fafafa",borderRadius:7,border:"1px solid #ede8e2"}}>
+                      <span style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 7px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0}}>{l.nuance}</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:"12.5px",color:"#1a1a1a"}}>{l.tete}</div>
+                        {l.libelle&&<div style={{fontSize:"9px",color:"#bbb",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:1}}>{l.libelle}</div>}
+                      </div>
+                      {st&&<span style={{background:sc.bg||"#eee",color:sc.txt||"#666",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 9px",borderRadius:5,whiteSpace:"nowrap",flexShrink:0}}>{st}</span>}
+                      {res.score&&<span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"11px",color:"#666",fontWeight:700,flexShrink:0}}>{res.score}%</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {crLiesEnr.length > 0 && (
+            <div>
+              <div style={{fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#E8186D",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8,fontWeight:700}}>Conseillers régionaux liés</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {crLiesEnr.map((cr,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",background:"linear-gradient(135deg,#fff5f8,#fce4ec)",borderRadius:8,border:"1px solid #f8bbd0"}}>
+                    <span style={{background:GC[cr.groupe]||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0}}>{cr.groupe}</span>
+                    <span style={{fontWeight:700,fontSize:"12.5px",flex:1,color:"#1a1a1a"}}>{cr.nom}</span>
+                    {cr.sc&&<span style={{background:cr.sc.bg,color:cr.sc.c,fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 9px",borderRadius:5,whiteSpace:"nowrap",flexShrink:0}}>{cr.fs}</span>}
+                    {cr.full?.s1!=null&&<span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"11px",color:"#888",flexShrink:0}}>T1: {cr.full.s1}%</span>}
+                    {cr.full?.s2!=null&&<span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"11px",color:"#888",flexShrink:0}}>T2: {cr.full.s2}%</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ HISTORIQUE — compact, honnête ══════════════════════════════ */}
+      <div style={{background:"#f9f6f2",border:"1px solid #ede8e2",borderRadius:10,padding:"13px 17px",marginBottom:12,display:"flex",alignItems:"center",gap:12}}>
+        <div style={{fontSize:18,opacity:.35,flexShrink:0}}>📅</div>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"1.8px",color:"#b08040",textTransform:"uppercase",fontWeight:700,marginBottom:3}}>Historique 2020 / 2014</div>
+          <div style={{fontSize:"10.5px",color:"#b0a898",fontFamily:"'Source Code Pro',monospace"}}>Résultats des scrutins précédents — intégration Phase 2.</div>
+        </div>
+        <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"8.5px",fontWeight:700,color:"#c8b89a",border:"1px solid #e0d0b8",borderRadius:6,padding:"3px 9px",flexShrink:0}}>Phase 2</div>
+      </div>
+
+      {/* ── Retour ──────────────────────────────────────────────────── */}
+      <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginTop:4}}>
+        <button onClick={onBack}
+          style={{background:"#1a1a1a",border:"none",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,letterSpacing:"1.5px",padding:"10px 24px",borderRadius:8,cursor:"pointer",textTransform:"uppercase",transition:"background .15s"}}
+          onMouseEnter={e=>e.currentTarget.style.background="#E8186D"}
+          onMouseLeave={e=>e.currentTarget.style.background="#1a1a1a"}
+        >← Retour à la carte</button>
+        <div style={{fontSize:"9px",color:"#c0b8b0",fontFamily:"'Source Code Pro',monospace"}}>
+          {c.nom} · INSEE {c.insee} · Municipales 2026 · NA
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+
 export default function App() {
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState("cartes");
@@ -1093,6 +1635,8 @@ export default function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // ── Couverture communale totale NA (hook v7) ─────────────────────────────
+  const { allCommunes, loadError: communesLoadError } = useCommunesNA(COMMUNES);
   const [crList, setCrList] = useState(CR_DATA);
   const [selDept, setSelDept] = useState(null);
   const [openDepts, setOpenDepts] = useState({});
@@ -1503,7 +2047,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                   <span style={{fontSize:18,lineHeight:1}}>🔍</span>
                   <input
                     type="text"
-                    placeholder="Rechercher une commune de Nouvelle-Aquitaine... (ex: Bordeaux, 33063, Marmande)"
+                    placeholder={`Rechercher${allCommunes ? ` parmi ${allCommunes.length.toLocaleString("fr-FR")} communes` : ""} de Nouvelle-Aquitaine… (nom, INSEE, département)`}
                     value={searchQuery}
                     onChange={e => {
                       const q = e.target.value;
@@ -1514,10 +2058,12 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                         return;
                       }
                       const qn = q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-                      const matches = COMMUNES.filter(c => {
+                      // v7 : recherche sur toutes les communes NA (allCommunes = 4300+)
+                      const pool = allCommunes || COMMUNES;
+                      const matches = pool.filter(c => {
                         const nomN = c.nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
                         return nomN.includes(qn) || (c.insee && c.insee.includes(q)) || c.dept.includes(q);
-                      }).slice(0,8);
+                      }).slice(0,10);
                       setSearchResults(matches);
                       setSearchOpen(matches.length > 0);
                     }}
@@ -1561,9 +2107,12 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                             color:"#fff",background:"#E8186D",padding:"2px 7px",borderRadius:4,flexShrink:0
                           }}>{c.dept}</div>
                           <div style={{flex:1,minWidth:0}}>
-                            <div style={{fontWeight:700,fontSize:14}}>{c.nom}</div>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontWeight:700,fontSize:14}}>{c.nom}</span>
+                              {c._premium && <span style={{fontSize:"7.5px",fontFamily:"'Source Code Pro',monospace",fontWeight:700,background:"#E8186D",color:"#fff",padding:"1px 5px",borderRadius:6}}>ENRICHIE</span>}
+                            </div>
                             <div style={{fontSize:10,color:"#aaa",fontFamily:"'Source Code Pro',monospace"}}>
-                              INSEE {c.insee} · {deptInfo?.nom||c.dept} · {c.pop?.toLocaleString("fr-FR")} hab.
+                              INSEE {c.insee} · {deptInfo?.nom||c.dept}{c.pop>0?` · ${c.pop.toLocaleString("fr-FR")} hab.`:""}
                             </div>
                           </div>
                           <div style={{display:"flex",gap:5,flexShrink:0}}>
@@ -1590,7 +2139,13 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
 
                 {/* CARTE SVG DÉPARTEMENTALE (réutilisée, pattern AzukiGPT : coloration politique) */}
                 <div>
-                  <NaMap crList={crList} communes={COMMUNES} selDept={selDept} onSelect={code=>{setSelDept(selDept===code?null:code);}}/>
+                  <NaMap
+                    crList={crList}
+                    allCommunes={allCommunes||COMMUNES}
+                    selDept={selDept}
+                    onSelect={code=>{setSelDept(selDept===code?null:code);}}
+                    onCommuneClick={com=>{setCommunePage(com);}}
+                  />
 
                 </div>
 
@@ -1688,8 +2243,18 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                 </div>
               </div>
 
-              {/* Note données */}
-              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginTop:16}}>
+              {/* Note données + état couverture */}
+              {communesLoadError && (
+                <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginTop:10}}>
+                  ⚠️ Couverture étendue temporairement indisponible — affichage des {COMMUNES.length} communes enrichies uniquement
+                </div>
+              )}
+              {allCommunes && !communesLoadError && (
+                <div style={{fontSize:"10px",color:"#558b2f",background:"#f1f8e9",border:"1px solid #c5e1a5",borderRadius:6,padding:"5px 10px",marginTop:10}}>
+                  ✓ {allCommunes.length.toLocaleString("fr-FR")} communes NA chargées · {COMMUNES.length} enrichies
+                </div>
+              )}
+              <div style={{fontSize:"10px",color:"#b08040",background:"#fffbf2",border:"1px solid #f0d9a0",borderRadius:6,padding:"5px 10px",marginTop:8}}>
                 ⚠️ Données collectées manuellement — des erreurs peuvent subsister
               </div>
             </div>
@@ -1706,417 +2271,15 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                Phase 2 : Historique 2020/2014, programmes, comparateur
                ══════════════════════════════════════════════════════════ */}
 
-          {tab==="cartes" && communePage && (() => {
-            const c = communePage;
-            const deptInfo = DEPTS.find(d=>d.code===c.dept);
-
-            // ── Palettes ──────────────────────────────────────────────────
-            const ENJTAG = {"très fort":["#b71c1c","#ffcdd2"],"fort":["#e65100","#ffe0b2"],"moyen":["#1565c0","#bbdefb"],"faible":["#2e7d32","#c8e6c9"]};
-            const POLTAG = {
-              "PS":"#e91e63","DVG":"#ef5350","PCF":"#c62828","LFI":"#7b1fa2",
-              "Verts":"#2e7d32","Écolo":"#2e7d32","DVC":"#1976d2","Centre":"#ef6c00",
-              "LR":"#1565c0","DVD":"#0d47a1","SE":"#546e7a","RN":"#212121",
-              "NC":"#78909c","Rég.":"#00796b","UDI":"#0288d1","RE":"#ef6c00",
-              "DIV":"#607d8b","DV":"#607d8b","UG":"#e53935","EXG":"#880e4f",
-              "EXD":"#0a0a0a","UXD":"#263238","UD":"#1565c0","PCF":"#c62828",
-            };
-            const polCol = POLTAG[c.couleur_pol] || "#607d8b";
-
-            const BLOC_LABEL = {
-              "PS":"Gauche","DVG":"Gauche","PCF":"Gauche","LFI":"Gauche radical",
-              "Verts":"Écologie","Écolo":"Écologie","DVC":"Centre","Centre":"Centre",
-              "UDI":"Centre","RE":"Centre","LR":"Droite","DVD":"Droite",
-              "RN":"Extrême droite","NC":"Sans étiquette","SE":"Sans étiquette",
-              "Rég.":"Régionaliste","UG":"Union gauche","DIV":"Divers",
-            };
-
-            const comKey     = `${c.dept}|${c.nom}`;
-            const listesVille= (typeof LISTES_DATA !== "undefined" ? LISTES_DATA[comKey] : null) || [];
-            const crLiesEnr  = (c.cr_lies||[]).map(cr => {
-              const full = crList.find(x => x.nom===cr.nom || x.nom.includes(cr.nom.split(" ").slice(-1)[0]));
-              const fs   = full ? getFinalStatut(full) : null;
-              return {...cr, full, fs, sc: fs ? (SC[fs]||SC["Candidat"]) : null};
-            });
-
-            // Résultats saisies
-            const listesAvecRes = listesVille.map((l,i) => {
-              const key = `${c.dept}|${c.nom}|${i}`;
-              const r   = listeResults[key]||{};
-              return { ...l, idx:i, res:r, statut: r.statut_t2||r.statut||"" };
-            });
-            const nbSaisies = listesAvecRes.filter(l=>l.statut||l.res.score).length;
-
-            // Vainqueur si dispo
-            const vainqueur = listesAvecRes.find(l=>
-              l.statut==="Victoire 1er Tour"||l.statut==="Victoire 2nd Tour"||
-              l.statut==="Élu 1er tour"||l.statut==="Élu 2nd tour"
-            );
-
-            const SC_COL = {
-              "Victoire 1er Tour":  {bg:"#1b5e20",txt:"#fff"},
-              "Victoire 2nd Tour":  {bg:"#2e7d32",txt:"#fff"},
-              "Élu 1er tour":       {bg:"#1b5e20",txt:"#fff"},
-              "Élu 2nd tour":       {bg:"#2e7d32",txt:"#fff"},
-              "Qualifié·e pour le 2nd Tour":{bg:"#e65100",txt:"#fff"},
-              "Ballottage":         {bg:"#e65100",txt:"#fff"},
-              "Défaite 1er Tour":   {bg:"#b71c1c",txt:"#fff"},
-              "Défaite 2nd Tour":   {bg:"#c62828",txt:"#fff"},
-              "Défaite":            {bg:"#b71c1c",txt:"#fff"},
-              "Désistement":        {bg:"#4e342e",txt:"#fff"},
-              "Candidat":           {bg:"#E8186D",txt:"#fff"},
-            };
-
-            return (
-              <div className="tc">
-
-                {/* ── Fil d'Ariane ─────────────────────────────────────── */}
-                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,
-                  fontSize:"11px",color:"#aaa",fontFamily:"'Source Code Pro',monospace",flexWrap:"wrap"}}>
-                  <button onClick={()=>setCommunePage(null)} style={{
-                    background:"none",border:"none",cursor:"pointer",color:"#E8186D",
-                    fontFamily:"'Source Code Pro',monospace",fontSize:"11px",padding:0,fontWeight:700,
-                  }}>← Retour à la carte</button>
-                  <span style={{color:"#ddd"}}>/</span>
-                  <span>{deptInfo?.nom||c.dept}</span>
-                  <span style={{color:"#ddd"}}>/</span>
-                  <span style={{color:"#333",fontWeight:700}}>{c.nom}</span>
-                  {c.enjeu && (
-                    <>
-                      <span style={{color:"#ddd"}}>/</span>
-                      <span style={{
-                        background:(ENJTAG[c.enjeu]||["#888","#eee"])[0],color:"#fff",
-                        fontSize:"8px",fontWeight:700,padding:"1px 7px",borderRadius:8
-                      }}>{c.enjeu}</span>
-                    </>
-                  )}
-                </div>
-
-                {/* ══ HERO — BLOC 1 ══════════════════════════════════════ */}
-                <div style={{
-                  background:"linear-gradient(135deg,#1a0a10 0%,#2d1020 50%,"+polCol+"33 100%)",
-                  borderRadius:14,padding:"28px 32px",marginBottom:16,
-                  border:`2px solid ${polCol}`,position:"relative",overflow:"hidden",
-                }}>
-                  {/* Fond décoratif */}
-                  <div style={{
-                    position:"absolute",top:-30,right:-30,width:160,height:160,
-                    borderRadius:"50%",background:polCol,opacity:.07,pointerEvents:"none",
-                  }}/>
-
-                  <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:16,position:"relative"}}>
-                    <div style={{flex:1,minWidth:220}}>
-                      {/* Département pill */}
-                      <div style={{
-                        fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,
-                        color:"rgba(255,255,255,.5)",letterSpacing:"2.5px",textTransform:"uppercase",
-                        marginBottom:8,
-                      }}>{deptInfo?.nom} · {c.dept}</div>
-
-                      {/* Nom commune */}
-                      <div style={{
-                        fontFamily:"'Libre Baskerville',serif",fontSize:32,fontWeight:700,
-                        color:"#fff",lineHeight:1.1,marginBottom:8,letterSpacing:"-.5px",
-                      }}>{c.nom}</div>
-
-                      {/* Sous-ligne */}
-                      <div style={{
-                        fontSize:"12px",color:"rgba(255,255,255,.55)",
-                        fontFamily:"'Source Code Pro',monospace",marginBottom:16,
-                      }}>INSEE {c.insee} · {c.pop?.toLocaleString("fr-FR")} hab.</div>
-
-                      {/* Badges politiques */}
-                      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-                        <span style={{
-                          background:polCol,color:"#fff",fontWeight:700,
-                          fontFamily:"'Source Code Pro',monospace",fontSize:"11px",
-                          padding:"5px 14px",borderRadius:20,letterSpacing:".3px",
-                        }}>{c.couleur_pol||"—"}</span>
-
-                        {BLOC_LABEL[c.couleur_pol] && (
-                          <span style={{
-                            background:"rgba(255,255,255,.12)",color:"rgba(255,255,255,.75)",
-                            fontFamily:"'Source Code Pro',monospace",fontSize:"10px",
-                            padding:"5px 12px",borderRadius:20,border:"1px solid rgba(255,255,255,.15)",
-                          }}>{BLOC_LABEL[c.couleur_pol]}</span>
-                        )}
-
-                        {c.enjeu && (() => {
-                          const [bg,fg] = ENJTAG[c.enjeu]||["#888","#fff"];
-                          return (
-                            <span style={{
-                              background:bg,color:fg,fontWeight:700,
-                              fontFamily:"'Source Code Pro',monospace",fontSize:"10px",
-                              padding:"5px 12px",borderRadius:20,letterSpacing:".3px",
-                            }}>Enjeu {c.enjeu}</span>
-                          );
-                        })()}
-
-                        {vainqueur && (() => {
-                          const sc = SC_COL[vainqueur.statut]||{bg:"#388e3c",txt:"#fff"};
-                          return (
-                            <span style={{
-                              background:sc.bg,color:sc.txt,fontWeight:700,
-                              fontFamily:"'Source Code Pro',monospace",fontSize:"10px",
-                              padding:"5px 12px",borderRadius:20,
-                            }}>✓ {vainqueur.tete}</span>
-                          );
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* Métadonnées droite */}
-                    <div style={{display:"flex",flexDirection:"column",gap:8,minWidth:170}}>
-                      {[
-                        {label:"Maire sortant",val:c.maire,icon:"🏛"},
-                        {label:"Listes en présence",val:listesVille.length>0?`${listesVille.length} liste${listesVille.length>1?"s":""}`:null,icon:"📋"},
-                        {label:"CR liés",val:crLiesEnr.length>0?`${crLiesEnr.length} CR suivi${crLiesEnr.length>1?"s":""}`:null,icon:"👤"},
-                        {label:"Résultats saisis",val:nbSaisies>0?`${nbSaisies}/${listesVille.length}`:null,icon:"📊"},
-                      ].filter(m=>m.val).map(m=>(
-                        <div key={m.label} style={{
-                          background:"rgba(255,255,255,.07)",borderRadius:8,padding:"8px 12px",
-                          border:"1px solid rgba(255,255,255,.10)",
-                        }}>
-                          <div style={{fontSize:"8px",fontFamily:"'Source Code Pro',monospace",color:"rgba(255,255,255,.4)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:2}}>
-                            {m.icon} {m.label}
-                          </div>
-                          <div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.88)"}}>{m.val}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Navigation interne (sommaire compact) ─────────────── */}
-                <div style={{
-                  display:"flex",gap:4,flexWrap:"wrap",marginBottom:14,
-                  padding:"8px 0",borderBottom:"2px solid #ede8e0",
-                  position:"sticky",top:0,background:"#f7f4f0",zIndex:10,
-                }}>
-                  {[
-                    {id:"cp-analyse",  label:"Analyse"},
-                    {id:"cp-resultats",label:"Résultats 2026"},
-                    {id:"cp-candidats",label:"Candidats & CR"},
-                  ].map(s=>(
-                    <a key={s.id} href={`#${s.id}`} onClick={e=>{
-                      e.preventDefault();
-                      document.getElementById(s.id)?.scrollIntoView({behavior:"smooth",block:"start"});
-                    }} style={{
-                      padding:"5px 13px",borderRadius:6,fontSize:"10px",
-                      fontFamily:"'Source Code Pro',monospace",fontWeight:700,
-                      background:"#fff",border:"1px solid #e0d8d0",color:"#888",
-                      cursor:"pointer",textDecoration:"none",letterSpacing:".3px",transition:"all .12s",
-                    }}
-                    onMouseEnter={e=>{e.currentTarget.style.background="#1a1a1a";e.currentTarget.style.color="#fff";e.currentTarget.style.borderColor="#1a1a1a";}}
-                    onMouseLeave={e=>{e.currentTarget.style.background="#fff";e.currentTarget.style.color="#888";e.currentTarget.style.borderColor="#e0d8d0";}}
-                    >{s.label}</a>
-                  ))}
-                </div>
-
-                {/* ══ BLOC 2 : ANALYSE ════════════════════════════════════ */}
-                <div id="cp-analyse" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                    <div style={{width:3,height:16,background:"#E8186D",borderRadius:2}}/>
-                    <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#E8186D",textTransform:"uppercase",fontWeight:700}}>
-                      Analyse électorale
-                    </div>
-                  </div>
-                  {c.analyse
-                    ? <div style={{fontSize:"13px",lineHeight:1.75,color:"#333",fontFamily:"'Source Sans 3',sans-serif"}}>{c.analyse}</div>
-                    : <div style={{fontSize:"12px",color:"#c0b8b0",fontStyle:"italic",fontFamily:"'Source Code Pro',monospace"}}>Analyse non encore renseignée.</div>
-                  }
-                </div>
-
-                {/* ══ BLOC 3 : RÉSULTATS 2026 ═════════════════════════════ */}
-                <div id="cp-resultats" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <div style={{width:3,height:16,background:"#1565c0",borderRadius:2}}/>
-                      <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#1565c0",textTransform:"uppercase",fontWeight:700}}>
-                        Résultats — Municipales 2026
-                      </div>
-                    </div>
-                    <span style={{
-                      fontSize:"9px",fontFamily:"'Source Code Pro',monospace",fontWeight:700,
-                      background: nbSaisies>0?"#c8e6c9":"#f3ede4",
-                      color:      nbSaisies>0?"#1b5e20":"#b08040",
-                      padding:"3px 11px",borderRadius:10,
-                    }}>
-                      {nbSaisies>0?`${nbSaisies} liste${nbSaisies>1?"s":""} saisie${nbSaisies>1?"s":""}`:listesVille.length>0?"En attente":"Données à venir"}
-                    </span>
-                  </div>
-
-                  {listesVille.length > 0 ? (
-                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                      {/* Header colonnes */}
-                      <div style={{display:"grid",gridTemplateColumns:"52px 1fr 56px 56px 110px",gap:6,alignItems:"center",padding:"0 4px",
-                        fontFamily:"'Source Code Pro',monospace",fontSize:"8px",color:"#c0b8b0",letterSpacing:"1px",textTransform:"uppercase"}}>
-                        <span>Nuance</span><span>Tête de liste</span><span style={{textAlign:"right"}}>T1 %</span><span style={{textAlign:"right"}}>T2 %</span><span>Résultat</span>
-                      </div>
-                      {listesAvecRes.map((l,i)=>{
-                        const sc  = SC_COL[l.statut]||{};
-                        const isWin = l.statut?.startsWith("Victoire")||l.statut?.startsWith("Élu");
-                        return (
-                          <div key={i} style={{
-                            display:"grid",gridTemplateColumns:"52px 1fr 56px 56px 110px",
-                            gap:6,alignItems:"center",
-                            padding:"9px 12px",
-                            background: isWin ? "#f0faf2" : "#fafaf9",
-                            borderRadius:8,
-                            border: isWin ? "1px solid #a5d6a7" : "1px solid #ede8e2",
-                          }}>
-                            <span style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 6px",borderRadius:4,textAlign:"center",whiteSpace:"nowrap"}}>{l.nuance}</span>
-                            <div>
-                              <div style={{fontWeight:700,fontSize:"12px",color:"#1a1a1a"}}>{l.tete}</div>
-                              {l.libelle&&<div style={{fontSize:"9px",color:"#aaa",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle}</div>}
-                            </div>
-                            <div style={{textAlign:"right",fontFamily:"'Source Code Pro',monospace",fontSize:"12px",fontWeight:700,color:l.res.score?"#333":"#ddd"}}>{l.res.score?`${l.res.score}%`:"—"}</div>
-                            <div style={{textAlign:"right",fontFamily:"'Source Code Pro',monospace",fontSize:"12px",fontWeight:700,color:l.res.score_t2?"#333":"#ddd"}}>{l.res.score_t2?`${l.res.score_t2}%`:"—"}</div>
-                            {l.statut
-                              ? <span style={{
-                                  background:sc.bg||"#f0f0f0",color:sc.txt||"#666",
-                                  fontFamily:"'Source Code Pro',monospace",fontSize:"8.5px",fontWeight:700,
-                                  padding:"3px 9px",borderRadius:6,whiteSpace:"nowrap",textAlign:"center",
-                                }}>{l.statut}</span>
-                              : <span style={{fontSize:"9px",color:"#ddd",fontFamily:"'Source Code Pro',monospace",textAlign:"center"}}>—</span>
-                            }
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div style={{
-                      padding:"20px",background:"#f9f6f2",borderRadius:8,
-                      textAlign:"center",fontSize:"12px",color:"#bbb",
-                      fontFamily:"'Source Code Pro',monospace",lineHeight:1.7,
-                    }}>
-                      Listes non encore renseignées pour cette commune.<br/>
-                      <span style={{fontSize:"10px"}}>Saisie disponible dans l'onglet <strong>Communes clés</strong>.</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* ══ BLOC 4 : CANDIDATS & CR LIÉS ════════════════════════ */}
-                <div id="cp-candidats" style={{scrollMarginTop:52,background:"#fff",border:"1px solid #e8e0d8",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-                    <div style={{width:3,height:16,background:"#4a148c",borderRadius:2}}/>
-                    <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#4a148c",textTransform:"uppercase",fontWeight:700}}>
-                      Candidats & Conseillers régionaux
-                    </div>
-                  </div>
-
-                  {/* ── Têtes de liste (section éditoriale) ── */}
-                  {listesVille.length > 0 && (
-                    <div style={{marginBottom:16}}>
-                      <div style={{
-                        fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#aaa",
-                        letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8,fontWeight:600,
-                      }}>Têtes de liste</div>
-                      <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                        {listesVille.map((l,i)=>{
-                          const res = listeResults[`${c.dept}|${c.nom}|${i}`]||{};
-                          const st  = res.statut_t2||res.statut||"";
-                          const sc  = SC_COL[st]||{};
-                          return (
-                            <div key={i} style={{
-                              display:"flex",alignItems:"center",gap:10,
-                              padding:"8px 12px",background:"#fafafa",
-                              borderRadius:7,border:"1px solid #ede8e2",
-                            }}>
-                              <span style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 7px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0}}>{l.nuance}</span>
-                              <div style={{flex:1,minWidth:0}}>
-                                <div style={{fontWeight:700,fontSize:"12.5px",color:"#1a1a1a"}}>{l.tete}</div>
-                                {l.libelle&&<div style={{fontSize:"9px",color:"#bbb",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:1}}>{l.libelle}</div>}
-                              </div>
-                              {st && <span style={{background:sc.bg||"#eee",color:sc.txt||"#666",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 9px",borderRadius:5,whiteSpace:"nowrap",flexShrink:0}}>{st}</span>}
-                              {res.score&&<span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"11px",color:"#666",fontWeight:700,flexShrink:0}}>{res.score}%</span>}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── CR liés (section distincte, fond rosé) ── */}
-                  {crLiesEnr.length > 0 && (
-                    <div>
-                      <div style={{
-                        fontSize:"9px",fontFamily:"'Source Code Pro',monospace",color:"#E8186D",
-                        letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:8,fontWeight:700,
-                      }}>Conseillers régionaux suivis</div>
-                      <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                        {crLiesEnr.map((cr,i)=>(
-                          <div key={i} style={{
-                            display:"flex",alignItems:"center",gap:10,
-                            padding:"9px 14px",
-                            background:"linear-gradient(135deg,#fff5f8,#fce4ec)",
-                            borderRadius:8,border:"1px solid #f8bbd0",
-                          }}>
-                            <span style={{
-                              background:GC[cr.groupe]||"#888",color:"#fff",
-                              fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,
-                              padding:"2px 8px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0,
-                            }}>{cr.groupe}</span>
-                            <span style={{fontWeight:700,fontSize:"12.5px",flex:1,color:"#1a1a1a"}}>{cr.nom}</span>
-                            {cr.sc && <span style={{
-                              background:cr.sc.bg,color:cr.sc.c,
-                              fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,
-                              padding:"2px 9px",borderRadius:5,whiteSpace:"nowrap",flexShrink:0,
-                            }}>{cr.fs}</span>}
-                            {cr.full?.s1!=null && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"11px",color:"#888",flexShrink:0}}>T1: {cr.full.s1}%</span>}
-                            {cr.full?.s2!=null && <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"11px",color:"#888",flexShrink:0}}>T2: {cr.full.s2}%</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {listesVille.length===0 && crLiesEnr.length===0 && (
-                    <div style={{fontSize:"12px",color:"#c0b8b0",fontStyle:"italic",fontFamily:"'Source Code Pro',monospace",textAlign:"center",padding:"12px 0"}}>Aucune donnée candidat renseignée pour cette commune.</div>
-                  )}
-                </div>
-
-                {/* ══ BLOC 5 : HISTORIQUE — compact, honnête ══════════════ */}
-                <div style={{
-                  background:"#f9f6f2",border:"1px solid #ede8e2",borderRadius:10,
-                  padding:"14px 18px",marginBottom:12,
-                  display:"flex",alignItems:"center",gap:14,
-                }}>
-                  <div style={{fontSize:20,opacity:.4,flexShrink:0}}>📅</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"2px",color:"#b08040",textTransform:"uppercase",fontWeight:700,marginBottom:4}}>
-                      Historique 2020 / 2014
-                    </div>
-                    <div style={{fontSize:"11px",color:"#b0a898",fontFamily:"'Source Code Pro',monospace"}}>
-                      Résultats des scrutins précédents — intégration à venir.
-                    </div>
-                  </div>
-                  <div style={{
-                    fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,
-                    color:"#c8b89a",border:"1px solid #e0d0b8",borderRadius:6,
-                    padding:"4px 10px",flexShrink:0,whiteSpace:"nowrap",
-                  }}>Phase 2</div>
-                </div>
-
-                {/* ── Retour ────────────────────────────────────────────── */}
-                <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginTop:4}}>
-                  <button onClick={()=>setCommunePage(null)} style={{
-                    background:"#1a1a1a",border:"none",color:"#fff",
-                    fontFamily:"'Source Code Pro',monospace",fontSize:"10px",fontWeight:700,
-                    letterSpacing:"1.5px",padding:"10px 24px",borderRadius:8,cursor:"pointer",
-                    textTransform:"uppercase",transition:"background .15s",
-                  }}
-                  onMouseEnter={e=>e.currentTarget.style.background="#E8186D"}
-                  onMouseLeave={e=>e.currentTarget.style.background="#1a1a1a"}
-                  >← Retour à la carte</button>
-                  <div style={{fontSize:"9px",color:"#c0b8b0",fontFamily:"'Source Code Pro',monospace"}}>
-                    {c.nom} · INSEE {c.insee} · Municipales 2026 · Nouvelle-Aquitaine
-                  </div>
-                </div>
-
-              </div>
-            );
-          })()}
-
+          {tab==="cartes" && communePage && (
+            <CommunePageV7
+              c={communePage}
+              crList={crList}
+              listeResults={listeResults}
+              onBack={()=>setCommunePage(null)}
+            />
+          )}
+          
 
           {/* ══ CR ══ */}
 
