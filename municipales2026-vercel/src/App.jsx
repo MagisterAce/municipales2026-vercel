@@ -1030,6 +1030,217 @@ function BlocConseilMunicipal({ id, cm }) {
   );
 }
 
+// ─── HOOK : MAIRES ────────────────────────────────────────────────────────────
+// Lit maires_communes_na via code_commune_2026 = c.insee
+// maybeSingle() : retourne null sans erreur si la commune est absente de la table
+function useMaire(insee) {
+  const [maire,     setMaire]     = useState(null);
+  const [maireDone, setMaireDone] = useState(false);
+
+  useEffect(() => {
+    if (!insee) { setMaireDone(true); return; }
+    let alive = true;
+
+    supabase
+      .from("maires_communes_na")
+      .select([
+        "maire_sortant_nom",
+        "maire_sortant_prenom",
+        "maire_sortant_sexe",
+        "maire_sortant_date_naissance",
+        "maire_sortant_csp_libelle",
+        "maire_sortant_date_mandat",
+        "maire_2014_nom",
+        "maire_2014_prenom",
+        "maire_2014_profession_libelle",
+        "indicateur_continuite",
+        "potentiel_bloc_historique",
+        "type_raccordement",
+      ].join(","))
+      .eq("code_commune_2026", insee)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) { setMaireDone(true); return; }
+        setMaire(data);
+        setMaireDone(true);
+      });
+
+    return () => { alive = false; };
+  }, [insee]);
+
+  return { maire, maireDone };
+}
+
+// ─── COMPOSANT : BLOC MAIRES ──────────────────────────────────────────────────
+function BlocMaires({ id, maire }) {
+  if (!maire?.maire_sortant_nom) return null;
+
+  const age = (() => {
+    if (!maire.maire_sortant_date_naissance) return null;
+    const d = new Date(maire.maire_sortant_date_naissance);
+    if (isNaN(d)) return null;
+    const today = new Date();
+    let a = today.getFullYear() - d.getFullYear();
+    if (today.getMonth() < d.getMonth() ||
+        (today.getMonth() === d.getMonth() && today.getDate() < d.getDate())) a--;
+    return a > 0 && a < 120 ? a : null;
+  })();
+
+  const anneeMandatRaw = maire.maire_sortant_date_mandat
+    ? new Date(maire.maire_sortant_date_mandat).getFullYear()
+    : null;
+  const anneeMandatStr = anneeMandatRaw && !isNaN(anneeMandatRaw)
+    ? String(anneeMandatRaw)
+    : null;
+
+  const continuite = maire.indicateur_continuite;
+  const a2014 = !!(maire.potentiel_bloc_historique
+    && maire.maire_2014_nom
+    && maire.type_raccordement !== "a_expertiser");
+
+  return (
+    <div id={id} style={{
+      scrollMarginTop: 52,
+      background: "#fff",
+      border: "1px solid #e8e0d8",
+      borderRadius: 10,
+      padding: "18px 22px",
+      marginBottom: 12,
+    }}>
+
+      {/* ── Header ───────────────────────────────────────────────────── */}
+      <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:14}}>
+        <div style={{width:3, height:16, background:"#5c3d8f", borderRadius:2}}/>
+        <div style={{
+          fontFamily:"'Source Code Pro',monospace",
+          fontSize:"9px", letterSpacing:"2px",
+          color:"#5c3d8f", textTransform:"uppercase", fontWeight:700,
+        }}>
+          Maires
+        </div>
+      </div>
+
+      {/* ── Maire sortant 2026 ────────────────────────────────────────── */}
+      <div style={{
+        padding:"12px 16px",
+        background:"#faf8ff",
+        borderRadius:8,
+        border:"1px solid #e8e0f0",
+        marginBottom: a2014 ? 8 : 0,
+      }}>
+        <div style={{
+          fontFamily:"'Source Code Pro',monospace",
+          fontSize:"8px", letterSpacing:"1.5px",
+          color:"#9c7cc0", textTransform:"uppercase",
+          fontWeight:700, marginBottom:6,
+        }}>
+          🏛 Maire sortant · 2026
+        </div>
+        <div style={{fontWeight:700, fontSize:"15px", color:"#1a1a1a", marginBottom:4}}>
+          {maire.maire_sortant_prenom} {maire.maire_sortant_nom}
+        </div>
+        <div style={{display:"flex", flexWrap:"wrap", gap:6, alignItems:"center"}}>
+          {age && (
+            <span style={{
+              fontFamily:"'Source Code Pro',monospace",
+              fontSize:"9px", color:"#888",
+            }}>
+              {age} ans
+            </span>
+          )}
+          {maire.maire_sortant_csp_libelle && (
+            <span style={{
+              fontFamily:"'Source Code Pro',monospace",
+              fontSize:"9px", color:"#888",
+            }}>
+              · {maire.maire_sortant_csp_libelle}
+            </span>
+          )}
+          {anneeMandatStr && (
+            <span style={{
+              fontFamily:"'Source Code Pro',monospace",
+              fontSize:"9px", fontWeight:700,
+              background:"#ede8f8", color:"#5c3d8f",
+              padding:"2px 9px", borderRadius:8,
+            }}>
+              Maire depuis {anneeMandatStr}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Maire 2014 (conditionnel) ────────────────────────────────── */}
+      {a2014 && (
+        <div style={{
+          padding:"10px 16px",
+          background:"#f9f6f2",
+          borderRadius:8,
+          border:"1px solid #ede8e2",
+          marginBottom: continuite !== null ? 8 : 0,
+        }}>
+          <div style={{
+            fontFamily:"'Source Code Pro',monospace",
+            fontSize:"8px", letterSpacing:"1.5px",
+            color:"#b08040", textTransform:"uppercase",
+            fontWeight:700, marginBottom:5,
+          }}>
+            📅 Maire en 2014
+          </div>
+          <div style={{fontWeight:700, fontSize:"13px", color:"#333", marginBottom:3}}>
+            {maire.maire_2014_prenom} {maire.maire_2014_nom}
+          </div>
+          {maire.maire_2014_profession_libelle && (
+            <div style={{
+              fontFamily:"'Source Code Pro',monospace",
+              fontSize:"9px", color:"#aaa",
+            }}>
+              {maire.maire_2014_profession_libelle}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Indicateur continuité (conditionnel) ────────────────────── */}
+      {continuite === true && a2014 && (
+        <div style={{
+          display:"flex", alignItems:"center", gap:8,
+          padding:"7px 14px",
+          background:"#f0faf4",
+          borderRadius:8,
+          border:"1px solid #a5d6b0",
+        }}>
+          <span style={{fontSize:14}}>✓</span>
+          <span style={{
+            fontFamily:"'Source Code Pro',monospace",
+            fontSize:"9px", fontWeight:700, color:"#2e7d32",
+          }}>
+            En poste depuis au moins 2014
+          </span>
+        </div>
+      )}
+      {continuite === false && a2014 && (
+        <div style={{
+          display:"flex", alignItems:"center", gap:8,
+          padding:"7px 14px",
+          background:"#f9f6f2",
+          borderRadius:8,
+          border:"1px solid #e0d8d0",
+        }}>
+          <span style={{fontSize:14}}>↔</span>
+          <span style={{
+            fontFamily:"'Source Code Pro',monospace",
+            fontSize:"9px", fontWeight:700, color:"#888",
+          }}>
+            Changement depuis 2014
+          </span>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
 function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
   const mapRef    = useRef(null);
   const Lref      = useRef(null);
@@ -1538,6 +1749,9 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
   // ── Conseil municipal (fetch au montage) ──────────────────────────────────
   const { cm, cmDone } = useConseilMunicipal(c.dept, c.nom);
 
+  // ── Maires (fetch au montage) ─────────────────────────────────────────────
+  const { maire, maireDone } = useMaire(c.insee);
+
   // ── Palettes ─────────────────────────────────────────────────────────────
   const POLTAG = {
     "PS":"#e91e63","DVG":"#ef5350","PCF":"#c62828","LFI":"#7b1fa2",
@@ -1601,7 +1815,8 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
     { id:"cp-resultats", label:"Résultats 2026",  show: isPremium && listesVille.length > 0 },
     { id:"cp-candidats", label:"Candidats & CR",  show: isPremium },
     { id:"cp-epci",      label:"Intercommunalité",show: epciDone && epci },
-    { id:"cp-cm",        label:"Conseil municipal",show: cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) },
+    { id:"cp-cm",     label:"Conseil municipal", show: cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) },
+    { id:"cp-maires", label:"Maires",            show: maireDone && !!maire?.maire_sortant_nom },
   ].filter(s => s.show);
 
   return (
@@ -1857,6 +2072,11 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
       {/* ══ CONSEIL MUNICIPAL ══════════════════════════════════════════ */}
       {cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) && (
         <BlocConseilMunicipal id="cp-cm" cm={cm} />
+      )}
+
+      {/* ══ MAIRES ════════════════════════════════════════════════════ */}
+      {maireDone && maire?.maire_sortant_nom && (
+        <BlocMaires id="cp-maires" maire={maire} />
       )}
 
       {/* ── Retour ──────────────────────────────────────────────────── */}
