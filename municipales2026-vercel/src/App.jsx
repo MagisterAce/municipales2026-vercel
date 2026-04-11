@@ -820,215 +820,391 @@ function useConseilMunicipal(dept, nom) {
   return { cm, cmDone, cmError };
 }
 
-// ─── COMPOSANT : BLOC CONSEIL MUNICIPAL ───────────────────────────────────────
-function BlocConseilMunicipal({ id, cm }) {
-  const total = cm.reduce((s, l) => s + (Number(l.sieges_cm) || 0), 0);
-  if (total === 0) return null;
+// ─── PALETTES NUANCES (partagée entre tous les blocs) ────────────────────────
+const NUANCE_COL = {
+  "PS":"#e91e63","SOC":"#e91e63","UG":"#e53935","DVG":"#ef5350",
+  "PCF":"#c62828","LFI":"#7b1fa2","VEC":"#2e7d32","ECOLO":"#2e7d32",
+  "DVC":"#1976d2","UC":"#1976d2","RE":"#ef6c00","UDI":"#0288d1",
+  "LR":"#1565c0","DVD":"#0d47a1","DSV":"#546e7a","RN":"#212121",
+  "UXD":"#263238","EXD":"#0a0a0a","REC":"#b71c1c","EXG":"#880e4f",
+  "DIV":"#607d8b","NC":"#78909c","UD":"#1565c0","DV":"#607d8b",
+};
+const nuanceCol = n => NUANCE_COL[(n||"").toUpperCase()] || "#90a4ae";
 
-  const avecSieges = cm.filter(l => (Number(l.sieges_cm) || 0) > 0);
-  const sansSieges = cm.filter(l => (Number(l.sieges_cm) || 0) === 0);
-  const totalCC    = cm.reduce((s, l) => s + (Number(l.sieges_cc) || 0), 0);
-  const isMajorite = avecSieges.length > 0 && avecSieges[0].sieges_cm > total / 2;
+// ─── COMPOSANT : BLOC ÉLECTION 2026 (fusion CM + Maires + CC) ────────────────
+// Remplace BlocConseilMunicipal + BlocMaires
+// Props : cm (listes_2026), maire (maires_communes_na), commune (epci_communes_na)
+function BlocElection2026({ id, cm, maire, commune }) {
 
-  const CM_COL = {
-    "PS":"#e91e63","SOC":"#e91e63","UG":"#e53935","DVG":"#ef5350",
-    "PCF":"#c62828","LFI":"#7b1fa2","VEC":"#2e7d32","ECOLO":"#2e7d32",
-    "DVC":"#1976d2","UC":"#1976d2","RE":"#ef6c00","UDI":"#0288d1",
-    "LR":"#1565c0","DVD":"#0d47a1","DSV":"#546e7a","RN":"#212121",
-    "UXD":"#263238","EXD":"#0a0a0a","REC":"#b71c1c","EXG":"#880e4f",
-    "DIV":"#607d8b","NC":"#78909c","UD":"#1565c0","DV":"#607d8b",
+  // ── Calculs sièges CM ──────────────────────────────────────────────────────
+  const totalCMVotes  = cm.reduce((s,l) => s + (Number(l.sieges_cm)||0), 0);
+  const totalCM       = (commune?.nbre_sap_com > 0 ? commune.nbre_sap_com : totalCMVotes);
+  const totalCCSource = commune?.nbre_sap_epci || 0;
+  const avecSieges    = cm.filter(l => (Number(l.sieges_cm)||0) > 0);
+  const sansSieges    = cm.filter(l => (Number(l.sieges_cm)||0) === 0);
+  const isMajorite    = avecSieges.length > 0 && avecSieges[0].sieges_cm > totalCM / 2;
+  const isListeUnique = avecSieges.length === 1;
+
+  // ── Règle métier CC ────────────────────────────────────────────────────────
+  // Cas 1 : sieges_cc par liste dispo → ventilation réelle
+  // Cas 2a : liste unique + nbre_sap_epci connu → totalité à la liste unique
+  // Cas 2b : plusieurs listes + pas de détail → total communal en note globale
+  const hasCCParListe = avecSieges.some(l => (Number(l.sieges_cc)||0) > 0);
+  const ccPourListe = l => {
+    const ccl = Number(l.sieges_cc)||0;
+    if (ccl > 0) return ccl;                               // cas 1
+    if (totalCCSource > 0 && isListeUnique) return totalCCSource; // cas 2a
+    return 0;                                              // cas 2b
   };
-  const colFor = n => CM_COL[(n || "").toUpperCase()] || "#90a4ae";
 
-  return (
-    <div id={id} style={{
+  // ── Données maire ──────────────────────────────────────────────────────────
+  const hasMaire = !!maire?.maire_sortant_nom;
+  const a2014    = !!(maire?.potentiel_bloc_historique
+    && maire?.maire_2014_nom
+    && maire?.type_raccordement !== "a_expertiser");
+  const continuite = maire?.indicateur_continuite;
+
+  const anneeMandatStr = (() => {
+    if (!maire?.maire_sortant_date_mandat) return null;
+    const y = new Date(maire.maire_sortant_date_mandat).getFullYear();
+    return isNaN(y) ? null : String(y);
+  })();
+
+  // Rien à afficher
+  if (totalCM === 0 && !hasMaire) return null;
+
+  const S = {
+    wrap: {
       scrollMarginTop: 52,
       background: "#fff",
-      border: "1px solid #e8e0d8",
-      borderRadius: 10,
-      padding: "18px 22px",
+      border: "0.5px solid #e4ddd5",
+      borderRadius: 12,
+      overflow: "hidden",
       marginBottom: 12,
-    }}>
+    },
+    // En-tête de section interne
+    sectionHead: (color) => ({
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "12px 20px 10px",
+      borderBottom: "0.5px solid #f0ebe4",
+      background: "#fafaf8",
+    }),
+    sectionDot: (color) => ({
+      width: 3, height: 14, background: color, borderRadius: 2, flexShrink: 0,
+    }),
+    sectionLabel: (color) => ({
+      fontFamily:"'Source Code Pro',monospace",
+      fontSize:"9px", letterSpacing:"2px",
+      color, textTransform:"uppercase", fontWeight:700,
+    }),
+    badge: (bg, col) => ({
+      fontFamily:"'Source Code Pro',monospace",
+      fontSize:"9px", fontWeight:700,
+      background: bg, color: col,
+      padding:"3px 10px", borderRadius:20,
+      whiteSpace:"nowrap",
+    }),
+  };
 
-      {/* ── Header ───────────────────────────────────────────────────── */}
-      <div style={{
-        display: "flex", alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: 14, flexWrap: "wrap", gap: 8,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 3, height: 16, background: "#00796b", borderRadius: 2 }} />
-          <div style={{
-            fontFamily: "'Source Code Pro',monospace",
-            fontSize: "9px", letterSpacing: "2px",
-            color: "#00796b", textTransform: "uppercase", fontWeight: 700,
-          }}>
-            Conseil Municipal
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{
-            fontFamily: "'Source Code Pro',monospace",
-            fontSize: "9px", fontWeight: 700,
-            background: "#e0f2f1", color: "#00796b",
-            padding: "3px 11px", borderRadius: 10,
-          }}>
-            {total} siège{total > 1 ? "s" : ""}
-          </span>
-          {totalCC > 0 && (
-            <span style={{
-              fontFamily: "'Source Code Pro',monospace",
-              fontSize: "9px", fontWeight: 700,
-              background: "#e3f2fd", color: "#1565c0",
-              padding: "3px 11px", borderRadius: 10,
-            }}>
-              {totalCC} siège{totalCC > 1 ? "s" : ""} CC
-            </span>
-          )}
-          {isMajorite && (
-            <span style={{
-              fontFamily: "'Source Code Pro',monospace",
-              fontSize: "9px", fontWeight: 700,
-              background: "#1b5e20", color: "#fff",
-              padding: "3px 11px", borderRadius: 10,
-            }}>
-              ✓ Majorité absolue
-            </span>
-          )}
-        </div>
-      </div>
+  return (
+    <div id={id} style={S.wrap}>
 
-      {/* ── Barre proportionnelle ─────────────────────────────────────── */}
-      <div style={{
-        display: "flex", height: 8, borderRadius: 6,
-        overflow: "hidden", marginBottom: 14, background: "#f0ebe4",
-      }}>
-        {avecSieges.map((l, i) => (
-          <div
-            key={i}
-            title={`${l.tete_liste || l.nuance} — ${l.sieges_cm} siège${l.sieges_cm > 1 ? "s" : ""}`}
-            style={{
-              width: `${(l.sieges_cm / total) * 100}%`,
-              background: colFor(l.nuance),
-              borderRight: i < avecSieges.length - 1 ? "1px solid rgba(255,255,255,.4)" : "none",
-              minWidth: 2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* ── Lignes par liste ──────────────────────────────────────────── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-        {avecSieges.map((l, i) => {
-          const pct   = Math.round((l.sieges_cm / total) * 100);
-          const isTop = i === 0;
-          const col   = colFor(l.nuance);
-          return (
-            <div key={i} style={{
-              display: "grid",
-              gridTemplateColumns: "44px 1fr 40px 36px",
-              gap: 8, alignItems: "center",
-              padding: "8px 12px",
-              background: isTop ? "#f0faf9" : "#fafaf9",
-              borderRadius: 8,
-              border: `1px solid ${isTop ? "#a7d8d4" : "#ede8e2"}`,
-            }}>
-              <span style={{
-                background: col, color: "#fff",
-                fontFamily: "'Source Code Pro',monospace",
-                fontSize: "8px", fontWeight: 700,
-                padding: "2px 5px", borderRadius: 4, textAlign: "center",
-              }}>
-                {l.nuance}
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div style={{
-                  fontWeight: 700, fontSize: "12px", color: "#1a1a1a",
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}>
-                  {l.tete_liste}
-                </div>
-                {l.libelle_liste && (
-                  <div style={{
-                    fontSize: "9px", color: "#aaa", marginTop: 1,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      {/* ══ SECTION 1 : COMPOSITION DU CONSEIL ═══════════════════════════════ */}
+      {totalCM > 0 && (
+        <>
+          {/* Header */}
+          <div style={{...S.sectionHead(), justifyContent:"space-between", flexWrap:"wrap", gap:6}}>
+            <div style={{display:"flex", alignItems:"center", gap:8}}>
+              <div style={S.sectionDot("#1b5e20")}/>
+              <div>
+                <span style={S.sectionLabel("#1b5e20")}>Composition du conseil</span>
+                {commune?.lib_epci && (
+                  <span style={{
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"9px", color:"#aaa",
+                    marginLeft:10,
                   }}>
-                    {l.libelle_liste}
-                  </div>
+                    {commune.lib_epci}
+                  </span>
                 )}
               </div>
-              <div style={{
-                textAlign: "right",
-                fontFamily: "'Source Code Pro',monospace",
-                fontSize: "14px", fontWeight: 700, color: "#1a1a1a",
-              }}>
-                {l.sieges_cm}
-              </div>
-              <div style={{
-                textAlign: "right",
-                fontFamily: "'Source Code Pro',monospace",
-                fontSize: "9px", color: "#aaa",
-              }}>
-                {pct}%
-              </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* ── Listes sans siège ─────────────────────────────────────────── */}
-      {sansSieges.length > 0 && (
-        <div style={{
-          marginTop: 8, fontSize: "9px", color: "#c0b8b0",
-          fontFamily: "'Source Code Pro',monospace",
-        }}>
-          + {sansSieges.length} liste{sansSieges.length > 1 ? "s" : ""} sans siège
-          {" — "}
-          {sansSieges.map(l => l.tete_liste).filter(Boolean).join(", ")}
-        </div>
-      )}
-
-      {/* ── Sièges CC ─────────────────────────────────────────────────── */}
-      {totalCC > 0 && (
-        <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #f0ebe4" }}>
-          <div style={{
-            fontSize: "9px",
-            fontFamily: "'Source Code Pro',monospace",
-            color: "#1976d2", letterSpacing: "1.5px",
-            textTransform: "uppercase", fontWeight: 700, marginBottom: 7,
-          }}>
-            Sièges intercommunaux (CC)
+            <div style={{display:"flex", gap:6, flexWrap:"wrap"}}>
+              <span style={S.badge("#e8f5e9","#1b5e20")}>{totalCM} conseillers</span>
+              {totalCCSource > 0 && (
+                <span style={S.badge("#e3f2fd","#1565c0")}>{totalCCSource} sièges intercommunaux</span>
+              )}
+              {isMajorite && (
+                <span style={S.badge("#1b5e20","#fff")}>Majorité absolue</span>
+              )}
+              {isListeUnique && !isMajorite && (
+                <span style={S.badge("#f3ede4","#7a6040")}>Liste unique</span>
+              )}
+            </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {avecSieges
-              .filter(l => (Number(l.sieges_cc) || 0) > 0)
-              .map((l, i) => (
+
+          {/* Barre proportionnelle */}
+          <div style={{padding:"14px 20px 0"}}>
+            <div style={{
+              display:"flex", height:12, borderRadius:8,
+              overflow:"hidden", background:"#f0ebe4",
+            }}>
+              {avecSieges.map((l,i) => (
+                <div key={i}
+                  title={`${l.tete_liste||l.nuance} — ${l.sieges_cm} siège${l.sieges_cm>1?"s":""}`}
+                  style={{
+                    width:`${(l.sieges_cm/totalCM)*100}%`,
+                    background: nuanceCol(l.nuance),
+                    borderRight: i<avecSieges.length-1 ? "2px solid #fff" : "none",
+                    minWidth: 3,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Lignes listes */}
+          <div style={{padding:"8px 20px 0"}}>
+            {/* Header colonnes */}
+            <div style={{
+              display:"grid",
+              gridTemplateColumns: hasCCParListe || (isListeUnique && totalCCSource>0)
+                ? "40px 1fr 52px 48px 34px"
+                : "40px 1fr 48px 34px",
+              gap:8, padding:"4px 0 6px",
+              fontFamily:"'Source Code Pro',monospace",
+              fontSize:"8px", color:"#c0b8b0", letterSpacing:"1px", textTransform:"uppercase",
+            }}>
+              <span></span>
+              <span>Tête de liste</span>
+              {(hasCCParListe || (isListeUnique && totalCCSource>0)) && (
+                <span style={{textAlign:"right"}}>Interco</span>
+              )}
+              <span style={{textAlign:"right"}}>CM</span>
+              <span style={{textAlign:"right"}}>%</span>
+            </div>
+
+            {avecSieges.map((l,i) => {
+              const pct   = Math.round((l.sieges_cm/totalCM)*100);
+              const isTop = i===0;
+              const col   = nuanceCol(l.nuance);
+              const ccVal = ccPourListe(l);
+              const showCC = hasCCParListe || (isListeUnique && totalCCSource>0);
+              return (
                 <div key={i} style={{
-                  display: "flex", alignItems: "center",
-                  gap: 10, fontSize: "11px", color: "#555",
+                  display:"grid",
+                  gridTemplateColumns: showCC
+                    ? "40px 1fr 52px 48px 34px"
+                    : "40px 1fr 48px 34px",
+                  gap:8, alignItems:"center",
+                  padding:"9px 12px",
+                  margin:"0 -12px",
+                  borderRadius:8,
+                  background: isTop ? "#f0faf4" : "transparent",
+                  borderBottom: i<avecSieges.length-1 ? "0.5px solid #f0ebe4" : "none",
                 }}>
                   <span style={{
-                    fontFamily: "'Source Code Pro',monospace",
-                    fontWeight: 700, color: "#1565c0",
-                    minWidth: 18, textAlign: "right",
-                  }}>
-                    {l.sieges_cc}
-                  </span>
-                  <span style={{ fontWeight: 600 }}>{l.tete_liste}</span>
+                    background:col, color:"#fff",
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"8px", fontWeight:700,
+                    padding:"2px 5px", borderRadius:4, textAlign:"center",
+                  }}>{l.nuance}</span>
+                  <div style={{minWidth:0}}>
+                    <div style={{
+                      fontWeight:700, fontSize:"12px", color:"#1a1a1a",
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                    }}>{l.tete_liste}</div>
+                    {l.libelle_liste && (
+                      <div style={{
+                        fontFamily:"'Source Code Pro',monospace",
+                        fontSize:"9px", color:"#aaa", marginTop:1,
+                        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                      }}>{l.libelle_liste}</div>
+                    )}
+                  </div>
+                  {showCC && (
+                    <div style={{
+                      textAlign:"right",
+                      fontFamily:"'Source Code Pro',monospace",
+                      fontSize:"11px", fontWeight:700,
+                      color: ccVal > 0 ? "#185fa5" : "#d4cfc8",
+                    }}>
+                      {ccVal > 0 ? ccVal : "—"}
+                    </div>
+                  )}
+                  <div style={{
+                    textAlign:"right",
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"14px", fontWeight:700, color:"#1a1a1a",
+                  }}>{l.sieges_cm}</div>
+                  <div style={{
+                    textAlign:"right",
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"9px", color:"#aaa",
+                  }}>{pct}%</div>
+                </div>
+              );
+            })}
+
+            {/* Sans siège */}
+            {sansSieges.length > 0 && (
+              <div style={{
+                padding:"8px 0 4px",
+                borderTop:"0.5px solid #f0ebe4",
+                fontFamily:"'Source Code Pro',monospace",
+                fontSize:"9px", color:"#c0b8b0",
+              }}>
+                + {sansSieges.length} liste{sansSieges.length>1?"s":""} sans siège
+                {" — "}
+                {sansSieges.map(l=>l.tete_liste).filter(Boolean).join(", ")}
+              </div>
+            )}
+          </div>
+
+          {/* Bande intercommunale */}
+          {totalCCSource > 0 && (
+            <div style={{
+              margin:"14px 0 0",
+              padding:"12px 20px",
+              background:"#e3f2fd",
+              borderTop:"0.5px solid #b3d8f8",
+            }}>
+              <div style={{
+                fontFamily:"'Source Code Pro',monospace",
+                fontSize:"9px", fontWeight:700,
+                color:"#1565c0", letterSpacing:"1.5px",
+                textTransform:"uppercase", marginBottom:8,
+              }}>
+                {commune?.lib_epci
+                  ? `Au conseil de ${commune.lib_epci}`
+                  : "Représentation intercommunale"}
+              </div>
+
+              {/* Cas 1 ou 2a : ventilation par liste */}
+              {(hasCCParListe || isListeUnique) ? (
+                <div style={{display:"flex", flexDirection:"column", gap:5}}>
+                  {avecSieges.map((l,i) => {
+                    const ccVal = ccPourListe(l);
+                    if (!ccVal) return null;
+                    const pctCC = Math.round((ccVal/totalCCSource)*100);
+                    return (
+                      <div key={i} style={{display:"flex", alignItems:"center", gap:10}}>
+                        <div style={{
+                          fontFamily:"'Source Code Pro',monospace",
+                          fontSize:"16px", fontWeight:700,
+                          color:"#1565c0", minWidth:28, textAlign:"right",
+                        }}>{ccVal}</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:"12px", fontWeight:700, color:"#1a1a1a"}}>
+                            {l.tete_liste}
+                          </div>
+                          <div style={{
+                            fontFamily:"'Source Code Pro',monospace",
+                            fontSize:"9px", color:"#1976d2",
+                          }}>
+                            {pctCC}% des sièges intercommunaux{isListeUnique ? " · Totalité" : ""}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Cas 2b : total communal sans répartition */
+                <div style={{display:"flex", alignItems:"baseline", gap:8}}>
                   <span style={{
-                    fontSize: "9px", color: "#aaa",
-                    fontFamily: "'Source Code Pro',monospace",
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"20px", fontWeight:700, color:"#1565c0",
+                  }}>{totalCCSource}</span>
+                  <span style={{
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"10px", color:"#1976d2",
                   }}>
-                    {l.nuance}
+                    sièges communaux — répartition par liste non disponible
                   </span>
                 </div>
-              ))}
-          </div>
-        </div>
+              )}
+            </div>
+          )}
+        </>
       )}
+
+      {/* ══ SECTION 2 : QUI GOUVERNE ════════════════════════════════════════ */}
+      {hasMaire && (
+        <>
+          <div style={{
+            ...S.sectionHead(),
+            borderTop: totalCM > 0 ? "0.5px solid #e8e0d8" : "none",
+            justifyContent:"space-between",
+          }}>
+            <div style={{display:"flex", alignItems:"center", gap:8}}>
+              <div style={S.sectionDot("#5c3d8f")}/>
+              <span style={S.sectionLabel("#5c3d8f")}>Qui gouverne</span>
+            </div>
+            {continuite === true && a2014 && (
+              <span style={S.badge("#e8f5e9","#2e7d32")}>Continuité depuis 2014</span>
+            )}
+            {continuite === false && a2014 && (
+              <span style={S.badge("#f9f6f2","#888")}>Changement depuis 2014</span>
+            )}
+          </div>
+
+          {/* Grille chronologique */}
+          <div style={{
+            display:"grid",
+            gridTemplateColumns: a2014 ? "1fr 1fr" : "1fr",
+            borderTop:"0.5px solid #f0ebe4",
+          }}>
+            {/* Colonne 2026 */}
+            <div style={{padding:"16px 20px"}}>
+              <div style={{
+                fontFamily:"'Libre Baskerville',serif",
+                fontSize:"22px", fontWeight:700,
+                color:"#1a1a1a", marginBottom:6, lineHeight:1,
+              }}>2026</div>
+              <div style={{fontSize:"15px", fontWeight:700, color:"#1a1a1a", marginBottom:3}}>
+                {maire.maire_sortant_prenom} {maire.maire_sortant_nom}
+              </div>
+              <div style={{
+                fontFamily:"'Source Code Pro',monospace",
+                fontSize:"9px", color:"#aaa", marginBottom:8,
+              }}>
+                {anneeMandatStr ? `Maire depuis ${anneeMandatStr}` : "Maire en exercice"}
+                {maire.maire_sortant_csp_libelle && ` · ${maire.maire_sortant_csp_libelle}`}
+              </div>
+            </div>
+
+            {/* Colonne 2014 */}
+            {a2014 && (
+              <div style={{
+                padding:"16px 20px",
+                borderLeft:"0.5px solid #f0ebe4",
+                background:"#fafaf8",
+              }}>
+                <div style={{
+                  fontFamily:"'Libre Baskerville',serif",
+                  fontSize:"22px", fontWeight:700,
+                  color:"#aaa", marginBottom:6, lineHeight:1,
+                }}>2014</div>
+                <div style={{fontSize:"13px", fontWeight:700, color:"#555", marginBottom:3}}>
+                  {maire.maire_2014_prenom} {maire.maire_2014_nom}
+                </div>
+                <div style={{
+                  fontFamily:"'Source Code Pro',monospace",
+                  fontSize:"9px", color:"#aaa",
+                }}>
+                  {maire.maire_2014_profession_libelle || "Maire en 2014"}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
     </div>
   );
 }
+
 
 // ─── HOOK : MAIRES ────────────────────────────────────────────────────────────
 // Lit maires_communes_na via code_commune_2026 = c.insee
@@ -1099,175 +1275,6 @@ function useCommune(insee) {
   }, [insee]);
 
   return { commune, communeDone };
-}
-
-// ─── COMPOSANT : BLOC MAIRES ──────────────────────────────────────────────────
-function BlocMaires({ id, maire }) {
-  if (!maire?.maire_sortant_nom) return null;
-
-  const age = (() => {
-    if (!maire.maire_sortant_date_naissance) return null;
-    const d = new Date(maire.maire_sortant_date_naissance);
-    if (isNaN(d)) return null;
-    const today = new Date();
-    let a = today.getFullYear() - d.getFullYear();
-    if (today.getMonth() < d.getMonth() ||
-        (today.getMonth() === d.getMonth() && today.getDate() < d.getDate())) a--;
-    return a > 0 && a < 120 ? a : null;
-  })();
-
-  const anneeMandatRaw = maire.maire_sortant_date_mandat
-    ? new Date(maire.maire_sortant_date_mandat).getFullYear()
-    : null;
-  const anneeMandatStr = anneeMandatRaw && !isNaN(anneeMandatRaw)
-    ? String(anneeMandatRaw)
-    : null;
-
-  const continuite = maire.indicateur_continuite;
-  const a2014 = !!(maire.potentiel_bloc_historique
-    && maire.maire_2014_nom
-    && maire.type_raccordement !== "a_expertiser");
-
-  return (
-    <div id={id} style={{
-      scrollMarginTop: 52,
-      background: "#fff",
-      border: "1px solid #e8e0d8",
-      borderRadius: 10,
-      padding: "18px 22px",
-      marginBottom: 12,
-    }}>
-
-      {/* ── Header ───────────────────────────────────────────────────── */}
-      <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:14}}>
-        <div style={{width:3, height:16, background:"#5c3d8f", borderRadius:2}}/>
-        <div style={{
-          fontFamily:"'Source Code Pro',monospace",
-          fontSize:"9px", letterSpacing:"2px",
-          color:"#5c3d8f", textTransform:"uppercase", fontWeight:700,
-        }}>
-          Maires
-        </div>
-      </div>
-
-      {/* ── Maire sortant 2026 ────────────────────────────────────────── */}
-      <div style={{
-        padding:"12px 16px",
-        background:"#faf8ff",
-        borderRadius:8,
-        border:"1px solid #e8e0f0",
-        marginBottom: a2014 ? 8 : 0,
-      }}>
-        <div style={{
-          fontFamily:"'Source Code Pro',monospace",
-          fontSize:"8px", letterSpacing:"1.5px",
-          color:"#9c7cc0", textTransform:"uppercase",
-          fontWeight:700, marginBottom:6,
-        }}>
-          🏛 Maire sortant · 2026
-        </div>
-        <div style={{fontWeight:700, fontSize:"15px", color:"#1a1a1a", marginBottom:4}}>
-          {maire.maire_sortant_prenom} {maire.maire_sortant_nom}
-        </div>
-        <div style={{display:"flex", flexWrap:"wrap", gap:6, alignItems:"center"}}>
-          {age && (
-            <span style={{
-              fontFamily:"'Source Code Pro',monospace",
-              fontSize:"9px", color:"#888",
-            }}>
-              {age} ans
-            </span>
-          )}
-          {maire.maire_sortant_csp_libelle && (
-            <span style={{
-              fontFamily:"'Source Code Pro',monospace",
-              fontSize:"9px", color:"#888",
-            }}>
-              · {maire.maire_sortant_csp_libelle}
-            </span>
-          )}
-          {anneeMandatStr && (
-            <span style={{
-              fontFamily:"'Source Code Pro',monospace",
-              fontSize:"9px", fontWeight:700,
-              background:"#ede8f8", color:"#5c3d8f",
-              padding:"2px 9px", borderRadius:8,
-            }}>
-              Maire depuis {anneeMandatStr}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ── Maire 2014 (conditionnel) ────────────────────────────────── */}
-      {a2014 && (
-        <div style={{
-          padding:"10px 16px",
-          background:"#f9f6f2",
-          borderRadius:8,
-          border:"1px solid #ede8e2",
-          marginBottom: continuite !== null ? 8 : 0,
-        }}>
-          <div style={{
-            fontFamily:"'Source Code Pro',monospace",
-            fontSize:"8px", letterSpacing:"1.5px",
-            color:"#b08040", textTransform:"uppercase",
-            fontWeight:700, marginBottom:5,
-          }}>
-            📅 Maire en 2014
-          </div>
-          <div style={{fontWeight:700, fontSize:"13px", color:"#333", marginBottom:3}}>
-            {maire.maire_2014_prenom} {maire.maire_2014_nom}
-          </div>
-          {maire.maire_2014_profession_libelle && (
-            <div style={{
-              fontFamily:"'Source Code Pro',monospace",
-              fontSize:"9px", color:"#aaa",
-            }}>
-              {maire.maire_2014_profession_libelle}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Indicateur continuité (conditionnel) ────────────────────── */}
-      {continuite === true && a2014 && (
-        <div style={{
-          display:"flex", alignItems:"center", gap:8,
-          padding:"7px 14px",
-          background:"#f0faf4",
-          borderRadius:8,
-          border:"1px solid #a5d6b0",
-        }}>
-          <span style={{fontSize:14}}>✓</span>
-          <span style={{
-            fontFamily:"'Source Code Pro',monospace",
-            fontSize:"9px", fontWeight:700, color:"#2e7d32",
-          }}>
-            En poste depuis au moins 2014
-          </span>
-        </div>
-      )}
-      {continuite === false && a2014 && (
-        <div style={{
-          display:"flex", alignItems:"center", gap:8,
-          padding:"7px 14px",
-          background:"#f9f6f2",
-          borderRadius:8,
-          border:"1px solid #e0d8d0",
-        }}>
-          <span style={{fontSize:14}}>↔</span>
-          <span style={{
-            fontFamily:"'Source Code Pro',monospace",
-            fontSize:"9px", fontWeight:700, color:"#888",
-          }}>
-            Changement depuis 2014
-          </span>
-        </div>
-      )}
-
-    </div>
-  );
 }
 
 function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
@@ -1847,8 +1854,7 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
     { id:"cp-resultats", label:"Résultats 2026",  show: isPremium && listesVille.length > 0 },
     { id:"cp-candidats", label:"Candidats & CR",  show: isPremium },
     { id:"cp-epci",      label:"Intercommunalité",show: epciDone && epci },
-    { id:"cp-cm",     label:"Conseil municipal", show: cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) },
-    { id:"cp-maires", label:"Maires",            show: maireDone && !!maire?.maire_sortant_nom },
+    { id:"cp-election2026", label:"Conseil & Gouvernance", show: (cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0)) || (maireDone && !!maire?.maire_sortant_nom) },
   ].filter(s => s.show);
 
   return (
@@ -1913,22 +1919,93 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
                 })()}
               </div>
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:7,minWidth:165}}>
-              {[
-                vainqueur
-                  ? {label:"Maire élu 2026",  val:vainqueur.tete, icon:"✓"}
-                  : (c.maire ? {label:"Maire sortant", val:c.maire, icon:"🏛"} : null),
-                communeDone && commune && {label:"CM · CC",val:`${commune.nbre_sap_com} conseillers · ${commune.nbre_sap_epci} CC`,icon:"🏛"},
-                listesVille.length>0 && {label:"Listes 2026",val:`${listesVille.length} liste${listesVille.length>1?"s":""}`,icon:"📋"},
-                crLiesEnr.length>0  && {label:"CR liés",val:`${crLiesEnr.length} suivi${crLiesEnr.length>1?"s":""}`,icon:"👤"},
-                nbSaisies>0         && {label:"Résultats saisis",val:`${nbSaisies}/${listesVille.length}`,icon:"📊"},
-                epci                && {label:"Intercommunalité",val:epci.nom,icon:"🏘"},
-              ].filter(Boolean).filter(m=>m.val).map(m=>(
-                <div key={m.label} style={{background:"rgba(255,255,255,.07)",borderRadius:8,padding:"7px 11px",border:"1px solid rgba(255,255,255,.10)"}}>
-                  <div style={{fontSize:"8px",fontFamily:"'Source Code Pro',monospace",color:"rgba(255,255,255,.4)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:2}}>{m.icon} {m.label}</div>
-                  <div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.88)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:160}}>{m.val}</div>
+
+            {/* ── Panneau exécutif droit ────────────────────────────── */}
+            <div style={{display:"flex",flexDirection:"column",gap:8,minWidth:190,maxWidth:210}}>
+
+              {/* Bloc maire + sièges — dominant */}
+              {(vainqueur || c.maire || (communeDone && commune)) && (
+                <div style={{
+                  background:"rgba(255,255,255,.10)",
+                  border:"1px solid rgba(255,255,255,.14)",
+                  borderRadius:10, overflow:"hidden",
+                }}>
+                  {/* Nom maire */}
+                  {(vainqueur || c.maire) && (
+                    <div style={{padding:"11px 14px 10px", borderBottom:"1px solid rgba(255,255,255,.07)"}}>
+                      <div style={{
+                        fontFamily:"'Source Code Pro',monospace",
+                        fontSize:"8px", letterSpacing:"1.5px",
+                        color:"rgba(255,255,255,.35)", textTransform:"uppercase",
+                        marginBottom:4,
+                      }}>
+                        {vainqueur ? "Maire élu · 2026" : "Maire sortant"}
+                      </div>
+                      <div style={{
+                        fontFamily:"'Libre Baskerville',serif",
+                        fontSize:"14px", fontWeight:700,
+                        color:"#fff", lineHeight:1.2,
+                        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                      }}>
+                        {vainqueur ? vainqueur.tete : c.maire}
+                      </div>
+                    </div>
+                  )}
+                  {/* Sièges CM + CC */}
+                  {communeDone && commune && (
+                    <div style={{padding:"9px 14px", display:"flex", flexDirection:"column", gap:5}}>
+                      <div>
+                        <div style={{
+                          fontFamily:"'Source Code Pro',monospace",
+                          fontSize:"17px", fontWeight:700, color:"#fff", lineHeight:1,
+                        }}>{commune.nbre_sap_com}</div>
+                        <div style={{
+                          fontFamily:"'Source Code Pro',monospace",
+                          fontSize:"9px", color:"rgba(255,255,255,.4)", marginTop:1,
+                        }}>conseillers municipaux</div>
+                      </div>
+                      <div style={{height:"0.5px", background:"rgba(255,255,255,.08)"}}/>
+                      <div>
+                        <div style={{
+                          fontFamily:"'Source Code Pro',monospace",
+                          fontSize:"17px", fontWeight:700, color:"#93c5fd", lineHeight:1,
+                        }}>{commune.nbre_sap_epci}</div>
+                        <div style={{
+                          fontFamily:"'Source Code Pro',monospace",
+                          fontSize:"9px", color:"rgba(255,255,255,.4)", marginTop:1,
+                        }}>sièges intercommunaux</div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Nom EPCI */}
+                  {communeDone && commune?.lib_epci && (
+                    <div style={{
+                      padding:"6px 14px",
+                      borderTop:"1px solid rgba(255,255,255,.06)",
+                      fontFamily:"'Source Code Pro',monospace",
+                      fontSize:"9px", color:"rgba(255,255,255,.28)",
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                    }}>
+                      {commune.lib_epci}
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
+
+              {/* Métadonnées secondaires — légères */}
+              <div style={{display:"flex", flexDirection:"column", gap:4}}>
+                {[
+                  listesVille.length>0 && `${listesVille.length} liste${listesVille.length>1?"s":""}`,
+                  crLiesEnr.length>0   && `${crLiesEnr.length} CR suivi${crLiesEnr.length>1?"s":""}`,
+                  nbSaisies>0          && `${nbSaisies}/${listesVille.length} résultat${nbSaisies>1?"s":""} saisi${nbSaisies>1?"s":""}`,
+                ].filter(Boolean).map((txt,i) => (
+                  <div key={i} style={{
+                    fontFamily:"'Source Code Pro',monospace",
+                    fontSize:"9px", color:"rgba(255,255,255,.35)",
+                    padding:"4px 0",
+                  }}>{txt}</div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -2114,14 +2191,14 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
         </div>
       )}
 
-      {/* ══ CONSEIL MUNICIPAL ══════════════════════════════════════════ */}
-      {cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) && (
-        <BlocConseilMunicipal id="cp-cm" cm={cm} />
-      )}
-
-      {/* ══ MAIRES ════════════════════════════════════════════════════ */}
-      {maireDone && maire?.maire_sortant_nom && (
-        <BlocMaires id="cp-maires" maire={maire} />
+      {/* ══ ÉLECTION 2026 : Conseil + Gouvernance (fusion premium) ═════════ */}
+      {(cmDone || maireDone) && (
+        <BlocElection2026
+          id="cp-election2026"
+          cm={cm}
+          maire={maire}
+          commune={commune}
+        />
       )}
 
       {/* ── Retour ──────────────────────────────────────────────────── */}
