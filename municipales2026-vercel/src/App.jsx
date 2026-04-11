@@ -1072,6 +1072,35 @@ function useMaire(insee) {
   return { maire, maireDone };
 }
 
+// ─── HOOK : DONNÉES COMMUNALES (EPCI / CM / CC) ──────────────────────────────
+// Lit epci_communes_na via code_commune = c.insee
+// maybeSingle() : retourne null sans erreur si la commune est absente
+function useCommune(insee) {
+  const [commune,     setCommune]     = useState(null);
+  const [communeDone, setCommuneDone] = useState(false);
+
+  useEffect(() => {
+    if (!insee) { setCommuneDone(true); return; }
+    let alive = true;
+
+    supabase
+      .from("epci_communes_na")
+      .select("nbre_sap_com, nbre_sap_epci, code_epci, lib_epci")
+      .eq("code_commune", insee)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) { setCommuneDone(true); return; }
+        setCommune(data);
+        setCommuneDone(true);
+      });
+
+    return () => { alive = false; };
+  }, [insee]);
+
+  return { commune, communeDone };
+}
+
 // ─── COMPOSANT : BLOC MAIRES ──────────────────────────────────────────────────
 function BlocMaires({ id, maire }) {
   if (!maire?.maire_sortant_nom) return null;
@@ -1752,6 +1781,9 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
   // ── Maires (fetch au montage) ─────────────────────────────────────────────
   const { maire, maireDone } = useMaire(c.insee);
 
+  // ── Données communales EPCI/CM/CC (fetch au montage) ─────────────────────
+  const { commune, communeDone } = useCommune(c.insee);
+
   // ── Palettes ─────────────────────────────────────────────────────────────
   const POLTAG = {
     "PS":"#e91e63","DVG":"#ef5350","PCF":"#c62828","LFI":"#7b1fa2",
@@ -1883,7 +1915,10 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:7,minWidth:165}}>
               {[
-                {label:"Maire sortant",val:c.maire,icon:"🏛"},
+                vainqueur
+                  ? {label:"Maire élu 2026",  val:vainqueur.tete, icon:"✓"}
+                  : (c.maire ? {label:"Maire sortant", val:c.maire, icon:"🏛"} : null),
+                communeDone && commune && {label:"CM · CC",val:`${commune.nbre_sap_com} conseillers · ${commune.nbre_sap_epci} CC`,icon:"🏛"},
                 listesVille.length>0 && {label:"Listes 2026",val:`${listesVille.length} liste${listesVille.length>1?"s":""}`,icon:"📋"},
                 crLiesEnr.length>0  && {label:"CR liés",val:`${crLiesEnr.length} suivi${crLiesEnr.length>1?"s":""}`,icon:"👤"},
                 nbSaisies>0         && {label:"Résultats saisis",val:`${nbSaisies}/${listesVille.length}`,icon:"📊"},
@@ -1919,6 +1954,16 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
               {epci && (
                 <span style={{background:"#e3f2fd",color:"#1565c0",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"4px 12px",borderRadius:20,maxWidth:180,textAlign:"right",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                   🏘 {epci.nom}
+                </span>
+              )}
+              {communeDone && commune && (
+                <span style={{background:"#e8f5e9",color:"#1b5e20",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"4px 12px",borderRadius:20}}>
+                  {commune.nbre_sap_com} CM · {commune.nbre_sap_epci} CC
+                </span>
+              )}
+              {maireDone && maire?.maire_sortant_nom && (
+                <span style={{background:"#ede8f8",color:"#5c3d8f",fontFamily:"'Source Code Pro',monospace",fontSize:"9px",fontWeight:700,padding:"4px 12px",borderRadius:20,maxWidth:200,textAlign:"right",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  🏛 {maire.maire_sortant_prenom} {maire.maire_sortant_nom}
                 </span>
               )}
             </div>
