@@ -780,6 +780,254 @@ function useGeoJsonDept(deptCode) {
 //   3. Clic commune → page commune (enrichie ou base)
 // Sources : maire_app pattern (MapLibre/GeoJSON) adapté Leaflet
 //           AzukiGPT : coloration politique communale
+// ─── HOOK : CONSEIL MUNICIPAL ─────────────────────────────────────────────────
+// Lit listes_2026 pour une commune via (dept, ville_norm)
+// ville_norm calculé depuis c.nom — 0 divergence vérifiée sur communes NA
+// Gestion démontage : flag `alive` annule le setState si le composant est parti
+function useConseilMunicipal(dept, nom) {
+  const [cm,      setCm]      = useState([]);
+  const [cmDone,  setCmDone]  = useState(false);
+  const [cmError, setCmError] = useState(false);
+
+  useEffect(() => {
+    if (!dept || !nom) { setCmDone(true); return; }
+    let alive = true;
+
+    const villeNorm = nom
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "");
+
+    supabase
+      .from("listes_2026")
+      .select("nuance, libelle_liste, tete_liste, sieges_cm, sieges_cc, statut_t1, statut_t2, score_t1, score_t2")
+      .eq("dept", dept)
+      .eq("ville_norm", villeNorm)
+      .order("sieges_cm", { ascending: false })
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) { setCmError(true); setCmDone(true); return; }
+        setCm(data || []);
+        setCmDone(true);
+      });
+
+    return () => { alive = false; };
+  }, [dept, nom]);
+
+  return { cm, cmDone, cmError };
+}
+
+// ─── COMPOSANT : BLOC CONSEIL MUNICIPAL ───────────────────────────────────────
+function BlocConseilMunicipal({ id, cm }) {
+  const total = cm.reduce((s, l) => s + (Number(l.sieges_cm) || 0), 0);
+  if (total === 0) return null;
+
+  const avecSieges = cm.filter(l => (Number(l.sieges_cm) || 0) > 0);
+  const sansSieges = cm.filter(l => (Number(l.sieges_cm) || 0) === 0);
+  const totalCC    = cm.reduce((s, l) => s + (Number(l.sieges_cc) || 0), 0);
+  const isMajorite = avecSieges.length > 0 && avecSieges[0].sieges_cm > total / 2;
+
+  const CM_COL = {
+    "PS":"#e91e63","SOC":"#e91e63","UG":"#e53935","DVG":"#ef5350",
+    "PCF":"#c62828","LFI":"#7b1fa2","VEC":"#2e7d32","ECOLO":"#2e7d32",
+    "DVC":"#1976d2","UC":"#1976d2","RE":"#ef6c00","UDI":"#0288d1",
+    "LR":"#1565c0","DVD":"#0d47a1","DSV":"#546e7a","RN":"#212121",
+    "UXD":"#263238","EXD":"#0a0a0a","REC":"#b71c1c","EXG":"#880e4f",
+    "DIV":"#607d8b","NC":"#78909c","UD":"#1565c0","DV":"#607d8b",
+  };
+  const colFor = n => CM_COL[(n || "").toUpperCase()] || "#90a4ae";
+
+  return (
+    <div id={id} style={{
+      scrollMarginTop: 52,
+      background: "#fff",
+      border: "1px solid #e8e0d8",
+      borderRadius: 10,
+      padding: "18px 22px",
+      marginBottom: 12,
+    }}>
+
+      {/* ── Header ───────────────────────────────────────────────────── */}
+      <div style={{
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 14, flexWrap: "wrap", gap: 8,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 3, height: 16, background: "#00796b", borderRadius: 2 }} />
+          <div style={{
+            fontFamily: "'Source Code Pro',monospace",
+            fontSize: "9px", letterSpacing: "2px",
+            color: "#00796b", textTransform: "uppercase", fontWeight: 700,
+          }}>
+            Conseil Municipal
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{
+            fontFamily: "'Source Code Pro',monospace",
+            fontSize: "9px", fontWeight: 700,
+            background: "#e0f2f1", color: "#00796b",
+            padding: "3px 11px", borderRadius: 10,
+          }}>
+            {total} siège{total > 1 ? "s" : ""}
+          </span>
+          {totalCC > 0 && (
+            <span style={{
+              fontFamily: "'Source Code Pro',monospace",
+              fontSize: "9px", fontWeight: 700,
+              background: "#e3f2fd", color: "#1565c0",
+              padding: "3px 11px", borderRadius: 10,
+            }}>
+              {totalCC} siège{totalCC > 1 ? "s" : ""} CC
+            </span>
+          )}
+          {isMajorite && (
+            <span style={{
+              fontFamily: "'Source Code Pro',monospace",
+              fontSize: "9px", fontWeight: 700,
+              background: "#1b5e20", color: "#fff",
+              padding: "3px 11px", borderRadius: 10,
+            }}>
+              ✓ Majorité absolue
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Barre proportionnelle ─────────────────────────────────────── */}
+      <div style={{
+        display: "flex", height: 8, borderRadius: 6,
+        overflow: "hidden", marginBottom: 14, background: "#f0ebe4",
+      }}>
+        {avecSieges.map((l, i) => (
+          <div
+            key={i}
+            title={`${l.tete_liste || l.nuance} — ${l.sieges_cm} siège${l.sieges_cm > 1 ? "s" : ""}`}
+            style={{
+              width: `${(l.sieges_cm / total) * 100}%`,
+              background: colFor(l.nuance),
+              borderRight: i < avecSieges.length - 1 ? "1px solid rgba(255,255,255,.4)" : "none",
+              minWidth: 2,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ── Lignes par liste ──────────────────────────────────────────── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        {avecSieges.map((l, i) => {
+          const pct   = Math.round((l.sieges_cm / total) * 100);
+          const isTop = i === 0;
+          const col   = colFor(l.nuance);
+          return (
+            <div key={i} style={{
+              display: "grid",
+              gridTemplateColumns: "44px 1fr 40px 36px",
+              gap: 8, alignItems: "center",
+              padding: "8px 12px",
+              background: isTop ? "#f0faf9" : "#fafaf9",
+              borderRadius: 8,
+              border: `1px solid ${isTop ? "#a7d8d4" : "#ede8e2"}`,
+            }}>
+              <span style={{
+                background: col, color: "#fff",
+                fontFamily: "'Source Code Pro',monospace",
+                fontSize: "8px", fontWeight: 700,
+                padding: "2px 5px", borderRadius: 4, textAlign: "center",
+              }}>
+                {l.nuance}
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{
+                  fontWeight: 700, fontSize: "12px", color: "#1a1a1a",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {l.tete_liste}
+                </div>
+                {l.libelle_liste && (
+                  <div style={{
+                    fontSize: "9px", color: "#aaa", marginTop: 1,
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {l.libelle_liste}
+                  </div>
+                )}
+              </div>
+              <div style={{
+                textAlign: "right",
+                fontFamily: "'Source Code Pro',monospace",
+                fontSize: "14px", fontWeight: 700, color: "#1a1a1a",
+              }}>
+                {l.sieges_cm}
+              </div>
+              <div style={{
+                textAlign: "right",
+                fontFamily: "'Source Code Pro',monospace",
+                fontSize: "9px", color: "#aaa",
+              }}>
+                {pct}%
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Listes sans siège ─────────────────────────────────────────── */}
+      {sansSieges.length > 0 && (
+        <div style={{
+          marginTop: 8, fontSize: "9px", color: "#c0b8b0",
+          fontFamily: "'Source Code Pro',monospace",
+        }}>
+          + {sansSieges.length} liste{sansSieges.length > 1 ? "s" : ""} sans siège
+          {" — "}
+          {sansSieges.map(l => l.tete_liste).filter(Boolean).join(", ")}
+        </div>
+      )}
+
+      {/* ── Sièges CC ─────────────────────────────────────────────────── */}
+      {totalCC > 0 && (
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid #f0ebe4" }}>
+          <div style={{
+            fontSize: "9px",
+            fontFamily: "'Source Code Pro',monospace",
+            color: "#1976d2", letterSpacing: "1.5px",
+            textTransform: "uppercase", fontWeight: 700, marginBottom: 7,
+          }}>
+            Sièges intercommunaux (CC)
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {avecSieges
+              .filter(l => (Number(l.sieges_cc) || 0) > 0)
+              .map((l, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center",
+                  gap: 10, fontSize: "11px", color: "#555",
+                }}>
+                  <span style={{
+                    fontFamily: "'Source Code Pro',monospace",
+                    fontWeight: 700, color: "#1565c0",
+                    minWidth: 18, textAlign: "right",
+                  }}>
+                    {l.sieges_cc}
+                  </span>
+                  <span style={{ fontWeight: 600 }}>{l.tete_liste}</span>
+                  <span style={{
+                    fontSize: "9px", color: "#aaa",
+                    fontFamily: "'Source Code Pro',monospace",
+                  }}>
+                    {l.nuance}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
   const mapRef    = useRef(null);
   const Lref      = useRef(null);
@@ -1285,6 +1533,9 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
   // ── EPCI (fetch au montage) ────────────────────────────────────────────────
   const { epci, epciDone } = useEpci(c.insee);
 
+  // ── Conseil municipal (fetch au montage) ──────────────────────────────────
+  const { cm, cmDone } = useConseilMunicipal(c.dept, c.nom);
+
   // ── Palettes ─────────────────────────────────────────────────────────────
   const POLTAG = {
     "PS":"#e91e63","DVG":"#ef5350","PCF":"#c62828","LFI":"#7b1fa2",
@@ -1344,10 +1595,11 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
 
   // ── Navigation sections (adaptée au niveau) ───────────────────────────────
   const sections = [
-    { id:"cp-analyse",   label:"Analyse",        show: isPremium },
+    { id:"cp-analyse",   label:"Analyse",         show: isPremium },
     { id:"cp-resultats", label:"Résultats 2026",  show: isPremium && listesVille.length > 0 },
     { id:"cp-candidats", label:"Candidats & CR",  show: isPremium },
     { id:"cp-epci",      label:"Intercommunalité",show: epciDone && epci },
+    { id:"cp-cm",        label:"Conseil municipal",show: cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) },
   ].filter(s => s.show);
 
   return (
@@ -1600,15 +1852,10 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
         </div>
       )}
 
-      {/* ══ HISTORIQUE — compact, honnête ══════════════════════════════ */}
-      <div style={{background:"#f9f6f2",border:"1px solid #ede8e2",borderRadius:10,padding:"13px 17px",marginBottom:12,display:"flex",alignItems:"center",gap:12}}>
-        <div style={{fontSize:18,opacity:.35,flexShrink:0}}>📅</div>
-        <div style={{flex:1}}>
-          <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",letterSpacing:"1.8px",color:"#b08040",textTransform:"uppercase",fontWeight:700,marginBottom:3}}>Historique 2020 / 2014</div>
-          <div style={{fontSize:"10.5px",color:"#b0a898",fontFamily:"'Source Code Pro',monospace"}}>Résultats des scrutins précédents — intégration Phase 2.</div>
-        </div>
-        <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"8.5px",fontWeight:700,color:"#c8b89a",border:"1px solid #e0d0b8",borderRadius:6,padding:"3px 9px",flexShrink:0}}>Phase 2</div>
-      </div>
+      {/* ══ CONSEIL MUNICIPAL ══════════════════════════════════════════ */}
+      {cmDone && cm.some(l => (Number(l.sieges_cm)||0) > 0) && (
+        <BlocConseilMunicipal id="cp-cm" cm={cm} />
+      )}
 
       {/* ── Retour ──────────────────────────────────────────────────── */}
       <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginTop:4}}>
