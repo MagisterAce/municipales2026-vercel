@@ -283,7 +283,7 @@ const COMMUNES = [
   {nom:"Pessac",dept:"33",insee:"33318",pop:67000,maire:"F. Raynal (DVD)",couleur_pol:"DVD",enjeu:"très fort",analyse:"200 voix d'écart 2020. UG Saint-Pasteur (PS) candidat. Bascule possible.",cr_lies:[]},
   {nom:"Villenave d'Ornon",dept:"33",insee:"33550",pop:42000,maire:"M. Poignonnec (DVD)",couleur_pol:"DVD",enjeu:"fort",analyse:"CR Anfray cheffe de file UG. Scrutin ouvert.",cr_lies:[{nom:"S. Anfray",groupe:"PS"}]},
   {nom:"Langon",dept:"33",insee:"33227",pop:7500,maire:"J. Guillem (PS)",couleur_pol:"PS",enjeu:"fort",analyse:"CR Guillem maire sortant. Face à sénatrice Lassarade (LR) + liste RN. Triangulaire.",cr_lies:[{nom:"J. Guillem",groupe:"PS"}]},
-  {nom:"Arcachon",dept:"33",insee:"33009",pop:10000,maire:"Y. Foulon (LR)",couleur_pol:"LR",enjeu:"moyen",analyse:"CR Foulon (LR) vs CR Lamara (RN). Duel de CR.",cr_lies:[{nom:"Y. Foulon",groupe:"LR"},{nom:"L. Lamara",groupe:"RN"},{nom:"V. Baudé",groupe:"Écologistes"}]},
+  {nom:"Arcachon",dept:"33",insee:"33009",pop:10000,maire:"Y. Foulon (LR)",couleur_pol:"LR",enjeu:"moyen",analyse:"CR Foulon (LR) vs CR Lamara (RN). Duel de CR.",cr_lies:[{nom:"Y. Foulon",groupe:"LR"},{nom:"L. Lamara",groupe:"RN"},{nom:"V. Baude",groupe:"Écologistes"}]},
   {nom:"Cenon",dept:"33",insee:"33119",pop:27000,maire:"J.-F. Egron (PS)",couleur_pol:"PS",enjeu:"moyen",analyse:"CR Astier sur liste sortante. Gauche solide.",cr_lies:[{nom:"D. Astier",groupe:"PS"}]},
   {nom:"Lormont",dept:"33",insee:"33249",pop:24000,maire:"Ph. Quertinmont (PS)",couleur_pol:"PS",enjeu:"moyen",analyse:"CR Boultam 2ème sur liste. Gauche solide.",cr_lies:[{nom:"Y. Boultam",groupe:"PS"}]},
   {nom:"Mont-de-Marsan",dept:"40",insee:"40192",pop:34000,maire:"C. Dayot (DVD)",couleur_pol:"DVD",enjeu:"très fort",analyse:"Triangulaire Dayot/Darrieussecq (MoDem)/Dutin (PS). CR Lafargue + Baché sur liste PS.",cr_lies:[{nom:"M.-L. Lafargue",groupe:"PS/PP"},{nom:"A. Baché",groupe:"PCF"}]},
@@ -977,7 +977,11 @@ function useConseilMunicipal(insee, dept, nom) {
         if (!alive) return;
 
         if (commune2026?.dept) queryDept = commune2026.dept;
-        if (commune2026?.ville_norm) queryVilleNorm = commune2026.ville_norm;
+        if (commune2026?.ville_norm) {
+          // Normalize: communes_2026.ville_norm may have spaces ("saint medard en jalles")
+          // but listes_2026.ville_norm has none ("saintmedardenjalles")
+          queryVilleNorm = commune2026.ville_norm.replace(/\s+/g, "");
+        }
       }
 
       const { data, error } = await supabase
@@ -1048,7 +1052,9 @@ function BlocElection2026({ id, cm, maire, commune, communeName, vainqueur }) {
   const totalCMVotes  = cm.reduce((s,l) => s + (Number(l.sieges_cm)||0), 0);
   const totalCM       = (commune?.nbre_sap_com > 0 ? commune.nbre_sap_com : totalCMVotes);
   const totalCCSource = commune?.nbre_sap_epci || 0;
-  const avecSieges    = cm.filter(l => (Number(l.sieges_cm)||0) > 0);
+  const avecSieges    = cm.filter(l => (Number(l.sieges_cm)||0) > 0)
+    .sort((a, b) => (Number(b.sieges_cm)||0) - (Number(a.sieges_cm)||0)
+      || (Number(b.score_t2 ?? b.score_t1 ?? -1)) - (Number(a.score_t2 ?? a.score_t1 ?? -1)));
   const sansSieges    = cm.filter(l => (Number(l.sieges_cm)||0) === 0);
   const isMajorite    = avecSieges.length > 0 && avecSieges[0].sieges_cm > totalCM / 2;
   const isListeUnique = avecSieges.length === 1;
@@ -2275,7 +2281,7 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
 
   // ── Navigation sections (adaptée au niveau) ───────────────────────────────
   const sections = [
-    { id:"cp-analyse",   label:"Analyse",         show: isPremium },
+    
     { id:"cp-resultats", label:"Résultats 2026",  show: has2026Data },
     { id:"cp-historique2020", label:"Résultats 2020", show: has2020Data },
     { id:"cp-historique2014", label:"Résultats 2014", show: has2014Data },
@@ -2530,6 +2536,33 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
 
 
 
+      {/* ══ BADGES SCRUTINS DISPONIBLES ══════════════════════════════════ */}
+      {(() => {
+        const badges = [];
+        if (has2026T1) badges.push({ label: "2026 T1", color: "#1565c0", target: "cp-resultats-2026-t1" });
+        if (has2026T2) badges.push({ label: "2026 T2", color: "#0d47a1", target: "cp-resultats-2026-t2" });
+        tours2020.forEach(tour => badges.push({ label: `2020 T${tour}`, color: tour === 2 ? "#4a148c" : "#6a1b9a", target: `cp-historique2020-t${tour}` }));
+        tours2014.forEach(tour => badges.push({ label: `2014 T${tour}`, color: tour === 2 ? "#8d2004" : "#bf360c", target: `cp-historique2014-t${tour}` }));
+        if (badges.length === 0) return null;
+        return (
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12,alignItems:"center"}}>
+            <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"8px",color:"var(--text-dim)",letterSpacing:"1.5px",textTransform:"uppercase",fontWeight:700,marginRight:4}}>Scrutins disponibles</span>
+            {badges.map((b, i) => (
+              <button type="button" key={i} onClick={() => { const el = document.getElementById(b.target); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }} style={{
+                background:b.color,color:"#fff",
+                fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,
+                padding:"4px 10px",borderRadius:999,letterSpacing:".6px",
+                boxShadow:`0 2px 8px ${b.color}33`,
+                cursor:"pointer",transition:"transform .15s,box-shadow .15s",
+                border:"none",
+              }} onMouseEnter={e => { e.currentTarget.style.transform="scale(1.08)"; e.currentTarget.style.boxShadow=`0 4px 14px ${b.color}55`; }}
+                 onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.boxShadow=`0 2px 8px ${b.color}33`; }}
+              >{b.label}</button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* ══ RÉSULTATS 2026 ══════════════════════════════════════════════ */}
       {has2026Data && (
         <div id="cp-resultats" style={{scrollMarginTop:52,background:"var(--bg-card)",border:"1px solid var(--border-main)",borderRadius:10,padding:"18px 22px",marginBottom:12}}>
@@ -2623,33 +2656,6 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
           )}
         </div>
       )}
-
-      {/* ══ BADGES SCRUTINS DISPONIBLES ══════════════════════════════════ */}
-      {(() => {
-        const badges = [];
-        if (has2026T1) badges.push({ label: "2026 T1", color: "#1565c0", target: "cp-resultats-2026-t1" });
-        if (has2026T2) badges.push({ label: "2026 T2", color: "#0d47a1", target: "cp-resultats-2026-t2" });
-        tours2020.forEach(tour => badges.push({ label: `2020 T${tour}`, color: tour === 2 ? "#4a148c" : "#6a1b9a", target: `cp-historique2020-t${tour}` }));
-        tours2014.forEach(tour => badges.push({ label: `2014 T${tour}`, color: tour === 2 ? "#8d2004" : "#bf360c", target: `cp-historique2014-t${tour}` }));
-        if (badges.length === 0) return null;
-        return (
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12,alignItems:"center"}}>
-            <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"8px",color:"var(--text-dim)",letterSpacing:"1.5px",textTransform:"uppercase",fontWeight:700,marginRight:4}}>Scrutins disponibles</span>
-            {badges.map((b, i) => (
-              <button type="button" key={i} onClick={() => { const el = document.getElementById(b.target); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }} style={{
-                background:b.color,color:"#fff",
-                fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,
-                padding:"4px 10px",borderRadius:999,letterSpacing:".6px",
-                boxShadow:`0 2px 8px ${b.color}33`,
-                cursor:"pointer",transition:"transform .15s,box-shadow .15s",
-                border:"none",
-              }} onMouseEnter={e => { e.currentTarget.style.transform="scale(1.08)"; e.currentTarget.style.boxShadow=`0 4px 14px ${b.color}55`; }}
-                 onMouseLeave={e => { e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.boxShadow=`0 2px 8px ${b.color}33`; }}
-              >{b.label}</button>
-            ))}
-          </div>
-        );
-      })()}
 
       {/* ══ RÉSULTATS 2020 (historique via v_resultats_commune) ═════════ */}
       {has2020Data && (() => {
@@ -2849,6 +2855,8 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
         </div>
       </div>
 
+      {/* ── Scroll to top ── */}
+
     </div>
   );
 }
@@ -2869,10 +2877,25 @@ export default function App() {
   const toggleTheme = () => setDarkMode(prev => { const next = !prev; try { localStorage.setItem("muni-theme", next ? "dark" : "light"); } catch {} return next; });
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState("cartes");
-  const [communePage, setCommunePage] = useState(null); // commune sélectionnée pour la page dédiée
+  const [communePage, setCommunePage] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // ── Scroll-to-top : sentinelle IntersectionObserver (indépendant du conteneur de scroll) ──
+  const [showTop, setShowTop] = useState(false);
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    if (!communePage) { setShowTop(false); return; }
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setShowTop(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [communePage]);
 
   // ── Couverture communale totale NA (hook v7) ─────────────────────────────
   const { allCommunes, loadError: communesLoadError } = useCommunesNA(COMMUNES);
@@ -3216,6 +3239,8 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
     <>
       <style dangerouslySetInnerHTML={{__html:CSS}} />
       <div className="app" data-theme={darkMode?"dark":"light"}>
+        {/* Sentinelle scroll-to-top : quand elle sort du viewport → afficher le bouton */}
+        <div ref={sentinelRef} style={{height:0,width:0,overflow:"hidden"}} aria-hidden="true" />
 
         {/* HEADER */}
         <header className="hdr">
@@ -3907,7 +3932,38 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
           )}
         </main>
 
-        {/* MODAL SAISIE */}
+        {/* ── Footer institutionnel ── */}
+        <footer style={{
+          borderTop:"1px solid var(--border-main)",
+          padding:"20px 28px",
+          marginTop:32,
+          display:"flex",
+          flexWrap:"wrap",
+          justifyContent:"space-between",
+          alignItems:"center",
+          gap:12,
+          fontFamily:"'Source Code Pro',monospace",
+          fontSize:"9px",
+          color:"var(--text-dim)",
+          letterSpacing:".5px",
+          lineHeight:1.6,
+        }}>
+          <div>
+            <span style={{fontWeight:700,color:"var(--text-secondary)"}}>Municipales 2026 · Nouvelle-Aquitaine</span>
+            <br/>
+            Développé par Tarik Laouani · Outil non commercial
+            <br/>
+            Conçu pour les élu·e·s régionaux du groupe PS, Place Publique et Apparentés
+          </div>
+          <div style={{textAlign:"right"}}>
+            <a href="mailto:tarik.laouani@nouvelle-aquitaine.fr"
+              style={{color:"var(--accent)",textDecoration:"none",fontWeight:600}}
+              onMouseEnter={e=>e.currentTarget.style.textDecoration="underline"}
+              onMouseLeave={e=>e.currentTarget.style.textDecoration="none"}
+            >tarik.laouani@nouvelle-aquitaine.fr</a>
+          </div>
+        </footer>
+
         {/* ══ MODAL RÉSULTAT LISTE ══ */}
 {listeModal && (
   <div className="modal-bg" onClick={()=>setListeModal(null)}>
@@ -4062,6 +4118,27 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
               </div>
             </div>
           </div>
+        )}
+
+        {/* Scroll-to-top — hors de tout conteneur avec transform */}
+        {showTop && (
+          <button
+            onClick={() => { sentinelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            aria-label="Retour en haut"
+            style={{
+              position:"fixed", bottom:28, right:28, zIndex:9999,
+              width:44, height:44, borderRadius:"50%",
+              background:"var(--bg-card)", border:"1px solid var(--border-main)",
+              boxShadow:"0 4px 16px rgba(0,0,0,.15)",
+              color:"var(--text-secondary)", cursor:"pointer",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              opacity:.8, transition:"opacity .2s, transform .2s",
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.transform="translateY(-2px)";}}
+            onMouseLeave={e=>{e.currentTarget.style.opacity=".8";e.currentTarget.style.transform="translateY(0)";}}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
         )}
       </div>
     </>
