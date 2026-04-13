@@ -906,25 +906,64 @@ const DEPT_NAMES_FOR_URL = {
   "79":"deux-sevres","86":"vienne","87":"haute-vienne",
 };
 
+const COMMUNE_GEOJSON_CACHE = new Map();
+
 function useGeoJsonDept(deptCode) {
   const [geoData,  setGeoData]  = useState(null);
+  const [geoDeptCode, setGeoDeptCode] = useState(null);
   const [geoError, setGeoError] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
 
   useEffect(() => {
-    if (!deptCode) { setGeoData(null); setGeoError(false); return; }
+    if (!deptCode) {
+      setGeoData(null);
+      setGeoDeptCode(null);
+      setGeoError(false);
+      setGeoLoading(false);
+      return;
+    }
+
+    const cached = COMMUNE_GEOJSON_CACHE.get(deptCode);
+    if (cached) {
+      setGeoData(cached);
+      setGeoDeptCode(deptCode);
+      setGeoError(false);
+      setGeoLoading(false);
+      return;
+    }
+
+    const ctrl = new AbortController();
+    let cancelled = false;
     setGeoLoading(true);
     setGeoData(null);
+    setGeoDeptCode(null);
     setGeoError(false);
     const name = DEPT_NAMES_FOR_URL[deptCode];
     const url  = `https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements/${deptCode}-${name}/communes-${deptCode}-${name}.geojson`;
-    fetch(url)
+    fetch(url, { signal: ctrl.signal })
       .then(r => { if (!r.ok) throw new Error("geo"); return r.json(); })
-      .then(d  => { setGeoData(d); setGeoLoading(false); })
-      .catch(() => { setGeoError(true); setGeoLoading(false); });
+      .then(d  => {
+        if (cancelled) return;
+        COMMUNE_GEOJSON_CACHE.set(deptCode, d);
+        setGeoData(d);
+        setGeoDeptCode(deptCode);
+        setGeoLoading(false);
+      })
+      .catch(err => {
+        if (cancelled || err?.name === "AbortError") return;
+        setGeoData(null);
+        setGeoDeptCode(null);
+        setGeoError(true);
+        setGeoLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
   }, [deptCode]);
 
-  return { geoData, geoError, geoLoading };
+  return { geoData, geoDeptCode, geoError, geoLoading };
 }
 
 // ─── NAMAP V4 — CARTE HYBRIDE RÉGION → DEPT → COMMUNES ──────────────────────
@@ -960,7 +999,7 @@ function useConseilMunicipal(insee, dept, nom) {
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]/g, "")
+      .replace(/['-]/g, "")
       .trim();
 
     (async () => {
@@ -978,9 +1017,8 @@ function useConseilMunicipal(insee, dept, nom) {
 
         if (commune2026?.dept) queryDept = commune2026.dept;
         if (commune2026?.ville_norm) {
-          // Normalize: communes_2026.ville_norm may have spaces ("saint medard en jalles")
-          // but listes_2026.ville_norm has none ("saintmedardenjalles")
-          queryVilleNorm = commune2026.ville_norm.replace(/\s+/g, "");
+          // Use ville_norm as-is from communes_2026 (matches listes_2026 format)
+          queryVilleNorm = commune2026.ville_norm;
         }
       }
 
@@ -1837,7 +1875,7 @@ function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
 
   // ── Couche communale : chargée via prop geoData ────────────────────────
   // (passée depuis App via useGeoJsonDept)
-  const {geoData:communeGeoData, geoError:communeGeoError, geoLoading:communeGeoLoading} = useGeoJsonDept(selDept);
+  const {geoData:communeGeoData, geoDeptCode:communeGeoDeptCode, geoError:communeGeoError, geoLoading:communeGeoLoading} = useGeoJsonDept(selDept);
 
   useEffect(() => {
     if (!mapInst.current || !Lref.current) return;
@@ -1846,7 +1884,15 @@ function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
 
     // Supprimer la couche communale précédente
     if (comLayer.current) { map.removeLayer(comLayer.current); comLayer.current = null; }
-    if (!selDept || !communeGeoData) return;
+    setComTip(null);
+    // Ne créer la couche que si le GeoJSON correspond bien au département sélectionné
+    if (!selDept || !communeGeoData || communeGeoDeptCode !== selDept) {
+      // Revenir à la vue régionale si on a désélectionné
+      if (!selDept && deptLayer.current?.getBounds?.().isValid()) {
+        map.fitBounds(deptLayer.current.getBounds(), { padding:[10,10] });
+      }
+      return;
+    }
 
     // Créer la couche communale
     const layer = L.geoJSON(communeGeoData, {
@@ -1894,7 +1940,7 @@ function NaMap({crList, allCommunes, selDept, onSelect, onCommuneClick}) {
     if (layer.getBounds().isValid()) {
       map.fitBounds(layer.getBounds(), { padding:[20,20], maxZoom:11 });
     }
-  }, [communeGeoData, selDept, communesByInsee]);
+  }, [communeGeoData, communeGeoDeptCode, selDept, communesByInsee, ready]);
 
   // ── Tooltip département ────────────────────────────────────────────────
   const hovDept = tip ? DEPTS.find(d=>d.code===tip.code) : null;
@@ -3411,7 +3457,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                     crList={crList}
                     allCommunes={allCommunes||COMMUNES}
                     selDept={selDept}
-                    onSelect={code=>{setSelDept(selDept===code?null:code);}}
+                    onSelect={setSelDept}
                     onCommuneClick={com=>{setCommunePage(com);}}
                   />
 
