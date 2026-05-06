@@ -1445,7 +1445,7 @@ function BlocElection2026({ id, cm, maire, commune, communeName, vainqueur }) {
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <span style={{fontWeight:700,fontSize:13,color:"var(--text-primary)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.tete_liste}</span>
-                      <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",color:col,fontWeight:700}}>{l.nuance}</span>
+                      <span style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",color:col,fontWeight:700}}>{nuanceMi(l.nuance, l.nuance_mi)}</span>
                     </div>
                     {l.libelle_liste && (
                       <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"9px",color:"var(--text-dim)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle_liste}</div>
@@ -2659,7 +2659,7 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
                   const sc = statut ? statusBadge(statut) : null;
                   return (
                     <div key={`2026-t1-${l.idx_liste ?? i}`} style={{display:"grid",gridTemplateColumns:"52px 1fr 56px 72px 110px",gap:6,alignItems:"center",padding:"9px 12px",background:isWin?"rgba(27,94,32,.07)":"var(--bg-card-alt)",borderRadius:8,border:isWin?"1px solid rgba(27,94,32,.28)":"1px solid var(--border-light)"}}>
-                      <span style={{background:col,color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 6px",borderRadius:4,textAlign:"center"}}>{l.nuance||"—"}</span>
+                      <span style={{background:col,color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 6px",borderRadius:4,textAlign:"center"}}>{nuanceMi(l.nuance, l.nuance_mi)||"—"}</span>
                       <div>
                         <div style={{fontWeight:700,fontSize:"12px",color:"var(--text-primary)"}}>{l.tete_liste||"—"}</div>
                         {l.libelle_liste && <div style={{fontSize:"9px",color:"var(--text-dim)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle_liste}</div>}
@@ -2692,7 +2692,7 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
                   const sc = statut ? statusBadge(statut) : null;
                   return (
                     <div key={`2026-t2-${l.idx_liste ?? i}`} style={{display:"grid",gridTemplateColumns:"52px 1fr 56px 72px 110px",gap:6,alignItems:"center",padding:"9px 12px",background:isWin?"rgba(27,94,32,.07)":"var(--bg-card-alt)",borderRadius:8,border:isWin?"1px solid rgba(27,94,32,.28)":"1px solid var(--border-light)"}}>
-                      <span style={{background:col,color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 6px",borderRadius:4,textAlign:"center"}}>{l.nuance||"—"}</span>
+                      <span style={{background:col,color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 6px",borderRadius:4,textAlign:"center"}}>{nuanceMi(l.nuance, l.nuance_mi)||"—"}</span>
                       <div>
                         <div style={{fontWeight:700,fontSize:"12px",color:"var(--text-primary)"}}>{l.tete_liste||"—"}</div>
                         {l.libelle_liste && <div style={{fontSize:"9px",color:"var(--text-dim)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle_liste}</div>}
@@ -2855,7 +2855,7 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
                   const sc  = SC_COL[st]||{};
                   return (
                     <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:"var(--bg-card-alt)",borderRadius:7,border:"1px solid var(--border-light)"}}>
-                      <span style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 7px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0}}>{l.nuance}</span>
+                      <span style={{background:l.color||"#888",color:"#fff",fontFamily:"'Source Code Pro',monospace",fontSize:"8px",fontWeight:700,padding:"2px 7px",borderRadius:4,whiteSpace:"nowrap",flexShrink:0}}>{nuanceMi(l.nuance, l.nuance_mi)}</span>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontWeight:700,fontSize:"12.5px",color:"var(--text-primary)"}}>{l.tete}</div>
                         {l.libelle&&<div style={{fontSize:"9px",color:"var(--text-dimmer)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginTop:1}}>{l.libelle}</div>}
@@ -3832,7 +3832,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                                             fontSize:"7px",fontWeight:700,
                                             padding:"1px 5px",borderRadius:3,flexShrink:0,
                                             whiteSpace:"nowrap"
-                                          }}>{l.nuance}</span>
+                                          }}>{nuanceMi(l.nuance, l.nuance_mi)}</span>
                                           <div style={{flex:1,minWidth:0}}>
                                             <span style={{fontWeight:700,fontSize:11,color:"var(--text-primary)"}}>{l.tete}</span>
                                             <span style={{fontSize:9,color:"var(--text-dimmer)",marginLeft:6}}>{l.libelle}</span>
@@ -4129,7 +4129,7 @@ const generatePdf = () => { window.open('https://municipales2026-vercel.vercel.a
                             background:l.color,color:"#fff",fontFamily:"'Source Code Pro',monospace",
                             fontSize:"8px",fontWeight:700,padding:"1px 6px",borderRadius:3,flexShrink:0,
                             whiteSpace:"nowrap"
-                          }}>{l.nuance}</span>
+                          }}>{nuanceMi(l.nuance, l.nuance_mi)}</span>
                           <div style={{flex:1,minWidth:0}}>
                             <div style={{fontWeight:700,fontSize:11,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.tete}</div>
                             <div style={{fontSize:9,color:"var(--text-dim)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.libelle}</div>
