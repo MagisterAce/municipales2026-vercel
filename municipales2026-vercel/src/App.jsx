@@ -1025,7 +1025,7 @@ function useConseilMunicipal(insee, dept, nom) {
 
       const { data, error } = await supabase
         .from("listes_2026")
-        .select("idx_liste, nuance, libelle_liste, tete_liste, sieges_cm, sieges_cc, statut_t1, statut_t2, score_t1, score_t2, voix_t1, voix_t2")
+        .select("idx_liste, nuance, nuance_mi, libelle_liste, tete_liste, sieges_cm, sieges_cc, statut_t1, statut_t2, score_t1, score_t2, voix_t1, voix_t2")
         .eq("dept", queryDept)
         .eq("ville_norm", queryVilleNorm)
         .order("idx_liste", { ascending: true })
@@ -1060,6 +1060,15 @@ const NUANCE_COL = {
   "PRG":"#d84315","FG":"#b71c1c",
 };
 const nuanceCol = n => NUANCE_COL[(n||"").toUpperCase()] || "#90a4ae";
+const NUANCE_MI = {
+  "DSV":"SE","DIV":"Divers","DVG":"Gauche","DVD":"Droite","DVC":"Centre",
+  "UG":"Union gauche","UXD":"Union droite","UD":"Union droite",
+  "RN":"RN","LR":"LR","PS":"PS","SOC":"PS","LFI":"LFI",
+  "PCF":"PCF","VEC":"Écolo","ECOLO":"Écolo","EXG":"Extrême gauche",
+  "EXD":"Extrême droite","REC":"Reconquête","UDI":"UDI","RE":"Renaissance",
+  "DV":"Divers","NC":"NC","SE":"SE","REG":"Régionaliste","PRG":"PRG",
+};
+const nuanceMi = (n, mi) => mi || NUANCE_MI[(n||"").toUpperCase()] || n || "";
 
 // Normalisation libellés EPCI (supprime doublons type : "METROPOLE BORDEAUX METROPOLE")
 function cleanEpciLabel(raw) {
@@ -1295,7 +1304,7 @@ function BlocElection2026({ id, cm, maire, commune, communeName, vainqueur }) {
                   <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
                     {winner2026?.nuance && (
                       <span style={{background:winnerColor,color:"#fff",fontFamily:"var(--font-mono)",fontSize:"8px",fontWeight:700,padding:"4px 10px",borderRadius:999,letterSpacing:"1px"}}>
-                        {winner2026.nuance}
+                        {nuanceMi(winner2026.nuance, winner2026.nuance_mi)}
                       </span>
                     )}
                     {continuity2026 !== null && (
@@ -2315,7 +2324,7 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
       vainqueur = {
         tete: cmWinner.tete_liste || "",
         tete_liste: cmWinner.tete_liste || "",
-        nuance: cmWinner.nuance || "",
+        nuance: cmWinner.nuance || "",nuance_mi: cmWinner.nuance_mi || "",
         statut: cmWinner.statut_t2 || cmWinner.statut_t1 || "",
         _fromCM: true,
       };
