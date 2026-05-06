@@ -2428,9 +2428,9 @@ function CommunePageV7({ c, crList, listeResults, onBack }) {
                   }}>
                     {vainqueur ? vainqueur.tete : c.maire}
                   </div>
-                  {BLOC_LABEL[c.couleur_pol] && (
+                  {BLOC_LABEL[(vainqueur&&vainqueur.nuance)||c.couleur_pol] && (
                     <div style={{fontFamily:"'Source Code Pro',monospace",fontSize:"10px",color:"var(--text-dim)",marginTop:4}}>
-                      {BLOC_LABEL[c.couleur_pol]}
+                      {BLOC_LABEL[(vainqueur&&vainqueur.nuance)||c.couleur_pol]}
                     </div>
                   )}
                   {vainqueur && (() => {
